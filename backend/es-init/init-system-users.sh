@@ -7,6 +7,7 @@ echo ">> [INIT] Waiting for Elasticsearch to be ready..."
 MAX_RETRIES=30
 RETRY_COUNT=0
 
+# UNCOMMENT THIS - Very important!
 until curl -s -u "elastic:${ELASTIC_PASSWORD}" http://elasticsearch:9200 >/dev/null; do
   RETRY_COUNT=$((RETRY_COUNT+1))
   if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then

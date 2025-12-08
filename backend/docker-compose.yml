@@ -27,33 +27,39 @@ services:
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=true
-      - xpack.security.http.ssl.enabled=false
+      - xpack.security.http.ssl.enabled=false  # Disable SSL for easier setup
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - KIBANA_SYSTEM_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
       - LOGSTASH_SYSTEM_PASSWORD=${LOGSTASH_SYSTEM_PASSWORD}
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "ES_JAVA_OPTS=-Xms2048m -Xmx2048m"
     ports:
       - "9200:9200"
       - "9300:9300"
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
-      - ./es-init/init-system-users.sh:/usr/local/bin/init-system-users.sh
-      - ./es-init/entrypoint.sh:/usr/local/bin/custom-entrypoint.sh
-    command: ["/bin/bash", "/usr/local/bin/custom-entrypoint.sh"]
     healthcheck:
-      test: [ "CMD-SHELL", "curl -s -u elastic:${ELASTIC_PASSWORD} http://localhost:9200/_cluster/health || exit 1" ]
+      test: [ "CMD-SHELL", "curl -s -u elastic:${ELASTIC_PASSWORD} http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"' || exit 1" ]
       interval: 10s
       timeout: 10s
       retries: 12
       start_period: 40s
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 65536
-        hard: 65536
+    networks:
+      - elk
 
+  es-init:
+    image: alpine/curl:latest
+    container_name: es-init
+    volumes:
+      - ./es-init/init-system-users.sh:/usr/local/bin/init-system-users.sh:ro
+    environment:
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - KIBANA_SYSTEM_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
+      - LOGSTASH_SYSTEM_PASSWORD=${LOGSTASH_SYSTEM_PASSWORD}
+    # Add chmod to ensure script is executable
+    command: sh -c "apk add --no-cache bash && bash /usr/local/bin/init-system-users.sh"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
     networks:
       - elk
 
@@ -65,15 +71,15 @@ services:
     environment:
       - ES_USER=logstash_system
       - ES_PWD=${LOGSTASH_SYSTEM_PASSWORD}
-      - "LS_JAVA_OPTS=-Xmx256m -Xms256m"
+      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
     ports:
       - "5000:5000"
       - "9600:9600"
     volumes:
       - ./logstash/pipeline:/usr/share/logstash/pipeline
     depends_on:
-      elasticsearch:
-        condition: service_healthy
+      es-init:
+        condition: service_completed_successfully
     networks:
       - elk
 
@@ -85,13 +91,13 @@ services:
     ports:
       - "5601:5601"
     environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200  # Changed to http
       - ELASTICSEARCH_USERNAME=kibana_system
       - ELASTICSEARCH_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
       - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=gJ_K9sL7R-aP9nF8tX_vCqY3zW1xU7oI
     depends_on:
-      elasticsearch:
-        condition: service_healthy
+      es-init:
+        condition: service_completed_successfully
     networks:
       - elk
 
