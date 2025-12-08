@@ -1,0 +1,105 @@
+services:
+  # Dịch vụ MySQL từ tệp gốc của bạn
+  mysql_db:
+    image: mysql:8.0
+    container_name: my-mysql-container
+    environment:
+      MYSQL_ROOT_PASSWORD: your_root_password
+      MYSQL_DATABASE: database
+      MYSQL_USER: your_app_user
+      MYSQL_PASSWORD: your_app_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+      interval: 10s
+    networks:
+      - elk
+
+  # Dịch vụ Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.1.5
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - KIBANA_SYSTEM_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
+      - LOGSTASH_SYSTEM_PASSWORD=${LOGSTASH_SYSTEM_PASSWORD}
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+      - ./es-init/init-system-users.sh:/usr/local/bin/init-system-users.sh
+      - ./es-init/entrypoint.sh:/usr/local/bin/custom-entrypoint.sh
+    command: ["/bin/bash", "/usr/local/bin/custom-entrypoint.sh"]
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -s -u elastic:${ELASTIC_PASSWORD} http://localhost:9200/_cluster/health || exit 1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 40s
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+
+    networks:
+      - elk
+
+  # Dịch vụ Logstash
+  logstash:
+    image: docker.elastic.co/logstash/logstash:9.1.5
+    container_name: logstash
+    restart: on-failure
+    environment:
+      - ES_USER=logstash_system
+      - ES_PWD=${LOGSTASH_SYSTEM_PASSWORD}
+      - "LS_JAVA_OPTS=-Xmx256m -Xms256m"
+    ports:
+      - "5000:5000"
+      - "9600:9600"
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - elk
+
+  # Dịch vụ Kibana
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.1.5
+    container_name: kibana
+    restart: on-failure
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
+      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=gJ_K9sL7R-aP9nF8tX_vCqY3zW1xU7oI
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - elk
+
+volumes:
+  mysql_data:
+  elasticsearch-data:
+    driver: local
+
+networks:
+  elk:
+    driver: bridge
