@@ -1,8 +1,16 @@
+import { RouterProvider } from "react-router-dom";
+import { Provider } from "react-redux";
+import { store } from "./store";
+import { router } from "./routes";
+import { ThemeProvider } from "./components/ThemeProvider";
+
 function App() {
   return (
-    <>
-      <h2 className="text-3xl font-bold underline">Hello world!</h2>
-    </>
+    <Provider store={store}>
+      <ThemeProvider defaultTheme="light" storageKey="auction-theme">
+        <RouterProvider router={router} />
+      </ThemeProvider>
+    </Provider>
   );
 }
 
