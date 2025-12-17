@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Package } from "lucide-react";
+import { Search } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 
@@ -21,7 +21,7 @@ const Header = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <Package className="h-6 w-6" />
+            <img src="/logo.png" alt="AuctionHub" className="h-16 w-16" />
             <span className="font-bold text-xl">AuctionHub</span>
           </Link>
 
