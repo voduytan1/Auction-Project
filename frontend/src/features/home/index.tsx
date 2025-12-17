@@ -7,7 +7,7 @@ import {
   endingSoonProducts,
   highestPriceProducts,
   mostBidsProducts,
-} from "./data/mock-products";
+} from "@/data/mock-data";
 
 const Home = () => {
   return (

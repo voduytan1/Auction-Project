@@ -10,7 +10,8 @@ import MainLayout from "../components/layout/MainLayout";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 
 // Route Wrappers
-import { PageWrapper, SuspenseWrapper } from "./components/RouteWrappers";
+import { PageWrapper } from "../components/PageWrapper";
+import { SuspenseWrapper } from "../components/SuspenseWrapper";
 
 // Lazy load pages
 const HomePage = lazy(() => import("./Homepage"));
@@ -24,6 +25,9 @@ const RegisterPage = lazy(() => import("./auth/register"));
 const DashboardPage = lazy(() => import("./admin/dashboard"));
 const UsersPage = lazy(() => import("./admin/users"));
 const AuctionsPage = lazy(() => import("./admin/auctions"));
+const CategoriesPage = lazy(() => import("./admin/categories"));
+const ProductsPage = lazy(() => import("./admin/products"));
+const UpgradeRequestsPage = lazy(() => import("./admin/upgrade-requests"));
 
 /**
  * Router configuration với lazy loading và SEO
@@ -115,6 +119,36 @@ export const router = createBrowserRouter([
           <SuspenseWrapper>
             <PageWrapper title="Quản lý Auctions - Admin">
               <AuctionsPage />
+            </PageWrapper>
+          </SuspenseWrapper>
+        ),
+      },
+      {
+        path: "categories",
+        element: (
+          <SuspenseWrapper>
+            <PageWrapper title="Quản lý Danh mục - Admin">
+              <CategoriesPage />
+            </PageWrapper>
+          </SuspenseWrapper>
+        ),
+      },
+      {
+        path: "products",
+        element: (
+          <SuspenseWrapper>
+            <PageWrapper title="Quản lý Sản phẩm - Admin">
+              <ProductsPage />
+            </PageWrapper>
+          </SuspenseWrapper>
+        ),
+      },
+      {
+        path: "upgrade-requests",
+        element: (
+          <SuspenseWrapper>
+            <PageWrapper title="Yêu cầu nâng cấp - Admin">
+              <UpgradeRequestsPage />
             </PageWrapper>
           </SuspenseWrapper>
         ),
