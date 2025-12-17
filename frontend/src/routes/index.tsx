@@ -11,11 +11,11 @@ import ProtectedRoute from "../components/auth/ProtectedRoute";
 
 // Route Wrappers
 import { PageWrapper } from "../components/PageWrapper";
-import { SuspenseWrapper } from "../components/SuspenseWrapper";
 
 // Lazy load pages
 const HomePage = lazy(() => import("./Homepage"));
 const UnauthorizedPage = lazy(() => import("./unauthorized"));
+const ProductDetailPage = lazy(() => import("./product-detail"));
 
 // Auth Pages
 const LoginPage = lazy(() => import("./auth/login"));
@@ -41,11 +41,17 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: (
-          <SuspenseWrapper>
-            <PageWrapper title="Trang chủ - Sàn đấu giá trực tuyến">
-              <HomePage />
-            </PageWrapper>
-          </SuspenseWrapper>
+          <PageWrapper title="Trang chủ - Sàn đấu giá trực tuyến">
+            <HomePage />
+          </PageWrapper>
+        ),
+      },
+      {
+        path: "products/:id",
+        element: (
+          <PageWrapper title="Chi tiết sản phẩm">
+            <ProductDetailPage />
+          </PageWrapper>
         ),
       },
     ],
@@ -59,21 +65,17 @@ export const router = createBrowserRouter([
       {
         path: "login",
         element: (
-          <SuspenseWrapper>
-            <PageWrapper title="Đăng nhập">
-              <LoginPage />
-            </PageWrapper>
-          </SuspenseWrapper>
+          <PageWrapper title="Đăng nhập">
+            <LoginPage />
+          </PageWrapper>
         ),
       },
       {
         path: "register",
         element: (
-          <SuspenseWrapper>
-            <PageWrapper title="Đăng ký tài khoản">
-              <RegisterPage />
-            </PageWrapper>
-          </SuspenseWrapper>
+          <PageWrapper title="Đăng ký tài khoản">
+            <RegisterPage />
+          </PageWrapper>
         ),
       },
       {
@@ -96,61 +98,49 @@ export const router = createBrowserRouter([
       {
         path: "dashboard",
         element: (
-          <SuspenseWrapper>
-            <PageWrapper title="Dashboard - Admin">
-              <DashboardPage />
-            </PageWrapper>
-          </SuspenseWrapper>
+          <PageWrapper title="Dashboard - Admin">
+            <DashboardPage />
+          </PageWrapper>
         ),
       },
       {
         path: "users",
         element: (
-          <SuspenseWrapper>
-            <PageWrapper title="Quản lý Users - Admin">
-              <UsersPage />
-            </PageWrapper>
-          </SuspenseWrapper>
+          <PageWrapper title="Quản lý Users - Admin">
+            <UsersPage />
+          </PageWrapper>
         ),
       },
       {
         path: "auctions",
         element: (
-          <SuspenseWrapper>
-            <PageWrapper title="Quản lý Auctions - Admin">
-              <AuctionsPage />
-            </PageWrapper>
-          </SuspenseWrapper>
+          <PageWrapper title="Quản lý Auctions - Admin">
+            <AuctionsPage />
+          </PageWrapper>
         ),
       },
       {
         path: "categories",
         element: (
-          <SuspenseWrapper>
-            <PageWrapper title="Quản lý Danh mục - Admin">
-              <CategoriesPage />
-            </PageWrapper>
-          </SuspenseWrapper>
+          <PageWrapper title="Quản lý Danh mục - Admin">
+            <CategoriesPage />
+          </PageWrapper>
         ),
       },
       {
         path: "products",
         element: (
-          <SuspenseWrapper>
-            <PageWrapper title="Quản lý Sản phẩm - Admin">
-              <ProductsPage />
-            </PageWrapper>
-          </SuspenseWrapper>
+          <PageWrapper title="Quản lý Sản phẩm - Admin">
+            <ProductsPage />
+          </PageWrapper>
         ),
       },
       {
         path: "upgrade-requests",
         element: (
-          <SuspenseWrapper>
-            <PageWrapper title="Yêu cầu nâng cấp - Admin">
-              <UpgradeRequestsPage />
-            </PageWrapper>
-          </SuspenseWrapper>
+          <PageWrapper title="Yêu cầu nâng cấp - Admin">
+            <UpgradeRequestsPage />
+          </PageWrapper>
         ),
       },
       {
@@ -228,11 +218,9 @@ export const router = createBrowserRouter([
   {
     path: "/unauthorized",
     element: (
-      <SuspenseWrapper>
-        <PageWrapper title="Không có quyền truy cập">
-          <UnauthorizedPage />
-        </PageWrapper>
-      </SuspenseWrapper>
+      <PageWrapper title="Không có quyền truy cập">
+        <UnauthorizedPage />
+      </PageWrapper>
     ),
   },
 
