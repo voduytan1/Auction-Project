@@ -1,23 +1,5 @@
-import { Suspense, useEffect } from "react";
+import { Suspense } from "react";
 import { Spinner } from "@/components/ui/spinner";
-
-/**
- * SEO Wrapper - Set document title cho mỗi route
- */
-export function PageWrapper({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  useEffect(() => {
-    document.title = `${title} | AuctionHub`;
-    // Có thể thêm meta tags khác ở đây
-  }, [title]);
-
-  return <>{children}</>;
-}
 
 /**
  * Suspense Wrapper với loading spinner
