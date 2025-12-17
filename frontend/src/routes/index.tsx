@@ -54,14 +54,15 @@ export const router = createBrowserRouter([
     ],
   },
 
-  // Admin routes (Protected)
+  // Admin routes (Protected) - TEMPORARILY DISABLED FOR TESTING
   {
     path: "/admin",
-    element: (
-      <ProtectedRoute requiredRole="ADMIN">
-        <AdminLayout />
-      </ProtectedRoute>
-    ),
+    element: <AdminLayout />,
+    // element: (
+    //   <ProtectedRoute requiredRole="ADMIN">
+    //     <AdminLayout />
+    //   </ProtectedRoute>
+    // ),
     children: [
       {
         path: "dashboard",

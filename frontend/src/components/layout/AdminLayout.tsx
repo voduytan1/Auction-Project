@@ -5,7 +5,7 @@ import {
   Gavel,
   Settings,
   LogOut,
-  Menu,
+  ChevronLeft,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { useState } from "react";
@@ -21,9 +21,9 @@ const AdminLayout = () => {
 
   const navItems = [
     { to: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { to: "/admin/users", icon: Users, label: "Users" },
-    { to: "/admin/auctions", icon: Gavel, label: "Auctions" },
-    { to: "/admin/settings", icon: Settings, label: "Settings" },
+    { to: "/admin/users", icon: Users, label: "Quản lý Users" },
+    { to: "/admin/auctions", icon: Gavel, label: "Quản lý Auctions" },
+    { to: "/admin/settings", icon: Settings, label: "Cài đặt" },
   ];
 
   const handleLogout = () => {
@@ -34,29 +34,40 @@ const AdminLayout = () => {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-muted/30">
       {/* Sidebar */}
       <aside
         className={cn(
-          "bg-card border-r border-border transition-all duration-300",
-          sidebarOpen ? "w-64" : "w-16"
+          "bg-card border-r shadow-sm transition-all duration-300 flex flex-col",
+          sidebarOpen ? "w-64" : "w-20"
         )}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-4 border-b border-border flex items-center justify-between">
-            {sidebarOpen && <h2 className="text-lg font-bold">Admin Panel</h2>}
+          <div className="h-16 border-b flex items-center px-4 gap-3">
+            <Link to="/" className="flex items-center gap-3">
+              <img src="/logo.png" alt="Logo" className="h-8 w-8" />
+              {sidebarOpen && (
+                <span className="font-bold text-lg">AuctionHub</span>
+              )}
+            </Link>
             <Button
               variant="ghost"
               size="icon"
+              className="ml-auto"
               onClick={() => setSidebarOpen(!sidebarOpen)}
             >
-              <Menu className="h-5 w-5" />
+              <ChevronLeft
+                className={cn(
+                  "h-4 w-4 transition-transform",
+                  !sidebarOpen && "rotate-180"
+                )}
+              />
             </Button>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2">
+          <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.to;
@@ -66,11 +77,15 @@ const AdminLayout = () => {
                   <Button
                     variant={isActive ? "secondary" : "ghost"}
                     className={cn(
-                      "w-full justify-start",
-                      !sidebarOpen && "justify-center"
+                      "w-full justify-start h-11",
+                      !sidebarOpen && "justify-center px-2",
+                      isActive &&
+                        "bg-primary/10 text-primary hover:bg-primary/15"
                     )}
                   >
-                    <Icon className="h-5 w-5" />
+                    <Icon
+                      className={cn("h-5 w-5", !sidebarOpen && "h-6 w-6")}
+                    />
                     {sidebarOpen && <span className="ml-3">{item.label}</span>}
                   </Button>
                 </Link>
@@ -98,20 +113,30 @@ const AdminLayout = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="bg-card border-b border-border p-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">
-              {navItems.find((item) => item.to === location.pathname)?.label ||
-                "Admin"}
-            </h1>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">Admin User</span>
+        <header className="h-16 bg-card border-b flex items-center px-6 shadow-sm">
+          <div className="flex items-center justify-between w-full">
+            <div>
+              <h1 className="text-xl font-semibold">
+                {navItems.find((item) => item.to === location.pathname)
+                  ?.label || "Admin Panel"}
+              </h1>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-sm">
+                <p className="font-medium">Admin User</p>
+                <p className="text-xs text-muted-foreground">
+                  admin@example.com
+                </p>
+              </div>
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="text-sm font-semibold text-primary">A</span>
+              </div>
             </div>
           </div>
         </header>
 
         {/* Content */}
-        <main className="flex-1 p-6 bg-muted/30">
+        <main className="flex-1 p-6 overflow-auto">
           <Outlet />
         </main>
       </div>
