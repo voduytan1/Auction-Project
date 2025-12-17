@@ -16,6 +16,214 @@ export interface HomeProduct {
   endTime: string;
 }
 
+// ============================================================================
+// PRODUCT DETAIL - Chi tiết sản phẩm
+// ============================================================================
+
+export interface BidHistory {
+  id: number;
+  bidderName: string; // Masked name: ****Khoa
+  amount: number;
+  timestamp: string;
+}
+
+export interface ProductQuestion {
+  id: number;
+  askerName: string;
+  askerRating: number;
+  question: string;
+  answer?: string;
+  askedAt: string;
+  answeredAt?: string;
+}
+
+export interface UserInfo {
+  id: number;
+  name: string;
+  rating: number; // Điểm đánh giá: 8/10 = 80%
+  totalRatings: number; // Tổng số lần đánh giá
+}
+
+export interface ProductDetail {
+  id: number;
+  name: string;
+  mainImage: string;
+  images: string[]; // Ít nhất 3 ảnh phụ
+  currentBid: number;
+  buyNowPrice?: number; // Giá mua ngay (optional)
+  startingPrice: number;
+  bidIncrement: number; // Bước giá
+  category: string;
+  subcategory: string;
+  seller: UserInfo;
+  highestBidder?: UserInfo; // Người đặt giá cao nhất
+  postedAt: string;
+  endTime: string; // ISO string
+  description: string; // HTML content
+  totalBids: number;
+  bidHistory: BidHistory[];
+  questions: ProductQuestion[];
+  autoRenew: boolean;
+}
+
+export const productDetailData: ProductDetail = {
+  id: 1,
+  name: "iPhone 15 Pro Max 256GB - Like New",
+  mainImage: "https://placehold.co/800x600/4a90e2/white?text=iPhone+15+Pro+Max",
+  images: [
+    "https://placehold.co/800x600/4a90e2/white?text=Front+View",
+    "https://placehold.co/800x600/50c878/white?text=Back+View",
+    "https://placehold.co/800x600/ff6b6b/white?text=Side+View",
+    "https://placehold.co/800x600/ffd93d/white?text=Accessories",
+  ],
+  currentBid: 25000000,
+  buyNowPrice: 28000000,
+  startingPrice: 20000000,
+  bidIncrement: 100000,
+  category: "Điện tử",
+  subcategory: "Điện thoại di động",
+  seller: {
+    id: 101,
+    name: "Nguyễn Văn A",
+    rating: 9.5,
+    totalRatings: 243,
+  },
+  highestBidder: {
+    id: 202,
+    name: "****Khoa",
+    rating: 8.7,
+    totalRatings: 156,
+  },
+  postedAt: "2025-12-10T08:00:00Z",
+  endTime: "2025-12-17T21:00:00Z", // 2 giờ nữa
+  description: `
+    <h3>Mô tả sản phẩm</h3>
+    <p>iPhone 15 Pro Max 256GB màu Titan Tự Nhiên, máy like new 99%, sử dụng 2 tháng.</p>
+    <ul>
+      <li>✅ Chip A17 Pro mạnh mẽ</li>
+      <li>✅ Camera 48MP chụp cực đẹp</li>
+      <li>✅ Pin 100% dung lượng</li>
+      <li>✅ Fullbox, còn nguyên seal phụ kiện</li>
+      <li>✅ Bảo hành Apple còn 10 tháng</li>
+    </ul>
+    <p><strong>Phụ kiện đi kèm:</strong></p>
+    <ul>
+      <li>Hộp nguyên seal</li>
+      <li>Cáp USB-C to USB-C</li>
+      <li>Sách hướng dẫn</li>
+      <li>Sim ghim</li>
+    </ul>
+    <p>Máy không trầy xước, không vết móp méo. Mua về xài ngay!</p>
+  `,
+  totalBids: 156,
+  bidHistory: [
+    {
+      id: 1,
+      bidderName: "****Khoa",
+      amount: 25000000,
+      timestamp: "2025-12-17T16:43:00Z",
+    },
+    {
+      id: 2,
+      bidderName: "****Kha",
+      amount: 24900000,
+      timestamp: "2025-12-17T15:20:00Z",
+    },
+    {
+      id: 3,
+      bidderName: "****Tuấn",
+      amount: 24800000,
+      timestamp: "2025-12-17T14:15:00Z",
+    },
+    {
+      id: 4,
+      bidderName: "****Khánh",
+      amount: 24700000,
+      timestamp: "2025-12-17T13:05:00Z",
+    },
+    {
+      id: 5,
+      bidderName: "****Minh",
+      amount: 24600000,
+      timestamp: "2025-12-17T11:30:00Z",
+    },
+  ],
+  questions: [
+    {
+      id: 1,
+      askerName: "Trần Văn B",
+      askerRating: 9.2,
+      question: "Máy có bị rơi vỡ hay sửa chữa gì không ạ?",
+      answer:
+        "Dạ máy chưa bao giờ rơi vỡ, không sửa chữa gì hết ạ. Máy còn rất mới.",
+      askedAt: "2025-12-15T10:30:00Z",
+      answeredAt: "2025-12-15T11:00:00Z",
+    },
+    {
+      id: 2,
+      askerName: "Lê Thị C",
+      askerRating: 8.5,
+      question: "Bảo hành còn bao lâu vậy shop?",
+      answer:
+        "Dạ bảo hành Apple chính hãng còn 10 tháng ạ, em check IMEI được luôn.",
+      askedAt: "2025-12-16T14:20:00Z",
+      answeredAt: "2025-12-16T14:45:00Z",
+    },
+    {
+      id: 3,
+      askerName: "Phạm Văn D",
+      askerRating: 7.8,
+      question: "Máy có lock mạng không ạ? Ship COD được không?",
+      askedAt: "2025-12-17T09:00:00Z",
+    },
+  ],
+  autoRenew: true,
+};
+
+// 5 sản phẩm liên quan (cùng category)
+export const relatedProducts: HomeProduct[] = [
+  {
+    id: 2,
+    name: "iPhone 14 Pro 128GB",
+    image: "https://placehold.co/400x300/5856d6/white?text=iPhone+14+Pro",
+    currentBid: 18000000,
+    bids: 98,
+    endTime: "1 ngày",
+  },
+  {
+    id: 3,
+    name: "iPhone 13 Pro Max 256GB",
+    image: "https://placehold.co/400x300/3867d6/white?text=iPhone+13+Pro+Max",
+    currentBid: 15000000,
+    bids: 134,
+    endTime: "2 ngày",
+  },
+  {
+    id: 11,
+    name: "iPhone 15 Plus 128GB",
+    image: "https://placehold.co/400x300/fd79a8/white?text=iPhone+15+Plus",
+    currentBid: 20000000,
+    bids: 87,
+    endTime: "3 giờ",
+  },
+  {
+    id: 12,
+    name: "iPhone 14 128GB",
+    image: "https://placehold.co/400x300/0abde3/white?text=iPhone+14",
+    currentBid: 14000000,
+    bids: 76,
+    endTime: "12 giờ",
+  },
+  {
+    id: 13,
+    name: "iPhone 15 Pro 256GB",
+    image: "https://placehold.co/400x300/00d2ff/white?text=iPhone+15+Pro",
+    currentBid: 23000000,
+    bids: 145,
+    endTime: "1 ngày",
+  },
+];
+
 // Top 5 sản phẩm gần kết thúc
 export const endingSoonProducts: HomeProduct[] = [
   {
