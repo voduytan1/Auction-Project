@@ -10,7 +10,7 @@ import type {
   Category,
   PlaceBidData,
   WatchlistItem,
-} from "@/types";
+} from "@/types/types";
 
 /**
  * Auction API endpoints

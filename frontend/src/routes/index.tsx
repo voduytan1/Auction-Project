@@ -1,6 +1,7 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { lazy } from "react";
+import { createBrowserRouter, Navigate } from "react-router";
 
-// Layouts
+// Layouts - Không lazy load layouts vì cần instant
 import AuthLayout from "../components/layout/AuthLayout";
 import AdminLayout from "../components/layout/AdminLayout";
 import MainLayout from "../components/layout/MainLayout";
@@ -8,19 +9,25 @@ import MainLayout from "../components/layout/MainLayout";
 // Auth Guard
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 
-// Public Pages
-import Homepage from "./homepage";
-import UnauthorizedPage from "./unauthorized";
+// Route Wrappers
+import { PageWrapper, SuspenseWrapper } from "./components/RouteWrappers";
+
+// Lazy load pages
+const HomePage = lazy(() => import("./Homepage"));
+const UnauthorizedPage = lazy(() => import("./unauthorized"));
 
 // Auth Pages
-import LoginPage from "./auth/login";
-import RegisterPage from "./auth/register";
+const LoginPage = lazy(() => import("./auth/login"));
+const RegisterPage = lazy(() => import("./auth/register"));
 
 // Admin Pages
-import DashboardPage from "./admin/dashboard";
-import UsersPage from "./admin/users";
-import AuctionsPage from "./admin/auctions";
+const DashboardPage = lazy(() => import("./admin/dashboard"));
+const UsersPage = lazy(() => import("./admin/users"));
+const AuctionsPage = lazy(() => import("./admin/auctions"));
 
+/**
+ * Router configuration với lazy loading và SEO
+ */
 export const router = createBrowserRouter([
   // Public homepage
   {
@@ -29,23 +36,41 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Homepage />,
+        element: (
+          <SuspenseWrapper>
+            <PageWrapper title="Trang chủ - Sàn đấu giá trực tuyến">
+              <HomePage />
+            </PageWrapper>
+          </SuspenseWrapper>
+        ),
       },
     ],
   },
 
-  // Auth routes (Login, Register, etc.)
+  // Auth routes (Login, Register)
   {
     path: "/auth",
     element: <AuthLayout />,
     children: [
       {
         path: "login",
-        element: <LoginPage />,
+        element: (
+          <SuspenseWrapper>
+            <PageWrapper title="Đăng nhập">
+              <LoginPage />
+            </PageWrapper>
+          </SuspenseWrapper>
+        ),
       },
       {
         path: "register",
-        element: <RegisterPage />,
+        element: (
+          <SuspenseWrapper>
+            <PageWrapper title="Đăng ký tài khoản">
+              <RegisterPage />
+            </PageWrapper>
+          </SuspenseWrapper>
+        ),
       },
       {
         index: true,
@@ -54,7 +79,7 @@ export const router = createBrowserRouter([
     ],
   },
 
-  // Admin routes (Protected) - TEMPORARILY DISABLED FOR TESTING
+  // Admin routes - TEMPORARILY DISABLED AUTH FOR TESTING
   {
     path: "/admin",
     element: <AdminLayout />,
@@ -66,19 +91,41 @@ export const router = createBrowserRouter([
     children: [
       {
         path: "dashboard",
-        element: <DashboardPage />,
+        element: (
+          <SuspenseWrapper>
+            <PageWrapper title="Dashboard - Admin">
+              <DashboardPage />
+            </PageWrapper>
+          </SuspenseWrapper>
+        ),
       },
       {
         path: "users",
-        element: <UsersPage />,
+        element: (
+          <SuspenseWrapper>
+            <PageWrapper title="Quản lý Users - Admin">
+              <UsersPage />
+            </PageWrapper>
+          </SuspenseWrapper>
+        ),
       },
       {
         path: "auctions",
-        element: <AuctionsPage />,
+        element: (
+          <SuspenseWrapper>
+            <PageWrapper title="Quản lý Auctions - Admin">
+              <AuctionsPage />
+            </PageWrapper>
+          </SuspenseWrapper>
+        ),
       },
       {
         path: "settings",
-        element: <div>Settings Page Coming Soon</div>,
+        element: (
+          <PageWrapper title="Cài đặt - Admin">
+            <div>Settings Page Coming Soon</div>
+          </PageWrapper>
+        ),
       },
       {
         index: true,
@@ -98,23 +145,43 @@ export const router = createBrowserRouter([
     children: [
       {
         path: "auctions",
-        element: <div>Auctions List</div>,
+        element: (
+          <PageWrapper title="Danh sách đấu giá">
+            <div>Auctions List</div>
+          </PageWrapper>
+        ),
       },
       {
         path: "auctions/:id",
-        element: <div>Auction Details</div>,
+        element: (
+          <PageWrapper title="Chi tiết đấu giá">
+            <div>Auction Details</div>
+          </PageWrapper>
+        ),
       },
       {
         path: "my-bids",
-        element: <div>My Bids</div>,
+        element: (
+          <PageWrapper title="Lượt đấu của tôi">
+            <div>My Bids</div>
+          </PageWrapper>
+        ),
       },
       {
         path: "my-auctions",
-        element: <div>My Auctions (Seller)</div>,
+        element: (
+          <PageWrapper title="Đấu giá của tôi">
+            <div>My Auctions (Seller)</div>
+          </PageWrapper>
+        ),
       },
       {
         path: "profile",
-        element: <div>User Profile</div>,
+        element: (
+          <PageWrapper title="Hồ sơ cá nhân">
+            <div>User Profile</div>
+          </PageWrapper>
+        ),
       },
       {
         index: true,
@@ -126,7 +193,13 @@ export const router = createBrowserRouter([
   // Utility routes
   {
     path: "/unauthorized",
-    element: <UnauthorizedPage />,
+    element: (
+      <SuspenseWrapper>
+        <PageWrapper title="Không có quyền truy cập">
+          <UnauthorizedPage />
+        </PageWrapper>
+      </SuspenseWrapper>
+    ),
   },
 
   // Catch all - redirect to home

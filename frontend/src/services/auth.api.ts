@@ -5,7 +5,7 @@ import type {
   MessageResponse,
   RegisterData,
   User,
-} from "@/types";
+} from "@/types/types";
 
 /**
  * Authentication API endpoints
