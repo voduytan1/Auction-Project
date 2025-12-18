@@ -1,5 +1,5 @@
 import type { AxiosError, AxiosResponse } from "axios";
-import type { ApiErrorResponse } from "@/types";
+import type { ApiErrorResponse } from "@/types/types";
 
 /**
  * Generic API helper functions

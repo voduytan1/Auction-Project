@@ -7,7 +7,7 @@ import type {
   UserRating,
   UserStats,
   UserUpdateData,
-} from "@/types";
+} from "@/types/types";
 
 /**
  * User API endpoints

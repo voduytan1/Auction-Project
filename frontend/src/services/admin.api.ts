@@ -1,5 +1,5 @@
 import api from "./api";
-import type { DashboardStats, User } from "@/types";
+import type { DashboardStats, User } from "@/types/types";
 
 /**
  * Admin-specific API endpoints
