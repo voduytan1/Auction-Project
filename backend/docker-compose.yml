@@ -1,5 +1,25 @@
 services:
   # Dịch vụ MySQL từ tệp gốc của bạn
+
+  redis:
+    image: redis:latest
+    container_name: "Cache"
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: [ "redis-server", "--maxmemory", "1gb", "--maxmemory-policy", "allkeys-lru" ]
+    environment:
+      REDIS_PASSWORD: ""
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli ping | grep -q PONG" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - elk
+
   mysql_db:
     image: mysql:8.0
     container_name: my-mysql-container
@@ -104,6 +124,8 @@ services:
 volumes:
   mysql_data:
   elasticsearch-data:
+    driver: local
+  redis-data:
     driver: local
 
 networks:
