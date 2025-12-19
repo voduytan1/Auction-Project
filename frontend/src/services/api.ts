@@ -1,9 +1,7 @@
 import axios, { AxiosError } from "axios";
 import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
-// import { store } from "../store";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 // Create axios instance
 const api = axios.create({
@@ -37,7 +35,11 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response: AxiosResponse) => {
-    // Extract data from response
+    // Backend trả về dạng ApiResponse<T> = { data: T, message, success }
+    // Extract data để dễ sử dụng
+    if (response.data?.data !== undefined) {
+      return { ...response, data: response.data.data };
+    }
     return response;
   },
   async (error: AxiosError) => {
@@ -45,33 +47,42 @@ api.interceptors.response.use(
       _retry?: boolean;
     };
 
-    // Handle 401 Unauthorized - Token expired
+    // Nếu là request login mà bị 401 thì trả lỗi về cho component xử lý, không redirect
+    if (
+      error.response?.status === 401 &&
+      originalRequest.url?.includes("/auth/login")
+    ) {
+      return Promise.reject(error);
+    }
+
+    // Handle 401 Unauthorized - Token expired (các request khác)
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
-        // TODO: Implement token refresh when Redux slices are ready
-        // const state = store.getState();
-        // const refreshToken = state.auth?.refreshToken;
-        const refreshToken = localStorage.getItem("refreshToken");
+        // Lấy user từ state để refresh token
+        const userId = localStorage.getItem("userId");
 
-        if (!refreshToken) {
-          // store.dispatch(logout());
+        if (!userId) {
           localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          window.location.href = "/auth/login";
+          // Chỉ redirect nếu không đang ở trang login
+          if (window.location.pathname !== "/auth/login") {
+            window.location.href = "/auth/login";
+          }
           return Promise.reject(error);
         }
 
-        const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-          refreshToken,
-        });
+        // Refresh token - BE sẽ đọc refresh_token từ cookie
+        const response = await axios.post(
+          `${API_BASE_URL}/auth/refresh/${userId}`,
+          {},
+          {
+            withCredentials: true, // Gửi cookie
+          }
+        );
 
-        const { accessToken, refreshToken: newRefreshToken } = response.data;
-
-        // store.dispatch(setCredentials({ user, accessToken, refreshToken: newRefreshToken }));
+        const { accessToken } = response.data.data;
         localStorage.setItem("accessToken", accessToken);
-        localStorage.setItem("refreshToken", newRefreshToken);
 
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
@@ -79,10 +90,11 @@ api.interceptors.response.use(
 
         return api(originalRequest);
       } catch (refreshError) {
-        // store.dispatch(logout());
         localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        window.location.href = "/auth/login";
+        localStorage.removeItem("userId");
+        if (window.location.pathname !== "/auth/login") {
+          window.location.href = "/auth/login";
+        }
         return Promise.reject(refreshError);
       }
     }

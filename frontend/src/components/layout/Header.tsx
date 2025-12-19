@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Home } from "lucide-react";
+import { Search, Home, LogOut, User as UserIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,17 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { logoutUser } from "@/store/slices/authSlice";
 
 /* ================= MOCK DATA ================= */
 
@@ -52,13 +63,20 @@ const categories = [
 
 export default function Header() {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [searchQuery, setSearchQuery] = useState("");
+  const { user, isAuthenticated } = useAppSelector((state) => state.auth);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
     }
+  };
+
+  const handleLogout = async () => {
+    await dispatch(logoutUser());
+    navigate("/");
   };
 
   return (
@@ -95,12 +113,64 @@ export default function Header() {
               </div>
             </form>
 
-            {/* Auth */}
+            {/* Auth / User Menu */}
             <div className="flex gap-2 shrink-0">
-              <Button variant="ghost" onClick={() => navigate("/auth/login")}>
-                Đăng nhập
-              </Button>
-              <Button onClick={() => navigate("/auth/register")}>Đăng ký</Button>
+              {isAuthenticated && user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="flex items-center gap-2">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user.avatar} alt={user.username} />
+                        <AvatarFallback>
+                          {user.username.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="hidden sm:inline">{user.username}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium">{user.username}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {user.email}
+                        </p>
+                        <p className="text-xs text-muted-foreground capitalize">
+                          {user.vaitro}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate("/profile")}>
+                      <UserIcon className="mr-2 h-4 w-4" />
+                      Trang cá nhân
+                    </DropdownMenuItem>
+                    {user.vaitro === "ADMIN" && (
+                      <DropdownMenuItem onClick={() => navigate("/admin")}>
+                        <UserIcon className="mr-2 h-4 w-4" />
+                        Quản trị
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Đăng xuất
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <>
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate("/auth/login")}
+                  >
+                    Đăng nhập
+                  </Button>
+                  <Button onClick={() => navigate("/auth/register")}>
+                    Đăng ký
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>

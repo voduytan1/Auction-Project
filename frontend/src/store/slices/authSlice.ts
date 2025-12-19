@@ -1,33 +1,42 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import type { User } from "@/features/auth/types";
+import type {
+  User,
+  LoginRequest,
+  RegisterRequest,
+} from "@/features/auth/types";
+import { authAPI } from "@/services/auth.api";
 
-// Async thunks - Implement Flux pattern
+// Async thunks - Connect với real Backend API
 export const loginUser = createAsyncThunk(
   "auth/login",
-  async (
-    credentials: { email: string; password: string },
-    { rejectWithValue }
-  ) => {
+  async (credentials: LoginRequest, { rejectWithValue }) => {
     try {
-      // TODO: Replace with actual API call
-      // const response = await authAPI.login(credentials);
-      // return response.data;
+      const response = await authAPI.login(credentials);
+      // Backend trả về: { accessToken, userid, username, vaitro, avatar, email }
+      // Refresh token được lưu trong HTTP-only cookie
+      localStorage.setItem("accessToken", response.accessToken);
+      localStorage.setItem("userId", response.userid);
 
-      // Mock response
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      return {
-        user: {
-          id: "1",
-          name: "Test User",
-          email: credentials.email,
-          role: "user" as const,
-        },
-        token: "mock-jwt-token",
+      const user: User = {
+        userid: response.userid,
+        username: response.username,
+        email: response.email,
+        vaitro: response.vaitro,
+        avatar: response.avatar,
       };
-    } catch (error: any) {
+
+      // Lưu user info vào localStorage để restore sau khi F5
+      localStorage.setItem("user", JSON.stringify(user));
+
+      return {
+        user,
+        token: response.accessToken,
+      };
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       return rejectWithValue(
-        error.response?.data?.message || "Đăng nhập thất bại"
+        err.response?.data?.message || "Đăng nhập thất bại"
       );
     }
   }
@@ -35,37 +44,56 @@ export const loginUser = createAsyncThunk(
 
 export const registerUser = createAsyncThunk(
   "auth/register",
-  async (
-    userData: { name: string; email: string; password: string },
-    { rejectWithValue }
-  ) => {
+  async (userData: RegisterRequest, { rejectWithValue }) => {
     try {
-      // TODO: Replace with actual API call
-      // const response = await authAPI.register(userData);
-      // return response.data;
+      const response = await authAPI.register(userData);
+      localStorage.setItem("accessToken", response.accessToken);
+      localStorage.setItem("userId", response.userid);
 
-      // Mock response
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      return {
-        user: {
-          id: "1",
-          name: userData.name,
-          email: userData.email,
-          role: "user" as const,
-        },
-        token: "mock-jwt-token",
+      const user: User = {
+        userid: response.userid,
+        username: response.username,
+        email: response.email,
+        vaitro: response.vaitro,
+        avatar: response.avatar,
       };
-    } catch (error: any) {
+
+      // Lưu user info vào localStorage để restore sau khi F5
+      localStorage.setItem("user", JSON.stringify(user));
+
+      return {
+        user,
+        token: response.accessToken,
+      };
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      return rejectWithValue(err.response?.data?.message || "Đăng ký thất bại");
+    }
+  }
+);
+
+export const refreshAccessToken = createAsyncThunk(
+  "auth/refresh",
+  async (userId: string, { rejectWithValue }) => {
+    try {
+      const response = await authAPI.refreshToken(userId);
+      localStorage.setItem("accessToken", response.accessToken);
+      return {
+        token: response.accessToken,
+        expiresIn: response.expiresIn,
+      };
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       return rejectWithValue(
-        error.response?.data?.message || "Đăng ký thất bại"
+        err.response?.data?.message || "Refresh token thất bại"
       );
     }
   }
 );
 
 export const logoutUser = createAsyncThunk("auth/logout", async () => {
-  // TODO: Call API to invalidate token
-  localStorage.removeItem("token");
+  await authAPI.logout();
+  localStorage.removeItem("accessToken");
   return null;
 });
 
@@ -78,13 +106,27 @@ interface AuthState {
   isAuthenticated: boolean;
 }
 
-// Initial state
+// Helper function để restore user từ localStorage
+const getUserFromStorage = (): User | null => {
+  try {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      return JSON.parse(userStr) as User;
+    }
+  } catch (error) {
+    console.error("Error parsing user from localStorage:", error);
+    localStorage.removeItem("user");
+  }
+  return null;
+};
+
+// Initial state - Restore từ localStorage nếu có
 const initialState: AuthState = {
-  user: null,
-  token: null, // localStorage.getItem("token"), // Tạm thời disable để test auth pages
+  user: getUserFromStorage(),
+  token: localStorage.getItem("accessToken"),
   isLoading: false,
   error: null,
-  isAuthenticated: false, // !!localStorage.getItem("token"), // Tạm thời disable để test auth pages
+  isAuthenticated: !!localStorage.getItem("accessToken"),
 };
 
 // Slice - Flux pattern với Redux Toolkit
@@ -102,7 +144,11 @@ const authSlice = createSlice({
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.isAuthenticated = true;
-      localStorage.setItem("token", action.payload.token);
+      localStorage.setItem("accessToken", action.payload.token);
+      localStorage.setItem("user", JSON.stringify(action.payload.user));
+      if (action.payload.user?.userid) {
+        localStorage.setItem("userId", action.payload.user.userid);
+      }
     },
   },
   extraReducers: (builder) => {
@@ -117,7 +163,9 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.isAuthenticated = true;
-        localStorage.setItem("token", action.payload.token);
+        localStorage.setItem("accessToken", action.payload.token);
+        localStorage.setItem("userId", action.payload.user.userid);
+        localStorage.setItem("user", JSON.stringify(action.payload.user));
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -135,7 +183,9 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.isAuthenticated = true;
-        localStorage.setItem("token", action.payload.token);
+        localStorage.setItem("accessToken", action.payload.token);
+        localStorage.setItem("userId", action.payload.user.userid);
+        localStorage.setItem("user", JSON.stringify(action.payload.user));
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -148,7 +198,30 @@ const authSlice = createSlice({
       state.token = null;
       state.isAuthenticated = false;
       state.error = null;
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("userId");
+      localStorage.removeItem("user");
     });
+
+    // Refresh Token
+    builder
+      .addCase(refreshAccessToken.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(refreshAccessToken.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.token = action.payload.token;
+        state.isAuthenticated = true;
+      })
+      .addCase(refreshAccessToken.rejected, (state) => {
+        state.isLoading = false;
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("userId");
+        localStorage.removeItem("user");
+      });
   },
 });
 
