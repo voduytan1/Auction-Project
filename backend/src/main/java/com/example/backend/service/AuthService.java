@@ -50,7 +50,7 @@ public class AuthService {
         if (passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             String userId = user.getUserid().toString();
 
-            JWTToken deleteToken = redisService.findByUserId(userId);
+            JWTToken deleteToken = redisService.findByUserId(userId).orElse(null);
             //Xóa refreshToken cũ nếu đã tồn tại
             if(deleteToken != null){
                 redisRepository.deleteById(deleteToken.getJti());

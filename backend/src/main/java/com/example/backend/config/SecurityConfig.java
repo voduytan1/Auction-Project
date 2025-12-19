@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -38,6 +39,25 @@ import java.util.Map;
 @EnableWebSecurity
 @Slf4j
 public class SecurityConfig {
+    private static final Map<String, Map<HttpMethod, String[]>> ROLE_BASED_ENDPOINTS = Map.of(
+            "PUBLIC", Map.of(
+                    HttpMethod.GET, new String[]{"/auth/**", "/actuator/**"},
+                    HttpMethod.POST, new String[]{"/auth/login", "/user"},
+                    HttpMethod.PUT, new String[]{"/user/{id}"}
+            ),
+            "ADMIN", Map.of(
+                    HttpMethod.GET, new String[]{},
+                    HttpMethod.POST, new String[]{},
+                    HttpMethod.PATCH, new String[]{},
+                    HttpMethod.DELETE, new String[]{"/user/{id}"}
+            ),
+            "AUTHENTICATED",Map.of(
+                    HttpMethod.GET, new String[]{},
+                    HttpMethod.POST, new String[]{},
+                    HttpMethod.PATCH, new String[]{},
+                    HttpMethod.DELETE, new String[]{}
+            )
+    );
     
     @Value("${jwt.secret.key}")
     private String jwtSecretKey;
@@ -59,7 +79,26 @@ public class SecurityConfig {
         httpSecurity.cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
         httpSecurity.authorizeHttpRequests(request -> {
-            request.anyRequest().authenticated();
+            request.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll(); //Preflight
+
+            //Public endpoint
+            var publicEnpoints = ROLE_BASED_ENDPOINTS.get("PUBLIC");
+            publicEnpoints.forEach((method, endpoints) ->
+                    request.requestMatchers(method, endpoints).permitAll()
+            );
+
+
+            var authenticatedEndpoints = ROLE_BASED_ENDPOINTS.get("AUTHENTICATED");
+            authenticatedEndpoints.forEach((method, endpoints) ->
+                    request.requestMatchers(method, endpoints).authenticated()
+            );
+
+            //ADMIN endpoint
+            var adminEndpoints = ROLE_BASED_ENDPOINTS.get("ADMIN");
+            adminEndpoints.forEach((method, endpoints) ->
+                    request.requestMatchers(method, endpoints).hasRole("ADMIN")
+            );
+            request.anyRequest().hasRole("ADMIN");
         });
 
         httpSecurity.headers(headers -> headers

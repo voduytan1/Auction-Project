@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.concurrent.TimeUnit;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -44,17 +44,16 @@ public class RedisService {
         redisRepository.deleteById(jti);
     }
 
-    public JWTToken createAndSaveJwtToken(TokenPair tokenPair, String userId,
-                                          JWTTokenMapper jwtTokenMapper, RedisRepository redisRepository) {
+    public void createAndSaveJwtToken(TokenPair tokenPair, String userId,
+                                      JWTTokenMapper jwtTokenMapper, RedisRepository redisRepository) {
         JWTToken jwtToken = jwtTokenMapper.toEntity(tokenPair);
         jwtToken.setUserId(userId);
         jwtToken.setTimeToLive(ChronoUnit.SECONDS.between(Instant.now(), jwtToken.getExpiresAt()));
 
         redisRepository.save(jwtToken);
-        return jwtToken;
     }
 
-    public JWTToken findByUserId(String userId){
-        return redisRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("Không tìm thấy user " + userId));
+    public Optional<JWTToken> findByUserId(String userId){
+        return redisRepository.findById(userId);
     }
 }

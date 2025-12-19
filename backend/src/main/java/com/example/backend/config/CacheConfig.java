@@ -25,12 +25,11 @@ import java.time.Duration;
 @EnableCaching
 public class CacheConfig {
 
-    @Bean
-    @Primary
     public JsonMapper redisJsonMapper() {
         // Tạo PolymorphicTypeValidator để bảo mật type handling
         PolymorphicTypeValidator typeValidator = BasicPolymorphicTypeValidator.builder()
-                .allowIfSubType("com.example")  // Thay bằng package thực tế của bạn
+                .allowIfSubType("com.example")
+                .allowIfSubType(java.util.Collection.class)
                 .allowIfSubType(java.util.List.class)
                 .allowIfSubType(java.util.Map.class)
                 .allowIfSubTypeIsArray()
