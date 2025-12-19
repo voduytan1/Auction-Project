@@ -11,7 +11,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   return (
-    <Link to={`/auction/${product.id}`} className="group">
+    <Link to={`/products/${product.id}`} className="group">
       <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group-hover:-translate-y-1 h-full">
         <div className="aspect-4/3 relative overflow-hidden bg-linear-to-br from-muted to-muted/50">
           <img

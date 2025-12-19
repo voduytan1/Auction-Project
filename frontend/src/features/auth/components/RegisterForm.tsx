@@ -23,7 +23,9 @@ import { FaXTwitter } from "react-icons/fa6";
 export function RegisterForm() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { isLoading, error } = useAppSelector((state) => state.auth);
+  const { isLoading, error, isAuthenticated } = useAppSelector(
+    (state) => state.auth
+  );
 
   const {
     register,
@@ -32,6 +34,13 @@ export function RegisterForm() {
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
   });
+
+  // Redirect nếu đã đăng nhập
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     return () => {
@@ -60,15 +69,17 @@ export function RegisterForm() {
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Họ và tên</Label>
+            <Label htmlFor="username">Tên đăng nhập</Label>
             <Input
-              id="name"
+              id="username"
               type="text"
-              placeholder="Nguyễn Văn A"
-              {...register("name")}
+              placeholder="username"
+              {...register("username")}
             />
-            {errors.name && (
-              <p className="text-sm text-destructive">{errors.name.message}</p>
+            {errors.username && (
+              <p className="text-sm text-destructive">
+                {errors.username.message}
+              </p>
             )}
           </div>
           <div className="space-y-2">
@@ -81,6 +92,20 @@ export function RegisterForm() {
             />
             {errors.email && (
               <p className="text-sm text-destructive">{errors.email.message}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="hoVaTen">Họ và tên</Label>
+            <Input
+              id="hoVaTen"
+              type="text"
+              placeholder="Nguyễn Văn A"
+              {...register("hoVaTen")}
+            />
+            {errors.hoVaTen && (
+              <p className="text-sm text-destructive">
+                {errors.hoVaTen.message}
+              </p>
             )}
           </div>
           <div className="space-y-2">

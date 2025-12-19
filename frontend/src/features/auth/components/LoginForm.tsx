@@ -15,7 +15,7 @@ import { PageLoader } from "@/components/PageLoader";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { loginUser, clearError } from "@/store/slices/authSlice";
 import { loginSchema, type LoginFormData } from "../schemas/validation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaGithub } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
@@ -23,7 +23,10 @@ import { FaXTwitter } from "react-icons/fa6";
 export function LoginForm() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { isLoading, error } = useAppSelector((state) => state.auth);
+  const { isLoading, error, isAuthenticated } = useAppSelector(
+    (state) => state.auth
+  );
+  const [isLoginAttempted, setIsLoginAttempted] = useState(false);
 
   const {
     register,
@@ -33,6 +36,14 @@ export function LoginForm() {
     resolver: zodResolver(loginSchema),
   });
 
+  // Redirect chỉ sau khi login thành công (không redirect khi mount với token cũ)
+  useEffect(() => {
+    if (isAuthenticated && isLoginAttempted) {
+      navigate("/", { replace: true });
+    }
+  }, [isAuthenticated, isLoginAttempted, navigate]);
+
+  // Clear error khi unmount
   useEffect(() => {
     return () => {
       dispatch(clearError());
@@ -40,9 +51,20 @@ export function LoginForm() {
   }, [dispatch]);
 
   const onSubmit = async (data: LoginFormData) => {
-    const result = await dispatch(loginUser(data));
-    if (loginUser.fulfilled.match(result)) {
-      navigate("/");
+    console.log("Form submitted - no reload should happen", data);
+
+    try {
+      setIsLoginAttempted(true);
+      const result = await dispatch(loginUser(data));
+      console.log("Login result:", result);
+
+      // Check if login was successful
+      if (result.type === "auth/login/fulfilled") {
+        console.log("Login successful, redirecting...");
+        navigate("/", { replace: true });
+      }
+    } catch (error) {
+      console.error("Login error:", error);
     }
   };
 
@@ -62,15 +84,17 @@ export function LoginForm() {
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="username">Tên đăng nhập</Label>
             <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              {...register("email")}
+              id="username"
+              type="text"
+              placeholder="username"
+              {...register("username")}
             />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
+            {errors.username && (
+              <p className="text-sm text-destructive">
+                {errors.username.message}
+              </p>
             )}
           </div>
           <div className="space-y-2">

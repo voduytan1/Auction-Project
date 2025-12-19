@@ -1,70 +1,65 @@
 import api from "./api";
 import type {
-  AuthResponse,
-  LoginCredentials,
-  MessageResponse,
-  RegisterData,
-  User,
-} from "@/types/types";
+  LoginRequest,
+  LoginResponse,
+  RegisterRequest,
+  RefreshTokenResponse,
+} from "@/features/auth/types";
+
+const AUTH_ENDPOINTS = {
+  LOGIN: "/auth/login",
+  LOGOUT: "/auth/logout",
+  REFRESH: (userId: string) => `/auth/refresh/${userId}`,
+} as const;
 
 /**
- * Authentication API endpoints
+ * Auth API Client - Aligned with Backend API
  */
 export const authAPI = {
   /**
-   * Login user
+   * Đăng nhập
+   * Backend sẽ set refresh_token vào HTTP-only cookie
    */
-  login: (credentials: LoginCredentials) =>
-    api.post<AuthResponse>("/auth/login", credentials),
+  login: async (credentials: LoginRequest) => {
+    const response = await api.post<LoginResponse>(
+      AUTH_ENDPOINTS.LOGIN,
+      credentials
+    );
+    // response.data đã được unwrap bởi interceptor (lấy data.data)
+    return response.data;
+  },
 
   /**
-   * Register new user
+   * Đăng ký tài khoản mới
    */
-  register: (userData: RegisterData) =>
-    api.post<MessageResponse>("/auth/register", userData),
+  register: async (userData: RegisterRequest) => {
+    const response = await api.post<LoginResponse>("/auth/register", userData);
+    return response.data;
+  },
 
   /**
-   * Logout user
+   * Đăng xuất - Xóa refresh_token cookie ở backend
    */
-  logout: () => api.post("/auth/logout"),
+  logout: async () => {
+    const response = await api.post<{ message: string }>(AUTH_ENDPOINTS.LOGOUT);
+    return response.data;
+  },
 
   /**
    * Refresh access token
+   * Sử dụng refresh_token từ cookie (tự động gửi với withCredentials: true)
    */
-  refreshToken: (refreshToken: string) =>
-    api.post<{ accessToken: string; refreshToken: string }>("/auth/refresh", {
-      refreshToken,
-    }),
+  refreshToken: async (userId: string) => {
+    const response = await api.post<RefreshTokenResponse>(
+      AUTH_ENDPOINTS.REFRESH(userId)
+    );
+    return response.data;
+  },
 
-  /**
-   * Forgot password
-   */
-  forgotPassword: (email: string) =>
-    api.post<MessageResponse>("/auth/forgot-password", { email }),
-
-  /**
-   * Reset password
-   */
-  resetPassword: (token: string, newPassword: string) =>
-    api.post<MessageResponse>("/auth/reset-password", {
-      token,
-      newPassword,
-    }),
-
-  /**
-   * Get current user profile
-   */
-  getProfile: () => api.get<{ user: User }>("/auth/profile"),
-
-  /**
-   * Verify email
-   */
-  verifyEmail: (token: string) =>
-    api.post<MessageResponse>("/auth/verify-email", { token }),
-
-  /**
-   * Resend verification email
-   */
-  resendVerification: (email: string) =>
-    api.post<MessageResponse>("/auth/resend-verification", { email }),
+  // TODO: Implement these endpoints when backend is ready
+  // forgotPassword: (email: string) => api.post("/auth/forgot-password", { email }),
+  // resetPassword: (token: string, newPassword: string) => api.post("/auth/reset-password", { token, newPassword }),
+  // getProfile: () => api.get("/auth/profile"),
+  // verifyEmail: (token: string) => api.post("/auth/verify-email", { token }),
+  // resendVerification: (email: string) => api.post("/auth/resend-verification", { email }),
 };
