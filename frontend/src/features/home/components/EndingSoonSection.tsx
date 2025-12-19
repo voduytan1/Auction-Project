@@ -52,7 +52,7 @@ export function EndingSoonSection({ products }: EndingSoonSectionProps) {
           {products.map((product) => (
             <Link
               key={product.id}
-              to={`/auction/${product.id}`}
+              to={`/products/${product.id}`}
               className="group"
             >
               <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 group-hover:-translate-y-2 h-full border-2 border-red-200 hover:border-red-400">

@@ -81,10 +81,10 @@ interface AuthState {
 // Initial state
 const initialState: AuthState = {
   user: null,
-  token: localStorage.getItem("token"),
+  token: null, // localStorage.getItem("token"), // Tạm thời disable để test auth pages
   isLoading: false,
   error: null,
-  isAuthenticated: !!localStorage.getItem("token"),
+  isAuthenticated: false, // !!localStorage.getItem("token"), // Tạm thời disable để test auth pages
 };
 
 // Slice - Flux pattern với Redux Toolkit

@@ -1,4 +1,3 @@
-import { CTASection } from "./components/CTASection";
 import { EndingSoonSection } from "./components/EndingSoonSection";
 import { HeroSection } from "./components/HeroSection";
 import { HighestPriceSection } from "./components/HighestPriceSection";
@@ -16,7 +15,6 @@ const Home = () => {
       <EndingSoonSection products={endingSoonProducts} />
       <MostBidsSection products={mostBidsProducts} />
       <HighestPriceSection products={highestPriceProducts} />
-      <CTASection />
     </div>
   );
 };

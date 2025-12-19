@@ -16,10 +16,14 @@ import { PageWrapper } from "../components/PageWrapper";
 const HomePage = lazy(() => import("./Homepage"));
 const UnauthorizedPage = lazy(() => import("./unauthorized"));
 const ProductDetailPage = lazy(() => import("./product-detail"));
+const CategoryProductsPage = lazy(() => import("./category-products"));
 
 // Auth Pages
 const LoginPage = lazy(() => import("./auth/login"));
 const RegisterPage = lazy(() => import("./auth/register"));
+
+// Error Pages
+const NotFoundPage = lazy(() => import("./not-found"));
 
 // Admin Pages
 const DashboardPage = lazy(() => import("./admin/dashboard"));
@@ -51,6 +55,22 @@ export const router = createBrowserRouter([
         element: (
           <PageWrapper title="Chi tiết sản phẩm">
             <ProductDetailPage />
+          </PageWrapper>
+        ),
+      },
+      {
+        path: "products",
+        element: (
+          <PageWrapper title="Danh sách sản phẩm">
+            <CategoryProductsPage />
+          </PageWrapper>
+        ),
+      },
+      {
+        path: "category/:category",
+        element: (
+          <PageWrapper title="Danh mục sản phẩm">
+            <CategoryProductsPage />
           </PageWrapper>
         ),
       },
@@ -224,9 +244,13 @@ export const router = createBrowserRouter([
     ),
   },
 
-  // Catch all - redirect to home
+  // Catch all - 404 Not Found
   {
     path: "*",
-    element: <Navigate to="/" replace />,
+    element: (
+      <PageWrapper title="404 - Không tìm thấy trang">
+        <NotFoundPage />
+      </PageWrapper>
+    ),
   },
 ]);
