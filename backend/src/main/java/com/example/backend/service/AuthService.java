@@ -14,6 +14,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -70,7 +71,7 @@ public class AuthService {
                     .email(user.getEmail())
                     .build();
         }else{
-            throw new RuntimeException("Mật khẩu không đúng!");
+            throw new BadCredentialsException("Mật khẩu không đúng!");
         }
     }
 

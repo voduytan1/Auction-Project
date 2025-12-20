@@ -1,0 +1,89 @@
+
+package com.example.backend.entity;
+
+import com.example.backend.entity.ProductStatus;
+import jakarta.persistence.*;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "products", indexes = {
+        @Index(name = "idx_product_status", columnList = "trang_thai"),
+        @Index(name = "idx_product_end_time", columnList = "thoi_gian_ket_thuc"),
+        @Index(name = "idx_product_created", columnList = "created_at"),
+        @Index(name = "idx_product_category", columnList = "categoryid"),
+        @Index(name = "idx_product_seller", columnList = "sellerid")
+})
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class Product {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "productid")
+    Long productid;
+
+    @Column(name = "ten_san_pham", length = 255, nullable = false, columnDefinition = "nvarchar(255)")
+    String tenSanPham;
+
+    @Column(name = "mo_ta", columnDefinition = "MEDIUMTEXT")
+    String moTa;
+
+    @Column(name = "gia_khoi_diem", precision = 15, scale = 2, nullable = false)
+    BigDecimal giaKhoiDiem;
+
+    @Column(name = "buoc_gia", precision = 15, scale = 2, nullable = false)
+    BigDecimal buocGia;
+
+    @Column(name = "gia_hien_tai", precision = 15, scale = 2, nullable = false)
+    BigDecimal giaHienTai;
+
+    @Column(name = "gia_mua_ngay", precision = 15, scale = 2)
+    BigDecimal giaMuaNgay;
+
+    @Column(name = "anh_dai_dien", length = 255)
+    String anhDaiDien;
+
+    @Column(name = "cho_phep_tu_dong_gia_han", nullable = false)
+    Boolean choPhepTuDongGiaHan = false;
+
+    @Column(name = "cho_phep_bidder_chua_danh_gia", nullable = false)
+    Boolean choPhepBidderChuaDanhGia = true;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "trang_thai", nullable = false)
+    ProductStatus trangThai = ProductStatus.PENDING;
+
+    @Column(name = "thoi_gian_ket_thuc", nullable = false)
+    LocalDateTime thoiGianKetThuc;
+
+    @Column(name = "so_luot_ra_gia")
+    Integer soLuotRaGia = 0;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "categoryid", nullable = false)
+    Category category;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sellerid", nullable = false)
+    User seller;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "current_bidderid")
+    User currentBidder;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    LocalDateTime updatedAt;
+}

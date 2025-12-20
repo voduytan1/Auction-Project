@@ -25,7 +25,6 @@ public class AuthController {
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest loginRequest, HttpServletRequest request, HttpServletResponse response) {
 
-
         LoginResponseWithRefreshToken fullResponse = authService.login(loginRequest);
 
         cookieUtils.setRefreshTokenCookie(response, fullResponse.getRefreshToken());
