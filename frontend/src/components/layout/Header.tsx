@@ -17,12 +17,9 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { logoutUser } from "@/store/slices/authSlice";
 import {
@@ -103,30 +100,31 @@ export default function Header() {
               {isAuthenticated && user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="flex items-center gap-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.avatar} alt={user.username} />
+                    <Button
+                      variant="ghost"
+                      className="flex items-center gap-3 h-auto py-2"
+                    >
+                      <div className="text-sm text-right hidden sm:block">
+                        <p className="font-medium">
+                          {user.hoVaTen || user.username}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {user.username}
+                        </p>
+                      </div>
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage
+                          src={user.anhDaiDien}
+                          alt={user.username}
+                        />
                         <AvatarFallback>
                           {user.username.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="hidden sm:inline">{user.username}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium">{user.username}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {user.email}
-                        </p>
-                        <p className="text-xs text-muted-foreground capitalize">
-                          {user.vaitro}
-                        </p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => navigate("/profile")}>
+                    <DropdownMenuItem onClick={() => navigate("/app/profile")}>
                       <UserIcon className="mr-2 h-4 w-4" />
                       Trang cá nhân
                     </DropdownMenuItem>
@@ -137,8 +135,11 @@ export default function Header() {
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>
-                      <LogOut className="mr-2 h-4 w-4" />
+                    <DropdownMenuItem
+                      onClick={handleLogout}
+                      className="text-destructive"
+                    >
+                      <LogOut className="mr-2 h-4 w-4 text-destructive" />
                       Đăng xuất
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -174,64 +175,47 @@ export default function Header() {
               Trang chủ
             </Link>
 
-            {/* Categories - Loading State */}
-            {categoriesLoading && (
-              <div className="flex gap-2 items-center">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-10 w-24" />
-                ))}
-              </div>
-            )}
-
-            {/* Categories - Error State */}
-            {categoriesError && (
-              <div className="flex-1 px-4">
-                <Alert variant="destructive" className="py-2">
-                  <AlertDescription className="text-sm">
-                    Không thể tải danh mục. Vui lòng thử lại sau.
-                  </AlertDescription>
-                </Alert>
-              </div>
-            )}
-
-            {/* Categories - Success State */}
-            {!categoriesLoading && !categoriesError && categories && (
-              <NavigationMenu>
-                <NavigationMenuList>
-                  {categories.map((category) => (
-                    <NavigationMenuItem key={category.id}>
-                      <NavigationMenuTrigger
-                        className="h-10 bg-transparent hover:bg-transparent hover:underline hover:text-accent focus:bg-transparent focus:underline focus:text-accent data-[state=open]:bg-transparent"
-                        onClick={() => navigate(`/category/${category.slug}`)}
-                      >
-                        {category.name}
-                      </NavigationMenuTrigger>
-                      {category.subcategories &&
-                        category.subcategories.length > 0 && (
-                          <NavigationMenuContent>
-                            <ul className="grid w-[200px] gap-2 p-2">
-                              {category.subcategories.map((sub) => (
-                                <li key={sub.id}>
-                                  <NavigationMenuLink asChild>
-                                    <Link
-                                      to={`/category/${sub.slug}`}
-                                      className="block select-none rounded-md p-3 leading-none outline-none"
-                                    >
-                                      <div className="text-sm font-medium">
-                                        {sub.name}
-                                      </div>
-                                    </Link>
-                                  </NavigationMenuLink>
-                                </li>
-                              ))}
-                            </ul>
-                          </NavigationMenuContent>
-                        )}
-                    </NavigationMenuItem>
-                  ))}
-                </NavigationMenuList>
-              </NavigationMenu>
-            )}
+            {/* Categories - Success State (only show if we have categories) */}
+            {!categoriesLoading &&
+              !categoriesError &&
+              categories &&
+              categories.length > 0 && (
+                <NavigationMenu>
+                  <NavigationMenuList>
+                    {categories.map((category) => (
+                      <NavigationMenuItem key={category.id}>
+                        <NavigationMenuTrigger
+                          className="h-10 bg-transparent hover:bg-transparent hover:underline hover:text-accent focus:bg-transparent focus:underline focus:text-accent data-[state=open]:bg-transparent"
+                          onClick={() => navigate(`/category/${category.slug}`)}
+                        >
+                          {category.name}
+                        </NavigationMenuTrigger>
+                        {category.subcategories &&
+                          category.subcategories.length > 0 && (
+                            <NavigationMenuContent>
+                              <ul className="grid w-[200px] gap-2 p-2">
+                                {category.subcategories.map((sub) => (
+                                  <li key={sub.id}>
+                                    <NavigationMenuLink asChild>
+                                      <Link
+                                        to={`/category/${sub.slug}`}
+                                        className="block select-none rounded-md p-3 leading-none outline-none"
+                                      >
+                                        <div className="text-sm font-medium">
+                                          {sub.name}
+                                        </div>
+                                      </Link>
+                                    </NavigationMenuLink>
+                                  </li>
+                                ))}
+                              </ul>
+                            </NavigationMenuContent>
+                          )}
+                      </NavigationMenuItem>
+                    ))}
+                  </NavigationMenuList>
+                </NavigationMenu>
+              )}
           </div>
         </div>
       </div>

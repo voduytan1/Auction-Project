@@ -17,6 +17,7 @@ const HomePage = lazy(() => import("./Homepage"));
 const UnauthorizedPage = lazy(() => import("./unauthorized"));
 const ProductDetailPage = lazy(() => import("./product-detail"));
 const CategoryProductsPage = lazy(() => import("./category-products"));
+const SearchPage = lazy(() => import("./search"));
 const ProfilePage = lazy(() => import("./profile"));
 
 // Auth Pages
@@ -73,6 +74,14 @@ export const router = createBrowserRouter([
         element: (
           <PageWrapper title="Danh mục sản phẩm">
             <CategoryProductsPage />
+          </PageWrapper>
+        ),
+      },
+      {
+        path: "search",
+        element: (
+          <PageWrapper title="Tìm kiếm sản phẩm">
+            <SearchPage />
           </PageWrapper>
         ),
       },

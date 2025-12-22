@@ -13,7 +13,7 @@ export const loginUser = createAsyncThunk(
   async (credentials: LoginRequest, { rejectWithValue }) => {
     try {
       const response = await authAPI.login(credentials);
-      // Backend trả về: { accessToken, userid, username, vaitro, avatar, email }
+      // Backend trả về: { accessToken, userid, username, vaitro, anhDaiDien, email, hoVaTen }
       // Refresh token được lưu trong HTTP-only cookie
       localStorage.setItem("accessToken", response.accessToken);
       localStorage.setItem("userId", response.userid);
@@ -23,7 +23,8 @@ export const loginUser = createAsyncThunk(
         username: response.username,
         email: response.email,
         vaitro: response.vaitro,
-        avatar: response.avatar,
+        anhDaiDien: response.anhDaiDien,
+        hoVaTen: response.hoVaTen,
       };
 
       // Lưu user info vào localStorage để restore sau khi F5
@@ -55,7 +56,8 @@ export const registerUser = createAsyncThunk(
         username: response.username,
         email: response.email,
         vaitro: response.vaitro,
-        avatar: response.avatar,
+        anhDaiDien: response.anhDaiDien,
+        hoVaTen: response.hoVaTen,
       };
 
       // Lưu user info vào localStorage để restore sau khi F5

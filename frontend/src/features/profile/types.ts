@@ -2,19 +2,24 @@ export interface UserProfile {
   userid: string;
   username: string;
   email: string;
-  hoVaTen?: string;
-  ngaySinh?: string;
-  avatar?: string;
   vaitro: "BIDDER" | "SELLER" | "ADMIN";
-  diemDanhGia?: number;
-  soLanDanhGia?: number;
+  hoVaTen?: string;
+  diaChi?: string;
+  soDienThoai?: string;
+  ngaySinh?: string;
+  anhDaiDien?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface UpdateProfileData {
   hoVaTen?: string;
   email?: string;
+  diaChi?: string;
+  soDienThoai?: string;
   ngaySinh?: string;
   avatar?: string;
+  anhDaiDien?: string;
 }
 
 export interface ChangePasswordData {

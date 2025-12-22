@@ -34,11 +34,14 @@ export interface User {
 
 // DTO for API responses
 export interface UserResponse {
-  id: string;
+  id: string; // UUID (UserResponse uses 'id', not 'userid')
   username: string;
   email: string;
   vaitro: Role;
   hoVaTen?: string;
+  diaChi?: string;
+  soDienThoai?: string;
+  ngaySinh?: string; // LocalDate from backend
   anhDaiDien?: string;
   createdAt: string;
   updatedAt: string;

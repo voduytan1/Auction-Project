@@ -248,14 +248,13 @@ export function UsersTable() {
                   <TableHead>Họ và tên</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Vai trò</TableHead>
-                  <TableHead>Avatar</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
+                    <TableCell colSpan={5} className="text-center py-8">
                       <div className="text-muted-foreground">
                         Không tìm thấy user nào
                       </div>
@@ -282,7 +281,6 @@ export function UsersTable() {
                           {user.vaitro}
                         </Badge>
                       </TableCell>
-                      <TableCell>{user.anhDaiDien ? "📷" : "-"}</TableCell>
                       <TableCell className="text-right space-x-2">
                         <Button
                           variant="ghost"

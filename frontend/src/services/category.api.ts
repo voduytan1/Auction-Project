@@ -103,13 +103,14 @@ export const categoryApi = {
    * Get category by ID
    */
   getCategoryById: async (id: number): Promise<CategoryResponse> => {
-    const response = await api.get<ApiResponse<CategoryResponse>>(
-      `/categories/${id}`
-    );
-    // Handle both response structures
-    return (response.data as any).categoryid
-      ? response.data
-      : response.data.data;
+    const response = await api.get<
+      CategoryResponse | ApiResponse<CategoryResponse>
+    >(`/categories/${id}`);
+    // Handle both response structures: direct CategoryResponse or wrapped in ApiResponse
+    if ("categoryid" in response.data) {
+      return response.data as CategoryResponse;
+    }
+    return (response.data as ApiResponse<CategoryResponse>).data;
   },
 
   /**
