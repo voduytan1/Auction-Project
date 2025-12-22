@@ -41,15 +41,15 @@ import java.util.Map;
 public class SecurityConfig {
     private static final Map<String, Map<HttpMethod, String[]>> ROLE_BASED_ENDPOINTS = Map.of(
             "PUBLIC", Map.of(
-                    HttpMethod.GET, new String[]{"/auth/**", "/actuator/**"},
-                    HttpMethod.POST, new String[]{"/auth/login", "/user"},
-                    HttpMethod.PUT, new String[]{"/user/{id}"}
+                    HttpMethod.GET, new String[]{"/auth/**", "/actuator/**", "/categories","/categories/{id}"},
+                    HttpMethod.POST, new String[]{"/auth/login", "/users"},
+                    HttpMethod.PUT, new String[]{"/users/{id}"}
             ),
             "ADMIN", Map.of(
                     HttpMethod.GET, new String[]{},
-                    HttpMethod.POST, new String[]{},
-                    HttpMethod.PATCH, new String[]{},
-                    HttpMethod.DELETE, new String[]{"/user/{id}"}
+                    HttpMethod.POST, new String[]{"/categories"},
+                    HttpMethod.PATCH, new String[]{"/categories/{id}"},
+                    HttpMethod.DELETE, new String[]{"/users/{id}","/categories/{id}"}
             ),
             "AUTHENTICATED",Map.of(
                     HttpMethod.GET, new String[]{},

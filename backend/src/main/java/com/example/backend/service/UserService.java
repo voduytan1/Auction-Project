@@ -130,13 +130,6 @@ public class UserService extends BaseService<User, UUID, CreateUserRequest, Upda
         return super.deleteOne(id);
     }
 
-    @Override
-    @Transactional
-    @CacheEvict(cacheNames = {"user", "user_list"}, allEntries = true)
-    public void deleteMany(List<UUID> userIds) {
-        super.deleteMany(userIds);
-    }
-
     @Transactional(readOnly = true)
     public Optional<User> fineOne(String username) {
         return userRepository.findUserByUsername(username);
@@ -144,41 +137,6 @@ public class UserService extends BaseService<User, UUID, CreateUserRequest, Upda
 
     @Transactional(readOnly = true)
     public Page<@NotNull UserResponse> findMany(PaginationRequest request) {
-        String cacheKey = request.getPage() + "-" +
-                request.getSize() + "-" +
-                request.getSortBy() + "-" +
-                request.getSortOrder() + "-" +
-                (request.getSearch() != null ? request.getSearch() : "nosearch");
-
-        var cache = cacheManager.getCache("user_list");
-
-        if (cache != null) {
-            Object cached = cache.get(cacheKey, Object.class);
-            if (cached != null) {
-                try {
-                    if (cached instanceof Map) {
-                        @SuppressWarnings("unchecked")
-                        Map<String, Object> map = (Map<String, Object>) cached;
-
-                        @SuppressWarnings("unchecked")
-                        List<Object> contentList = (List<Object>) map.get("content");
-                        List<UserResponse> content = contentList.stream()
-                                .map(obj -> jsonMapper.convertValue(obj, UserResponse.class))
-                                .toList();
-
-                        int page = (Integer) map.get("page");
-                        int size = (Integer) map.get("size");
-                        long totalElements = ((Number) map.get("totalElements")).longValue();
-
-                        Pageable pageable = PageRequest.of(page, size);
-                        return new PageImpl<>(content, pageable, totalElements);
-                    }
-                } catch (Exception e) {
-                    cache.evict(cacheKey);
-                }
-            }
-        }
-
         // Lấy từ DB
         Pageable pageable = PageUtils.createPageable(request);
         Page<@NotNull User> usersPage = request.hasSearch()
@@ -190,19 +148,7 @@ public class UserService extends BaseService<User, UUID, CreateUserRequest, Upda
                 .sorted(Comparator.comparing(UserResponse::getCreatedAt))
                 .toList();
 
-        Page<@NotNull UserResponse> resultPage = new PageImpl<>(userResponses, pageable, usersPage.getTotalElements());
-
-        // Lưu vào cache dưới dạng Map
-        if (cache != null) {
-            Map<String, Object> cacheData = new HashMap<>();
-            cacheData.put("content", userResponses);
-            cacheData.put("page", resultPage.getNumber());
-            cacheData.put("size", resultPage.getSize());
-            cacheData.put("totalElements", resultPage.getTotalElements());
-            cache.put(cacheKey, cacheData);
-        }
-
-        return resultPage;
+        return new PageImpl<>(userResponses, pageable, usersPage.getTotalElements());
     }
 
     @Transactional(readOnly = true)

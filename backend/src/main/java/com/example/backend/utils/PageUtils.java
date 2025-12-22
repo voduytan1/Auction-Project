@@ -8,11 +8,12 @@ import java.util.List;
 
 public class PageUtils {
     public static PaginationInfo fromPage(Page<?> page, String search) {
+        boolean isUnpaged = page.getPageable().isUnpaged();
         return PaginationInfo.builder()
                 .totalElements(page.getTotalElements())
                 .totalPages(page.getTotalPages())
                 .currentPage(page.getNumber() + 1) // Convert to 1-based
-                .pageSize(page.getSize())
+                .pageSize(isUnpaged ? page.getNumberOfElements() : page.getSize())
                 .hasNext(page.hasNext())
                 .hasPrevious(page.hasPrevious())
                 .sortBy(extractSortBy(page.getSort()))
@@ -46,20 +47,11 @@ public class PageUtils {
     }
 
     public static Pageable createPageable(PaginationRequest request) {
-
-        // Create Sort direction
-        Sort.Direction direction = "asc".equalsIgnoreCase(request.getSortOrder())
-                ? Sort.Direction.ASC
-                : Sort.Direction.DESC;
-
-        // Create Sort object
-        Sort sort = Sort.by(direction, request.getSortBy());
-
         // Create Pageable (0-based indexing)
         return (Pageable) PageRequest.of(
                 request.getPageZeroBased(),  // Convert 1-based to 0-based
-                request.getSize(),           // Page size (đã validated trong DTO)
-                sort                         // Sort criteria
+                request.getSizeOrDefault(),           // Page size (đã validated trong DTO)
+                request.getSort()                    // Sort criteria
         );
     }
     public static <T> Page<T> createPageFromSlice(

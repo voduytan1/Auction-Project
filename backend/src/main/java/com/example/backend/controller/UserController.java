@@ -27,7 +27,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/user")
+@RequestMapping("/users")
 public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
@@ -85,12 +85,5 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<@NotNull Void> deleteOneUser(@PathVariable UUID id) {
         return userService.deleteOne(id) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
-    }
-
-    @DeleteMapping
-    public ResponseEntity<@NotNull Void> deleteManyUser(@Valid @RequestBody @NotEmpty List<UserIdOnlyRequest> ids) {
-        var userIds = ids.stream().map(UserIdOnlyRequest::getUserId).toList();
-        userService.deleteMany(userIds);
-        return ResponseEntity.noContent().build();
     }
 }

@@ -86,29 +86,6 @@ public abstract class BaseService<T, ID, CreateReq, UpdateReq, Response> {
     }
 
     /**
-     * Template method for deleting multiple entities
-     */
-    @Transactional
-    public void deleteMany(List<ID> ids) {
-        if (ids == null || ids.isEmpty()) return;
-
-        // Allow subclasses to handle dependencies
-        beforeBatchDelete(ids);
-
-        getRepository().deleteAllById(ids);
-        evictCaches();
-    }
-
-    /**
-     * Hook for handling dependencies before batch delete
-     */
-
-    protected void beforeBatchDelete(List<ID> ids) {
-        // Default implementation does nothing
-        // Override in subclasses if needed
-    }
-
-    /**
      * Common method for finding by ID
      */
     public Optional<T> findById(ID id) {
