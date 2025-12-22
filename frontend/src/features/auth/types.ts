@@ -3,8 +3,13 @@ export interface User {
   username: string;
   email: string;
   vaitro: "BIDDER" | "SELLER" | "ADMIN";
-  avatar?: string;
   hoVaTen?: string;
+  diaChi?: string;
+  soDienThoai?: string;
+  ngaySinh?: string;
+  anhDaiDien?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface LoginRequest {
@@ -24,7 +29,8 @@ export interface LoginResponse {
   userid: string;
   username: string;
   vaitro: "BIDDER" | "SELLER" | "ADMIN";
-  avatar?: string;
+  anhDaiDien?: string;
+  hoVaTen?: string;
   email: string;
 }
 

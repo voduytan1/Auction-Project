@@ -11,6 +11,14 @@ import {
   UserCog,
 } from "lucide-react";
 import { Button } from "../ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 import { useState } from "react";
 import { cn } from "../../lib/utils";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
@@ -34,7 +42,6 @@ const AdminLayout = () => {
     { to: "/admin/products", icon: Package, label: "Sản phẩm" },
     { to: "/admin/auctions", icon: Gavel, label: "Auctions" },
     { to: "/admin/upgrade-requests", icon: UserCog, label: "Yêu cầu nâng cấp" },
-    { to: "/admin/settings", icon: Settings, label: "Cài đặt" },
   ];
 
   const handleLogout = async () => {
@@ -102,19 +109,28 @@ const AdminLayout = () => {
             })}
           </nav>
 
-          {/* Logout */}
+          {/* Settings */}
           <div className="p-4 border-t border-border">
-            <Button
-              variant="ghost"
-              className={cn(
-                "w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10",
-                !sidebarOpen && "justify-center"
-              )}
-              onClick={handleLogout}
-            >
-              <LogOut className="h-5 w-5" />
-              {sidebarOpen && <span className="ml-3">Logout</span>}
-            </Button>
+            <Link to="/admin/settings">
+              <Button
+                variant={
+                  location.pathname === "/admin/settings"
+                    ? "secondary"
+                    : "ghost"
+                }
+                className={cn(
+                  "w-full justify-start h-11",
+                  !sidebarOpen && "justify-center px-2",
+                  location.pathname === "/admin/settings" &&
+                    "bg-primary/10 text-primary hover:bg-primary/15"
+                )}
+              >
+                <Settings
+                  className={cn("h-5 w-5", !sidebarOpen && "h-6 w-6")}
+                />
+                {sidebarOpen && <span className="ml-3">Cài đặt</span>}
+              </Button>
+            </Link>
           </div>
         </div>
       </aside>
@@ -130,27 +146,46 @@ const AdminLayout = () => {
                   ?.label || "Admin Panel"}
               </h1>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="text-sm">
-                <p className="font-medium">{user?.username}</p>
-                <p className="text-xs text-muted-foreground">
-                  {user?.email || "admin@example.com"}
-                </p>
-              </div>
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
-                {user?.avatar ? (
-                  <img
-                    src={user.avatar}
-                    alt={user.username || "User"}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <span className="text-sm font-semibold text-primary">
-                    {user?.username?.charAt(0).toUpperCase() || "A"}
-                  </span>
-                )}
-              </div>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-3 h-auto py-2"
+                >
+                  <div className="text-sm text-right">
+                    <p className="font-medium">
+                      {user?.hoVaTen || user?.username}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {user?.username}
+                    </p>
+                  </div>
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage
+                      src={user?.anhDaiDien}
+                      alt={user?.username || "User"}
+                    />
+                    <AvatarFallback>
+                      {user?.username?.charAt(0).toUpperCase() || "A"}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => navigate("/app/profile")}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Trang cá nhân
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="text-destructive"
+                >
+                  <LogOut className="mr-2 h-4 w-4 text-destructive" />
+                  Đăng xuất
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
