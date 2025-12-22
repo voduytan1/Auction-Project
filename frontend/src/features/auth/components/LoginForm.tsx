@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -98,7 +98,15 @@ export function LoginForm() {
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Mật khẩu</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Mật khẩu</Label>
+              <Link
+                to="/auth/forgot-password"
+                className="text-sm text-primary hover:underline"
+              >
+                Quên mật khẩu?
+              </Link>
+            </div>
             <Input
               id="password"
               type="password"
@@ -185,6 +193,13 @@ export function LoginForm() {
               <FaXTwitter className="mr-2 h-5 w-5" />
               Twitter
             </Button>
+          </div>
+
+          <div className="text-center text-sm mt-4">
+            Chưa có tài khoản?{" "}
+            <Link to="/auth/register" className="text-primary hover:underline">
+              Đăng ký ngay
+            </Link>
           </div>
         </form>
       </CardContent>

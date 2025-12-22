@@ -17,10 +17,12 @@ const HomePage = lazy(() => import("./Homepage"));
 const UnauthorizedPage = lazy(() => import("./unauthorized"));
 const ProductDetailPage = lazy(() => import("./product-detail"));
 const CategoryProductsPage = lazy(() => import("./category-products"));
+const ProfilePage = lazy(() => import("./profile"));
 
 // Auth Pages
 const LoginPage = lazy(() => import("./auth/login"));
 const RegisterPage = lazy(() => import("./auth/register"));
+const ForgotPasswordPage = lazy(() => import("./auth/forgot-password"));
 
 // Error Pages
 const NotFoundPage = lazy(() => import("./not-found"));
@@ -95,6 +97,14 @@ export const router = createBrowserRouter([
         element: (
           <PageWrapper title="Đăng ký tài khoản">
             <RegisterPage />
+          </PageWrapper>
+        ),
+      },
+      {
+        path: "forgot-password",
+        element: (
+          <PageWrapper title="Quên mật khẩu">
+            <ForgotPasswordPage />
           </PageWrapper>
         ),
       },
@@ -223,7 +233,7 @@ export const router = createBrowserRouter([
         path: "profile",
         element: (
           <PageWrapper title="Hồ sơ cá nhân">
-            <div>User Profile</div>
+            <ProfilePage />
           </PageWrapper>
         ),
       },
