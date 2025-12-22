@@ -1,199 +1,174 @@
 import api from "./api";
 import type {
-  Auction,
-  AuctionCreateData,
-  AuctionSearchParams,
-  AuctionStats,
-  AuctionUpdateData,
-  AuctionQuestion,
-  Bid,
-  Category,
+  Product,
+  ProductDisplay,
+  ProductSearchParams,
   PlaceBidData,
-  WatchlistItem,
+  BidDisplay,
+  WatchList,
+  ProductQuestion,
 } from "@/types/types";
 
 /**
- * Auction API endpoints
- * Consolidated from auction, category, question, bidder, seller APIs
+ * Product/Auction API endpoints
+ * Consolidated from product, bid, watchlist, question APIs
  */
 export const auctionAPI = {
-  // ============= Categories =============
-  getAllCategories: () => api.get<{ categories: Category[] }>("/categories"),
-
-  getCategoryById: (id: string) =>
-    api.get<{ category: Category }>(`/categories/${id}`),
-
   // ============= Public Browse =============
   /**
-   * Get all auctions with filters
-   * Full-text search support for Vietnamese (unaccented)
+   * Get all products with filters
    */
-  getAll: (params?: AuctionSearchParams) =>
+  getAll: (params?: ProductSearchParams) =>
     api.get<{
-      auctions: Auction[];
+      products: ProductDisplay[];
       total: number;
       page: number;
       limit: number;
-    }>("/auctions", { params }),
+    }>("/products", { params }),
 
   /**
-   * Search auctions by keyword
-   * Supports Vietnamese full-text search
+   * Search products by keyword
    */
   search: (params: {
     keyword?: string;
     categoryId?: string;
-    sortBy?: "endDate" | "price" | "newest";
+    sortBy?: "thoiGianKetThuc" | "giaHienTai" | "createdAt";
     page?: number;
     limit?: number;
-  }) => api.get("/auctions/search", { params }),
+  }) => api.get("/products/search", { params }),
 
   /**
-   * Get auction by ID (with full details)
+   * Get product by ID (with full details)
    */
-  getById: (id: string) => api.get<{ auction: Auction }>(`/auctions/${id}`),
+  getById: (id: number) =>
+    api.get<{ product: ProductDisplay }>(`/products/${id}`),
 
   /**
-   * Get auctions by category
+   * Get products by category
    */
   getByCategory: (
     categoryId: string,
     params?: { page?: number; limit?: number }
-  ) => api.get(`/auctions/category/${categoryId}`, { params }),
+  ) => api.get(`/products/category/${categoryId}`, { params }),
 
   // ============= Homepage Featured =============
   /**
-   * Top 5 ending soon auctions
+   * Top 5 ending soon products
    */
   getEndingSoon: () =>
-    api.get<{ auctions: Auction[] }>("/auctions/ending-soon"),
+    api.get<{ products: ProductDisplay[] }>("/products/ending-soon"),
 
   /**
-   * Top 5 most bid auctions
+   * Top 5 most bid products
    */
-  getMostBids: () => api.get<{ auctions: Auction[] }>("/auctions/most-bids"),
+  getMostBids: () =>
+    api.get<{ products: ProductDisplay[] }>("/products/most-bids"),
 
   /**
-   * Top 5 highest price auctions
+   * Top 5 highest price products
    */
   getHighestPrice: () =>
-    api.get<{ auctions: Auction[] }>("/auctions/highest-price"),
+    api.get<{ products: ProductDisplay[] }>("/products/highest-price"),
 
   /**
-   * Get 5 related auctions (same category)
+   * Get 5 related products (same category)
    */
-  getRelated: (auctionId: string) =>
-    api.get<{ auctions: Auction[] }>(`/auctions/${auctionId}/related`),
+  getRelated: (productId: number) =>
+    api.get<{ products: ProductDisplay[] }>(`/products/${productId}/related`),
 
   // ============= Bidding =============
   /**
-   * Place bid on auction
-   * Supports both normal and auto-bidding
+   * Place bid on product
    */
   placeBid: (data: PlaceBidData) =>
-    api.post<{ bid: Bid }>(`/auctions/${data.auctionId}/bids`, data),
+    api.post<{ bid: BidDisplay }>(`/products/${data.productId}/bids`, data),
 
   /**
-   * Get bid history for auction
-   * Bidder info is partially masked for privacy
+   * Get bid history for product
    */
-  getBidHistory: (auctionId: string) =>
-    api.get<{ bids: Bid[] }>(`/auctions/${auctionId}/bids`),
+  getBidHistory: (productId: number) =>
+    api.get<{ bids: BidDisplay[] }>(`/products/${productId}/bids`),
 
   // ============= Watchlist =============
   /**
    * Get user's watchlist
    */
-  getWatchlist: () => api.get<{ watchlist: WatchlistItem[] }>("/me/watchlist"),
+  getWatchlist: () => api.get<{ items: WatchList[] }>("/watchlist"),
 
   /**
-   * Add auction to watchlist
+   * Add product to watchlist
    */
-  addToWatchlist: (auctionId: string) =>
-    api.post<{ watchlist: WatchlistItem }>("/me/watchlist", { auctionId }),
+  addToWatchlist: (productId: number) =>
+    api.post<{ watchlist: WatchList }>("/watchlist", { productId }),
 
   /**
-   * Remove auction from watchlist
+   * Remove product from watchlist
    */
-  removeFromWatchlist: (auctionId: string) =>
-    api.delete(`/me/watchlist/${auctionId}`),
+  removeFromWatchlist: (productId: number) =>
+    api.delete(`/watchlist/${productId}`),
 
   // ============= Questions =============
   /**
-   * Get all questions for an auction
+   * Get all questions for a product
    */
-  getQuestions: (auctionId: string) =>
-    api.get<{ questions: AuctionQuestion[] }>(
-      `/auctions/${auctionId}/questions`
+  getQuestions: (productId: number) =>
+    api.get<{ questions: ProductQuestion[] }>(
+      `/products/${productId}/questions`
     ),
 
   /**
-   * Ask question about auction (bidders)
+   * Ask a question about a product
    */
-  askQuestion: (auctionId: string, question: string) =>
-    api.post<{ question: AuctionQuestion }>(
-      `/auctions/${auctionId}/questions`,
+  askQuestion: (productId: number, question: string) =>
+    api.post<{ question: ProductQuestion }>(
+      `/products/${productId}/questions`,
       { question }
     ),
 
   /**
    * Answer question (seller only)
    */
-  answerQuestion: (questionId: string, answer: string) =>
-    api.put<{ question: AuctionQuestion }>(`/questions/${questionId}`, {
+  answerQuestion: (questionId: number, answer: string) =>
+    api.put<{ question: ProductQuestion }>(`/questions/${questionId}`, {
       answer,
     }),
 
   // ============= Seller Operations =============
   /**
-   * Create new auction
+   * Create new product
    */
-  createAuction: (data: AuctionCreateData) =>
-    api.post<{ auction: Auction }>("/auctions", data),
+  createProduct: (data: Partial<Product>) =>
+    api.post<{ product: ProductDisplay }>("/products", data),
 
   /**
-   * Update auction (before first bid)
+   * Update product (before first bid)
    */
-  updateAuction: (id: string, data: AuctionUpdateData) =>
-    api.put<{ auction: Auction }>(`/auctions/${id}`, data),
+  updateProduct: (id: number, data: Partial<Product>) =>
+    api.put<{ product: ProductDisplay }>(`/products/${id}`, data),
 
   /**
-   * Append to auction description (after first bid)
-   * Maintains history of changes
+   * Delete product
    */
-  appendDescription: (id: string, content: string) =>
-    api.post<{ auction: Auction }>(`/auctions/${id}/description`, {
-      content,
-    }),
+  deleteProduct: (id: number) => api.delete(`/products/${id}`),
 
   /**
-   * Reject bidder from auction
-   * Prevents future bids from this bidder
+   * Get seller's products
    */
-  rejectBidder: (auctionId: string, bidderId: string) =>
-    api.post(`/auctions/${auctionId}/reject-bidder`, { bidderId }),
-
-  // ============= My Auctions =============
-  /**
-   * Get auctions I'm selling
-   */
-  getMyAuctions: (params?: { status?: string }) =>
-    api.get<{ auctions: Auction[] }>("/me/auctions", { params }),
+  getSellerProducts: () =>
+    api.get<{ products: ProductDisplay[] }>("/me/products"),
 
   /**
-   * Get auctions I'm bidding on
+   * Reject bidder from product
    */
-  getMyBids: (params?: { status?: string }) =>
-    api.get<{ bids: Bid[] }>("/me/bids", { params }),
+  rejectBidder: (productId: number, bidderId: string) =>
+    api.post(`/products/${productId}/reject-bidder`, { bidderId }),
 
+  // ============= Stats =============
   /**
-   * Get auctions I won
+   * Get product statistics (Admin only)
    */
-  getMyWonAuctions: () => api.get<{ auctions: Auction[] }>("/me/auctions/won"),
-
-  // ============= Statistics =============
-  /**
-   * Get auction statistics
-   */
-  getStats: () => api.get<AuctionStats>("/auctions/stats"),
+  getStats: () =>
+    api.get<{ totalProducts: number; activeProducts: number }>(
+      "/products/stats"
+    ),
 };

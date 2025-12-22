@@ -1,53 +1,69 @@
 /**
  * Type definitions for API responses and requests
- * Based on Online Auction System Requirements
+ * Generated from backend entities and DTOs
  */
+
+// ============= Enums =============
+export type Role = "BIDDER" | "SELLER" | "ADMIN";
+
+export type ProductStatus = "PENDING" | "ACTIVE" | "COMPLETED" | "CANCELLED";
+
+export type TransactionStatus =
+  | "PENDING_PAYMENT"
+  | "PAID"
+  | "SHIPPED"
+  | "COMPLETED"
+  | "CANCELLED";
+
+export type UpgradeRequestStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 // ============= User Types =============
 export interface User {
-  id: string;
+  userid: string; // UUID from backend
+  username: string;
   email: string;
-  name: string;
-  role: "BIDDER" | "SELLER" | "ADMIN";
-  avatar?: string;
-  address?: string;
-  dateOfBirth?: string;
-  // Rating system: positive/negative ratings
-  positiveRatings: number; // số lượt đánh giá +1
-  negativeRatings: number; // số lượt đánh giá -1
-  // Rating percentage for bid eligibility check
-  ratingPercentage: number; // (positiveRatings / totalRatings) * 100
-  // Seller upgrade request
-  upgradeRequested?: boolean;
-  upgradeRequestDate?: string;
+  vaitro: Role;
+  hoVaTen?: string;
+  diaChi?: string;
+  soDienThoai?: string;
+  ngaySinh?: string; // LocalDate from backend
+  anhDaiDien?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface UserRating {
+// DTO for API responses
+export interface UserResponse {
   id: string;
-  fromUserId: string;
-  toUserId: string;
-  fromUser?: User;
-  rating: 1 | -1; // +1 or -1
-  comment: string;
-  auctionId?: string;
+  username: string;
+  email: string;
+  vaitro: Role;
+  hoVaTen?: string;
+  anhDaiDien?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface UserUpdateData {
-  name?: string;
-  address?: string;
-  avatar?: string;
-  dateOfBirth?: string;
+// DTO for creating user
+export interface CreateUserRequest {
+  username: string; // 3-50 chars
+  password: string; // 6-100 chars
+  email: string;
+  vaitro: Role;
+  hoVaTen?: string; // max 100 chars
+  anhDaiDien?: string;
 }
 
-export interface UserStats {
-  totalUsers: number;
-  activeUsers: number;
-  newUsers: number;
-  pendingUpgrades: number;
+// DTO for updating user
+export interface UpdateUserRequest {
+  username?: string;
+  email?: string;
+  vaitro?: Role;
+  hoVaTen?: string;
+  diaChi?: string;
+  soDienThoai?: string;
+  ngaySinh?: string;
+  anhDaiDien?: string;
 }
 
 // ============= Auth Types =============
@@ -75,193 +91,209 @@ export interface PasswordChangeData {
 }
 
 // ============= Category Types =============
+// Entity from backend
 export interface Category {
-  id: string;
-  name: string;
-  parentId?: string; // For 2-level categories
-  parent?: Category;
-  children?: Category[];
-  productCount?: number;
+  categoryid: number; // Long from backend (changed from UUID)
+  tenDanhMuc: string;
+  level: number; // 1 = parent, 2 = child
+  parentCategory?: Category;
+  moTa?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-// ============= Auction Types =============
-export interface Auction {
-  id: string;
+// DTO from backend API responses
+export interface CategoryResponse {
+  categoryid: number;
+  tenDanhMuc: string;
+  parentCategoryId?: number; // Flattened from parent
+  parentCategoryName?: string; // Flattened from parent
+  level: number;
+  moTa?: string;
+}
+
+// Helper interfaces for frontend display
+export interface CategoryDisplay {
+  id: number;
+  name: string;
+  slug: string;
+  level: number;
+  parentId?: number;
+  parentName?: string;
+  description?: string;
+  subcategories?: CategoryDisplay[];
+}
+
+// ============= Product Types (Auction Items) =============
+export interface Product {
+  productid: number; // From backend
+  tenSanPham: string;
+  moTa?: string;
+  giaKhoiDiem: number; // BigDecimal
+  buocGia: number; // BigDecimal
+  giaHienTai: number; // BigDecimal
+  giaMuaNgay?: number; // BigDecimal
+  anhDaiDien?: string;
+  choPhepTuDongGiaHan: boolean;
+  choPhepBidderChuaDanhGia: boolean;
+  trangThai: ProductStatus;
+  thoiGianKetThuc: string; // LocalDateTime
+  soLuotRaGia: number;
+  category: Category;
+  seller: User;
+  currentBidder?: User;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Helper interface for frontend display
+export interface ProductDisplay {
+  id: number;
   title: string;
-  description: string;
-  // Pricing
+  description?: string;
   startingPrice: number;
   currentPrice: number;
-  stepPrice: number; // Bước giá
-  buyNowPrice?: number; // Giá mua ngay
-  // Timing
-  startDate: string;
-  endDate: string;
-  // Auto-extend settings
-  autoExtend: boolean; // Tự động gia hạn
-  autoExtendTrigger?: number; // Minutes before end to trigger (default 5)
-  autoExtendDuration?: number; // Minutes to extend (default 10)
-  // Status
-  status: "PENDING" | "ACTIVE" | "ENDED" | "CANCELLED" | "COMPLETED";
-  // Relations
-  categoryId: string;
-  category?: Category;
-  sellerId: string;
-  seller?: User;
-  winnerId?: string;
-  winner?: User;
-  // Media
-  images: string[]; // Min 3 images required
-  thumbnailImage: string;
-  // Bidding
-  bids?: Bid[];
-  bidCount: number;
-  currentBidderId?: string;
-  currentBidder?: User;
-  // Questions
-  questions?: AuctionQuestion[];
-  // Settings
-  allowNewBidders: boolean; // Cho phép bidder chưa có đánh giá
-  rejectedBidders?: string[]; // List of rejected bidder IDs
-  // Metadata
-  viewCount: number;
-  isNew: boolean; // Sản phẩm mới đăng (trong N phút)
-  createdAt: string;
-  updatedAt: string;
-  // Description updates
-  descriptionHistory?: DescriptionUpdate[];
-}
-
-export interface DescriptionUpdate {
-  content: string;
-  updatedAt: string;
-}
-
-export interface AuctionCreateData {
-  title: string;
-  description: string;
-  startingPrice: number;
   stepPrice: number;
   buyNowPrice?: number;
-  startDate: string;
-  endDate: string;
+  thumbnailImage?: string;
+  allowAutoExtend: boolean;
+  allowUnratedBidders: boolean;
+  status: ProductStatus;
+  endTime: string;
+  bidCount: number;
   categoryId: string;
-  images: string[]; // Min 3
-  autoExtend: boolean;
-  autoExtendTrigger?: number;
-  autoExtendDuration?: number;
-  allowNewBidders: boolean;
-}
-
-export interface AuctionUpdateData {
-  description?: string; // Append only, không replace
-  buyNowPrice?: number;
-  endDate?: string;
-  status?: "PENDING" | "ACTIVE" | "ENDED" | "CANCELLED" | "COMPLETED";
-}
-
-export interface AuctionStats {
-  totalAuctions: number;
-  activeAuctions: number;
-  endedAuctions: number;
-  totalBids: number;
-  totalRevenue: number;
-  newAuctionsToday: number;
+  categoryName: string;
+  sellerId: string;
+  sellerName: string;
+  currentBidderId?: string;
+  currentBidderName?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ============= Bid Types =============
-export interface Bid {
-  id: string;
-  amount: number;
-  maxAmount?: number; // For auto-bidding system
-  isAutoBid: boolean; // Đấu giá tự động
-  auctionId: string;
+export interface BidHistory {
+  bidHistoryid: number;
+  product: Product;
+  bidder: User;
+  giaDat: number; // BigDecimal
+  thoiGianDat: string; // LocalDateTime
+}
+
+// Helper interface for frontend
+export interface BidDisplay {
+  id: number;
+  productId: number;
   bidderId: string;
-  bidder?: User;
-  auction?: Auction;
-  isRejected: boolean; // Bị seller từ chối
-  createdAt: string;
+  bidderName: string;
+  amount: number;
+  placedAt: string;
 }
 
 export interface PlaceBidData {
-  auctionId: string;
+  productId: number;
   amount: number;
-  maxAmount?: number; // For auto-bidding
 }
 
-// ============= Watchlist Types =============
-export interface WatchlistItem {
-  id: string;
-  userId: string;
-  auctionId: string;
-  auction?: Auction;
-  createdAt: string;
-}
-
-// ============= Question Types =============
-export interface AuctionQuestion {
-  id: string;
-  auctionId: string;
-  auction?: Auction;
-  questionerId: string;
-  questioner?: User;
-  question: string;
-  answer?: string;
-  answeredAt?: string;
-  createdAt: string;
-}
-
-export interface AskQuestionData {
-  auctionId: string;
-  question: string;
-}
-
-export interface AnswerQuestionData {
-  questionId: string;
-  answer: string;
-}
-
-// ============= Order/Transaction Types =============
-export interface Order {
-  id: string;
-  auctionId: string;
-  auction?: Auction;
-  sellerId: string;
-  seller?: User;
-  buyerId: string;
-  buyer?: User;
-  finalPrice: number;
-  // Payment
-  isPaid: boolean;
-  paymentMethod?: string;
-  paidAt?: string;
-  // Shipping
-  shippingAddress?: string;
-  trackingNumber?: string;
-  isShipped: boolean;
-  shippedAt?: string;
-  // Completion
-  isReceived: boolean;
-  receivedAt?: string;
-  // Status
-  status: "PENDING_PAYMENT" | "PAID" | "SHIPPED" | "COMPLETED" | "CANCELLED";
-  // Ratings
-  sellerRatingId?: string;
-  buyerRatingId?: string;
-  // Cancellation
-  cancelledBy?: string;
-  cancelReason?: string;
-  cancelledAt?: string;
+// ============= Auto Bid Types =============
+export interface AutoBid {
+  autoBidid: number;
+  product: Product;
+  bidder: User;
+  giaToiDa: number; // BigDecimal
   createdAt: string;
   updatedAt: string;
 }
 
-export interface UpdateOrderData {
-  shippingAddress?: string;
-  trackingNumber?: string;
-  status?: "PENDING_PAYMENT" | "PAID" | "SHIPPED" | "COMPLETED" | "CANCELLED";
+// ============= Blocked Bidder Types =============
+export interface BlockedBidder {
+  blockedBidderid: number;
+  product: Product;
+  bidder: User;
+  seller: User;
+  lyDoChanBidder?: string;
+  createdAt: string;
+}
+
+// ============= Rating Types =============
+export interface Rating {
+  ratingid: number;
+  rater: User; // Người đánh giá
+  ratee: User; // Người được đánh giá
+  product: Product;
+  diem: number; // +1 or -1
+  nhanXet?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ============= Watchlist Types =============
+export interface WatchList {
+  watchListid: number;
+  user: User;
+  product: Product;
+  createdAt: string;
+}
+
+// ============= Product Question Types =============
+export interface ProductQuestion {
+  productQuestionid: number;
+  product: Product;
+  questioner: User;
+  cauHoi: string;
+  cauTraLoi?: string;
+  thoiGianTraLoi?: string; // LocalDateTime
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ============= Product Image Types =============
+export interface ProductImage {
+  productImageid: number;
+  product: Product;
+  duongDanAnh: string;
+  thuTu: number;
+  createdAt: string;
+}
+
+// ============= Product Description History Types =============
+export interface ProductDescriptionHistory {
+  productDescriptionHistoryid: number;
+  product: Product;
+  moTaCu: string;
+  moTaMoi: string;
+  thoiGianCapNhat: string; // LocalDateTime
+}
+
+// ============= Transaction Types =============
+export interface Transaction {
+  transactionid: number;
+  product: Product;
+  buyer: User;
+  seller: User;
+  giaCuoiCung: number; // BigDecimal
+  trangThai: TransactionStatus;
+  phuongThucThanhToan?: string;
+  thoiGianThanhToan?: string; // LocalDateTime
+  diaChiGiaoHang?: string;
+  maVanChuyen?: string;
+  thoiGianGiaoHang?: string; // LocalDateTime
+  thoiGianNhanHang?: string; // LocalDateTime
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ============= Upgrade Request Types =============
+export interface UpgradeRequest {
+  upgradeRequestid: number;
+  user: User;
+  trangThai: UpgradeRequestStatus;
+  lyDoYeuCau?: string;
+  lyDoTuChoi?: string;
+  thoiGianDuyet?: string; // LocalDateTime
+  adminDuyet?: User;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ============= Pagination Types =============
@@ -278,12 +310,12 @@ export interface PaginationParams {
 }
 
 // ============= Search/Filter Types =============
-export interface AuctionSearchParams extends PaginationParams {
+export interface ProductSearchParams extends PaginationParams {
   categoryId?: string;
   keyword?: string;
-  sortBy?: "endDate" | "price" | "newest";
+  sortBy?: "thoiGianKetThuc" | "giaHienTai" | "createdAt";
   sortOrder?: "asc" | "desc";
-  status?: "ACTIVE" | "ENDED";
+  status?: ProductStatus;
   minPrice?: number;
   maxPrice?: number;
 }

@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation } from "react-router-dom";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
@@ -6,10 +6,15 @@ import {
   Settings,
   LogOut,
   ChevronLeft,
+  FolderTree,
+  Package,
+  UserCog,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { useState } from "react";
 import { cn } from "../../lib/utils";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { logoutUser } from "@/store/slices/authSlice";
 
 /**
  * AdminLayout - For admin dashboard
@@ -17,20 +22,24 @@ import { cn } from "../../lib/utils";
  */
 const AdminLayout = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { user } = useAppSelector((state) => state.auth);
 
   const navItems = [
     { to: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
     { to: "/admin/users", icon: Users, label: "Quản lý Users" },
-    { to: "/admin/auctions", icon: Gavel, label: "Quản lý Auctions" },
+    { to: "/admin/categories", icon: FolderTree, label: "Danh mục" },
+    { to: "/admin/products", icon: Package, label: "Sản phẩm" },
+    { to: "/admin/auctions", icon: Gavel, label: "Auctions" },
+    { to: "/admin/upgrade-requests", icon: UserCog, label: "Yêu cầu nâng cấp" },
     { to: "/admin/settings", icon: Settings, label: "Cài đặt" },
   ];
 
-  const handleLogout = () => {
-    // TODO: Implement logout logic
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    window.location.href = "/auth/login";
+  const handleLogout = async () => {
+    await dispatch(logoutUser());
+    navigate("/auth/login");
   };
 
   return (
@@ -123,13 +132,23 @@ const AdminLayout = () => {
             </div>
             <div className="flex items-center gap-3">
               <div className="text-sm">
-                <p className="font-medium">Admin User</p>
+                <p className="font-medium">{user?.username}</p>
                 <p className="text-xs text-muted-foreground">
-                  admin@example.com
+                  {user?.email || "admin@example.com"}
                 </p>
               </div>
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-sm font-semibold text-primary">A</span>
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                {user?.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={user.username || "User"}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="text-sm font-semibold text-primary">
+                    {user?.username?.charAt(0).toUpperCase() || "A"}
+                  </span>
+                )}
               </div>
             </div>
           </div>

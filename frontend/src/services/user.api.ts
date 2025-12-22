@@ -1,17 +1,16 @@
 import api from "./api";
 import type {
   MessageResponse,
-  Order,
-  PasswordChangeData,
-  User,
-  UserRating,
-  UserStats,
-  UserUpdateData,
+  Transaction,
+  UserResponse,
+  CreateUserRequest,
+  UpdateUserRequest,
+  Rating,
 } from "@/types/types";
 
 /**
  * User API endpoints
- * Includes bidder/seller upgrade and rating management
+ * Includes user management, ratings, and transactions
  */
 export const userAPI = {
   // ============= User Management =============
@@ -19,21 +18,29 @@ export const userAPI = {
    * Get all users (admin only)
    */
   getAll: (params?: { page?: number; limit?: number; role?: string }) =>
-    api.get<{ users: User[]; total: number; page: number; limit: number }>(
-      "/users",
-      { params }
-    ),
+    api.get<{
+      users: UserResponse[];
+      total: number;
+      page: number;
+      limit: number;
+    }>("/users", { params }),
+
+  /**
+   * Create new user (admin only)
+   */
+  create: (data: CreateUserRequest) =>
+    api.post<{ user: UserResponse }>("/users", data),
 
   /**
    * Get user by ID
    */
-  getById: (id: string) => api.get<{ user: User }>(`/users/${id}`),
+  getById: (id: string) => api.get<{ user: UserResponse }>(`/users/${id}`),
 
   /**
    * Update user
    */
-  update: (id: string, data: UserUpdateData) =>
-    api.put<{ user: User }>(`/users/${id}`, data),
+  update: (id: string, data: UpdateUserRequest) =>
+    api.put<{ user: UserResponse }>(`/users/${id}`, data),
 
   /**
    * Delete user (admin only)
@@ -43,25 +50,21 @@ export const userAPI = {
   /**
    * Update user profile (self)
    */
-  updateProfile: (data: UserUpdateData) =>
-    api.put<{ user: User }>("/users/profile", data),
+  updateProfile: (data: UpdateUserRequest) =>
+    api.put<{ user: UserResponse }>("/users/profile", data),
 
   /**
    * Change password
    */
-  changePassword: (data: PasswordChangeData) =>
+  changePassword: (data: { currentPassword: string; newPassword: string }) =>
     api.post<MessageResponse>("/users/change-password", data),
-
-  /**
-   * Get user statistics (admin only)
-   */
-  getStats: () => api.get<UserStats>("/users/stats"),
 
   // ============= Bidder Upgrade =============
   /**
    * Request upgrade to Seller role
    */
-  requestUpgrade: () => api.post<MessageResponse>("/users/request-upgrade"),
+  requestUpgrade: (lyDoYeuCau?: string) =>
+    api.post<MessageResponse>("/users/request-upgrade", { lyDoYeuCau }),
 
   // ============= Rating Management =============
   /**
@@ -69,63 +72,48 @@ export const userAPI = {
    */
   getRatings: (userId: string) =>
     api.get<{
-      ratings: UserRating[];
+      ratings: Rating[];
       stats: { positive: number; negative: number; percentage: number };
     }>(`/users/${userId}/ratings`),
 
   /**
-   * Rate a user (after order completion)
+   * Rate a user (after transaction completion)
    */
-  rateUser: (userId: string, type: "like" | "dislike", orderId: string) =>
-    api.post<{ rating: UserRating }>(`/users/${userId}/rate`, {
-      type,
-      orderId,
+  rateUser: (
+    userId: string,
+    diem: 1 | -1,
+    productId: number,
+    nhanXet?: string
+  ) =>
+    api.post<{ rating: Rating }>(`/users/${userId}/rate`, {
+      diem,
+      productId,
+      nhanXet,
     }),
 
-  // ============= Order Management =============
+  // ============= Transaction Management =============
   /**
-   * Get all orders for current user
+   * Get all transactions for current user
    */
-  getMyOrders: (params?: { status?: string }) =>
-    api.get<{ orders: Order[] }>("/me/orders", { params }),
+  getMyTransactions: (params?: { status?: string }) =>
+    api.get<{ transactions: Transaction[] }>("/me/transactions", { params }),
 
   /**
-   * Get order by ID
+   * Get transaction by ID
    */
-  getOrderById: (orderId: string) =>
-    api.get<{ order: Order }>(`/orders/${orderId}`),
+  getTransactionById: (transactionId: number) =>
+    api.get<{ transaction: Transaction }>(`/transactions/${transactionId}`),
 
   /**
-   * Update order status (seller only)
+   * Update transaction status
    */
-  updateOrderStatus: (
-    orderId: string,
-    status: "pending_payment" | "paid" | "shipped" | "delivered" | "cancelled"
-  ) => api.put<{ order: Order }>(`/orders/${orderId}/status`, { status }),
-
-  /**
-   * Confirm payment received (seller)
-   */
-  confirmPayment: (orderId: string) =>
-    api.post<{ order: Order }>(`/orders/${orderId}/confirm-payment`),
-
-  /**
-   * Mark order as shipped (seller)
-   */
-  shipOrder: (orderId: string, trackingNumber?: string) =>
-    api.post<{ order: Order }>(`/orders/${orderId}/ship`, {
-      trackingNumber,
-    }),
-
-  /**
-   * Confirm delivery (bidder)
-   */
-  confirmDelivery: (orderId: string) =>
-    api.post<{ order: Order }>(`/orders/${orderId}/confirm-delivery`),
-
-  /**
-   * Cancel order
-   */
-  cancelOrder: (orderId: string, reason: string) =>
-    api.post<{ order: Order }>(`/orders/${orderId}/cancel`, { reason }),
+  updateTransactionStatus: (
+    transactionId: number,
+    status: string,
+    data?: Partial<Transaction>
+  ) =>
+    api.put<{ transaction: Transaction }>(
+      `/transactions/${transactionId}/status`,
+      { status, ...data }
+    ),
 };
