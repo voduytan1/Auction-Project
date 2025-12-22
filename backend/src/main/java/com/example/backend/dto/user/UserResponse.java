@@ -4,6 +4,7 @@ import com.example.backend.entity.Role;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -23,9 +24,11 @@ public class UserResponse {
 
     String hoVaTen;
 
-    String chucVu;
+    String diaChi;
 
-    String maKhoa;
+    String soDienThoai;
+
+    LocalDate ngaySinh;
 
     String anhDaiDien;
 

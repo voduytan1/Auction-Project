@@ -5,14 +5,13 @@ import com.example.backend.dto.common.PaginationInfo;
 import com.example.backend.dto.common.PaginationRequest;
 import com.example.backend.dto.user.CreateUserRequest;
 import com.example.backend.dto.user.UpdateUserRequest;
-import com.example.backend.dto.user.UserIdOnlyRequest;
 import com.example.backend.dto.user.UserResponse;
 import com.example.backend.mapper.UserMapper;
 import com.example.backend.service.UserService;
 import com.example.backend.utils.PageUtils;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
+
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;

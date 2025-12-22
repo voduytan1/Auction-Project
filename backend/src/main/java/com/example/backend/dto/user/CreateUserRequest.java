@@ -1,13 +1,11 @@
 package com.example.backend.dto.user;
 
-
 import com.example.backend.entity.Role;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.time.LocalDate;
 
 @Data
 @Builder
@@ -32,6 +30,16 @@ public class CreateUserRequest {
 
     @Size(max = 100, message = "Họ và tên không quá 100 ký tự")
     String hoVaTen;
+
+    @Size(max = 255, message = "Địa chỉ không quá 255 ký tự")
+    String diaChi;
+
+    // Kiểm tra số điện thoại có đúng 10 chữ số không
+    @Pattern(regexp = "^\\d{10}$", message = "Số điện thoại phải bao gồm 10 chữ số")
+    String soDienThoai;
+
+    @Past(message = "Ngày sinh phải là ngày trong quá khứ")
+    LocalDate ngaySinh;
 
     String anhDaiDien;
 }

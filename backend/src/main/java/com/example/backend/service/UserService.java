@@ -22,7 +22,6 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
@@ -92,9 +91,6 @@ public class UserService extends BaseService<User, UUID, CreateUserRequest, Upda
 
     @Override
     protected void beforeUpdate(User entity, UpdateUserRequest dto) {
-        if(dto.getDeleteKhoa() == null){
-            dto.setDeleteKhoa(false);
-        }
         setPasswordIfProvided(entity, dto.getPassword());
 
         entity.setUpdatedAt(LocalDateTime.now());

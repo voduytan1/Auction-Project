@@ -2,11 +2,15 @@ package com.example.backend.dto.user;
 
 import com.example.backend.entity.Role;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
 
 @Builder
 @Data
@@ -24,13 +28,14 @@ public class UpdateUserRequest {
     @Size(max = 100, message = "Họ và tên không quá 100 ký tự")
     String hoVaTen;
 
-    @Size(max = 50, message = "Chức vụ không quá 50 ký tự")
-    String chucVu;
+    @Size(max = 255, message = "Địa chỉ không quá 255 ký tự")
+    String diaChi;
 
-    @Size(min = 3, max = 3, message = "Mã khoa phải đúng 3 ký tự")
-    String maKhoa;
+    @Pattern(regexp = "^\\d{10}$", message = "Số điện thoại phải bao gồm 10 chữ số")
+    String soDienThoai;
 
-    Boolean deleteKhoa = false;
+    @Past(message = "Ngày sinh phải là ngày trong quá khứ")
+    LocalDate ngaySinh;
 
     String anhDaiDien;
 }
