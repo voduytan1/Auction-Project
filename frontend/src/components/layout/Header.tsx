@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, Home, LogOut, User as UserIcon } from "lucide-react";
 
@@ -21,51 +21,36 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { logoutUser } from "@/store/slices/authSlice";
-
-/* ================= MOCK DATA ================= */
-
-const categories = [
-  {
-    id: 1,
-    name: "Điện tử",
-    slug: "electronics",
-    subcategories: [
-      { id: 11, name: "Điện thoại di động", slug: "phones" },
-      { id: 12, name: "Máy tính xách tay", slug: "laptops" },
-      { id: 13, name: "Máy tính bảng", slug: "tablets" },
-      { id: 14, name: "Tai nghe", slug: "headphones" },
-    ],
-  },
-  {
-    id: 2,
-    name: "Thời trang",
-    slug: "fashion",
-    subcategories: [
-      { id: 21, name: "Giày dép", slug: "shoes" },
-      { id: 22, name: "Đồng hồ", slug: "watches" },
-      { id: 23, name: "Túi xách", slug: "bags" },
-    ],
-  },
-  {
-    id: 3,
-    name: "Nhà cửa & Đời sống",
-    slug: "home",
-    subcategories: [
-      { id: 31, name: "Nội thất", slug: "furniture" },
-      { id: 32, name: "Đồ gia dụng", slug: "household" },
-    ],
-  },
-];
-
-/* ================= COMPONENT ================= */
+import {
+  fetchCategories,
+  selectCategories,
+  selectCategoriesLoading,
+  selectCategoriesError,
+  selectIsCacheValid,
+} from "@/store/slices/categorySlice";
 
 export default function Header() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [searchQuery, setSearchQuery] = useState("");
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+
+  // Get categories from Redux store
+  const categories = useAppSelector(selectCategories);
+  const categoriesLoading = useAppSelector(selectCategoriesLoading);
+  const categoriesError = useAppSelector(selectCategoriesError);
+  const isCacheValid = useAppSelector(selectIsCacheValid);
+
+  // Fetch categories only if cache is invalid
+  useEffect(() => {
+    if (!isCacheValid && !categoriesLoading) {
+      dispatch(fetchCategories());
+    }
+  }, [dispatch, isCacheValid, categoriesLoading]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,39 +174,64 @@ export default function Header() {
               Trang chủ
             </Link>
 
-            {/* Categories */}
-            <NavigationMenu>
-              <NavigationMenuList>
-                {categories.map((category) => (
-                  <NavigationMenuItem key={category.id}>
-                    <NavigationMenuTrigger
-                      className="h-10"
-                      onClick={() => navigate(`/category/${category.slug}`)}
-                    >
-                      {category.name}
-                    </NavigationMenuTrigger>
-                    <NavigationMenuContent>
-                      <ul className="grid w-[200px] gap-2 p-2">
-                        {category.subcategories.map((sub) => (
-                          <li key={sub.id}>
-                            <NavigationMenuLink asChild>
-                              <Link
-                                to={`/category/${sub.slug}`}
-                                className="block select-none rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                              >
-                                <div className="text-sm font-medium">
-                                  {sub.name}
-                                </div>
-                              </Link>
-                            </NavigationMenuLink>
-                          </li>
-                        ))}
-                      </ul>
-                    </NavigationMenuContent>
-                  </NavigationMenuItem>
+            {/* Categories - Loading State */}
+            {categoriesLoading && (
+              <div className="flex gap-2 items-center">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-10 w-24" />
                 ))}
-              </NavigationMenuList>
-            </NavigationMenu>
+              </div>
+            )}
+
+            {/* Categories - Error State */}
+            {categoriesError && (
+              <div className="flex-1 px-4">
+                <Alert variant="destructive" className="py-2">
+                  <AlertDescription className="text-sm">
+                    Không thể tải danh mục. Vui lòng thử lại sau.
+                  </AlertDescription>
+                </Alert>
+              </div>
+            )}
+
+            {/* Categories - Success State */}
+            {!categoriesLoading && !categoriesError && categories && (
+              <NavigationMenu>
+                <NavigationMenuList>
+                  {categories.map((category) => (
+                    <NavigationMenuItem key={category.id}>
+                      <NavigationMenuTrigger
+                        className="h-10 bg-transparent hover:bg-transparent hover:underline hover:text-accent focus:bg-transparent focus:underline focus:text-accent data-[state=open]:bg-transparent"
+                        onClick={() => navigate(`/category/${category.slug}`)}
+                      >
+                        {category.name}
+                      </NavigationMenuTrigger>
+                      {category.subcategories &&
+                        category.subcategories.length > 0 && (
+                          <NavigationMenuContent>
+                            <ul className="grid w-[200px] gap-2 p-2">
+                              {category.subcategories.map((sub) => (
+                                <li key={sub.id}>
+                                  <NavigationMenuLink asChild>
+                                    <Link
+                                      to={`/category/${sub.slug}`}
+                                      className="block select-none rounded-md p-3 leading-none outline-none"
+                                    >
+                                      <div className="text-sm font-medium">
+                                        {sub.name}
+                                      </div>
+                                    </Link>
+                                  </NavigationMenuLink>
+                                </li>
+                              ))}
+                            </ul>
+                          </NavigationMenuContent>
+                        )}
+                    </NavigationMenuItem>
+                  ))}
+                </NavigationMenuList>
+              </NavigationMenu>
+            )}
           </div>
         </div>
       </div>
