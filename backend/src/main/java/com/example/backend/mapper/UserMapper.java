@@ -14,7 +14,6 @@ public interface UserMapper {
     @Mapping(target = "updatedAt", ignore = true)
     User toEntity(CreateUserRequest dto);
 
-    @Mapping(target = "id", source = "userid")
     UserResponse toResponse(User user);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
