@@ -21,10 +21,14 @@ public class ProductImage {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "productid", nullable = false)
+    @ToString.Exclude
     Product product;
 
     @Column(name = "url_anh", length = 255, nullable = false)
     String urlAnh;
+
+    @Column(name = "public_id", length = 255)
+    String publicId;
 
     @Column(name = "thu_tu")
     Integer thuTu;

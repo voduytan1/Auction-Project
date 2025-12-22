@@ -1,23 +1,37 @@
 package com.example.backend.dto.auth;
 
 import com.example.backend.entity.Role;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+import java.time.LocalDate;
 
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class LoginResponseWithRefreshToken {
-    private String accessToken;
-    private String refreshToken;
-    private String userid;
-    private String username;
-    private Role vaitro;
-    private String maKhoa;
-    private String avatar;
-    private String email;
+    String accessToken;
+
+    String refreshToken;
+
+    String userid;
+
+    String username;
+
+    String email;
+
+    Role vaitro;
+
+    String hoVaTen;
+
+    String diaChi;
+
+    String soDienThoai;
+
+    LocalDate ngaySinh;
+
+    String anhDaiDien;
 }

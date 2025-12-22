@@ -67,7 +67,11 @@ public class AuthService {
                     .userid(String.valueOf(user.getUserid()))
                     .username(user.getUsername())
                     .vaitro(user.getVaitro())
-                    .avatar(user.getAnhDaiDien())
+                    .diaChi(user.getDiaChi())
+                    .hoVaTen(user.getHoVaTen())
+                    .ngaySinh(user.getNgaySinh())
+                    .soDienThoai(user.getSoDienThoai())
+                    .anhDaiDien(user.getAnhDaiDien())
                     .email(user.getEmail())
                     .build();
         }else{

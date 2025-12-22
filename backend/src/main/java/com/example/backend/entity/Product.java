@@ -10,6 +10,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "products", indexes = {
@@ -48,8 +50,9 @@ public class Product {
     @Column(name = "gia_mua_ngay", precision = 15, scale = 2)
     BigDecimal giaMuaNgay;
 
-    @Column(name = "anh_dai_dien", length = 255)
-    String anhDaiDien;
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    List<ProductImage> images = new ArrayList<>();
 
     @Column(name = "cho_phep_tu_dong_gia_han", nullable = false)
     Boolean choPhepTuDongGiaHan = false;
