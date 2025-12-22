@@ -174,64 +174,47 @@ export default function Header() {
               Trang chủ
             </Link>
 
-            {/* Categories - Loading State */}
-            {categoriesLoading && (
-              <div className="flex gap-2 items-center">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-10 w-24" />
-                ))}
-              </div>
-            )}
-
-            {/* Categories - Error State */}
-            {categoriesError && (
-              <div className="flex-1 px-4">
-                <Alert variant="destructive" className="py-2">
-                  <AlertDescription className="text-sm">
-                    Không thể tải danh mục. Vui lòng thử lại sau.
-                  </AlertDescription>
-                </Alert>
-              </div>
-            )}
-
-            {/* Categories - Success State */}
-            {!categoriesLoading && !categoriesError && categories && (
-              <NavigationMenu>
-                <NavigationMenuList>
-                  {categories.map((category) => (
-                    <NavigationMenuItem key={category.id}>
-                      <NavigationMenuTrigger
-                        className="h-10 bg-transparent hover:bg-transparent hover:underline hover:text-accent focus:bg-transparent focus:underline focus:text-accent data-[state=open]:bg-transparent"
-                        onClick={() => navigate(`/category/${category.slug}`)}
-                      >
-                        {category.name}
-                      </NavigationMenuTrigger>
-                      {category.subcategories &&
-                        category.subcategories.length > 0 && (
-                          <NavigationMenuContent>
-                            <ul className="grid w-[200px] gap-2 p-2">
-                              {category.subcategories.map((sub) => (
-                                <li key={sub.id}>
-                                  <NavigationMenuLink asChild>
-                                    <Link
-                                      to={`/category/${sub.slug}`}
-                                      className="block select-none rounded-md p-3 leading-none outline-none"
-                                    >
-                                      <div className="text-sm font-medium">
-                                        {sub.name}
-                                      </div>
-                                    </Link>
-                                  </NavigationMenuLink>
-                                </li>
-                              ))}
-                            </ul>
-                          </NavigationMenuContent>
-                        )}
-                    </NavigationMenuItem>
-                  ))}
-                </NavigationMenuList>
-              </NavigationMenu>
-            )}
+            {/* Categories - Success State (only show if we have categories) */}
+            {!categoriesLoading &&
+              !categoriesError &&
+              categories &&
+              categories.length > 0 && (
+                <NavigationMenu>
+                  <NavigationMenuList>
+                    {categories.map((category) => (
+                      <NavigationMenuItem key={category.id}>
+                        <NavigationMenuTrigger
+                          className="h-10 bg-transparent hover:bg-transparent hover:underline hover:text-accent focus:bg-transparent focus:underline focus:text-accent data-[state=open]:bg-transparent"
+                          onClick={() => navigate(`/category/${category.slug}`)}
+                        >
+                          {category.name}
+                        </NavigationMenuTrigger>
+                        {category.subcategories &&
+                          category.subcategories.length > 0 && (
+                            <NavigationMenuContent>
+                              <ul className="grid w-[200px] gap-2 p-2">
+                                {category.subcategories.map((sub) => (
+                                  <li key={sub.id}>
+                                    <NavigationMenuLink asChild>
+                                      <Link
+                                        to={`/category/${sub.slug}`}
+                                        className="block select-none rounded-md p-3 leading-none outline-none"
+                                      >
+                                        <div className="text-sm font-medium">
+                                          {sub.name}
+                                        </div>
+                                      </Link>
+                                    </NavigationMenuLink>
+                                  </li>
+                                ))}
+                              </ul>
+                            </NavigationMenuContent>
+                          )}
+                      </NavigationMenuItem>
+                    ))}
+                  </NavigationMenuList>
+                </NavigationMenu>
+              )}
           </div>
         </div>
       </div>
