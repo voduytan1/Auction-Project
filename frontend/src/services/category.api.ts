@@ -126,4 +126,37 @@ export const categoryApi = {
   getChildCategories: async (): Promise<CategoryResponse[]> => {
     return categoryApi.getCategoriesByLevel(2);
   },
+
+  /**
+   * Get child categories by parent ID
+   * GET /categories?search={parentId}&level=2
+   */
+  getChildCategoriesByParentId: async (
+    parentId: number
+  ): Promise<CategoryResponse[]> => {
+    const response = await api.get<ApiResponse<CategoryResponse[]>>(
+      `/categories?search=${parentId}&level=2`
+    );
+    return Array.isArray(response.data) ? response.data : response.data.data;
+  },
+
+  /**
+   * POST /categories - Create new category (admin only)
+   */
+  create: (data: {
+    tenDanhMuc: string;
+    moTa?: string;
+    parentCategoryId?: number;
+  }) => api.post<CategoryResponse>("/categories", data),
+
+  /**
+   * PATCH /categories/{id} - Update category (admin only)
+   */
+  update: (id: number, data: { tenDanhMuc?: string; moTa?: string }) =>
+    api.patch<CategoryResponse>(`/categories/${id}`, data),
+
+  /**
+   * DELETE /categories/{id} - Delete category (admin only)
+   */
+  delete: (id: number) => api.delete<void>(`/categories/${id}`),
 };

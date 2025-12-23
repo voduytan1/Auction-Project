@@ -36,6 +36,15 @@ const CategoriesPage = lazy(() => import("./admin/categories"));
 const ProductsPage = lazy(() => import("./admin/products"));
 const UpgradeRequestsPage = lazy(() => import("./admin/upgrade-requests"));
 
+// Seller Pages
+const SellerProductsPage = lazy(() => import("./seller/products"));
+const CreateProductPage = lazy(() => import("./seller/create-product"));
+
+// Bidder Pages
+const WatchListPage = lazy(() => import("./bidder/watchlist"));
+const BidderProfilePage = lazy(() => import("./bidder/profile"));
+const UpgradeRequestPage = lazy(() => import("./bidder/upgrade-request"));
+
 /**
  * Router configuration với lazy loading và SEO
  */
@@ -249,6 +258,78 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <Navigate to="/app/auctions" replace />,
+      },
+    ],
+  },
+
+  // Seller routes
+  {
+    path: "/seller",
+    element: (
+      <ProtectedRoute requiredRole="SELLER">
+        <MainLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: "products",
+        element: (
+          <PageWrapper title="Sản phẩm của tôi">
+            <SellerProductsPage />
+          </PageWrapper>
+        ),
+      },
+      {
+        path: "products/create",
+        element: (
+          <PageWrapper title="Đăng sản phẩm mới">
+            <CreateProductPage />
+          </PageWrapper>
+        ),
+      },
+      {
+        index: true,
+        element: <Navigate to="/seller/products" replace />,
+      },
+    ],
+  },
+
+  // Bidder routes
+  {
+    path: "/bidder",
+    element: (
+      <ProtectedRoute requiredRole="BIDDER">
+        <MainLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: "watchlist",
+        element: (
+          <PageWrapper title="Danh sách yêu thích">
+            <WatchListPage />
+          </PageWrapper>
+        ),
+      },
+      {
+        path: "profile",
+        element: (
+          <PageWrapper title="Hồ sơ của tôi">
+            <BidderProfilePage />
+          </PageWrapper>
+        ),
+      },
+      {
+        path: "upgrade-request",
+        element: (
+          <PageWrapper title="Yêu cầu nâng cấp Seller">
+            <UpgradeRequestPage />
+          </PageWrapper>
+        ),
+      },
+      {
+        index: true,
+        element: <Navigate to="/bidder/profile" replace />,
       },
     ],
   },
