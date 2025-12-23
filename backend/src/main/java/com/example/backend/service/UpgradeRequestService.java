@@ -92,7 +92,11 @@ public class UpgradeRequestService {
         User user = userRepository.findById(userid)
                 .orElseThrow(()->new EntityNotFoundException("Không tìm thấy user với id " + userid));
 
-        if(user.getVaitro()== Role.SELLER && user.getThoiHanBanHang() != null &&LocalDateTime.now().isBefore(user.getThoiHanBanHang())){
+        if(user.getVaitro() == Role.ADMIN){
+            throw new AccessDeniedException("Chỉ Bidder mới có quyền gửi yêu cầu");
+        }
+
+        if(user.getVaitro() == Role.SELLER && user.getThoiHanBanHang() != null &&LocalDateTime.now().isBefore(user.getThoiHanBanHang())){
             throw new AccessDeniedException("Quyền bán hàng của bạn chưa hết hạn");
         }
 

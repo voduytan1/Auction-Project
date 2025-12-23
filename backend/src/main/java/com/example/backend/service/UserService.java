@@ -160,8 +160,8 @@ public class UserService extends BaseService<User, UUID, CreateUserRequest, Upda
     @Transactional
     public void approveSeller(UUID id) {
         User user = userRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("Không tìm thấy user với id "+ id));
-        if(user.getVaitro()== Role.SELLER && user.getThoiHanBanHang() != null &&LocalDateTime.now().isBefore(user.getThoiHanBanHang())){
-            throw new AccessDeniedException("Quyền bán hàng của bạn chưa hết hạn");
+        if(user.getVaitro()!= Role.BIDDER){
+            throw new AccessDeniedException("User không phải BIDDER");
         }
         user.setVaitro(Role.SELLER);
         user.setThoiHanBanHang(LocalDateTime.now().plusDays(7));

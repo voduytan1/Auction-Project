@@ -67,6 +67,7 @@ public class AuthService {
                     .userid(String.valueOf(user.getUserid()))
                     .username(user.getUsername())
                     .vaitro(user.getVaitro())
+                    .thoiHanBanHang(user.getThoiHanBanHang())
                     .diaChi(user.getDiaChi())
                     .hoVaTen(user.getHoVaTen())
                     .ngaySinh(user.getNgaySinh())
