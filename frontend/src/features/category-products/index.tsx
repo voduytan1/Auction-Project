@@ -14,6 +14,7 @@ import { Clock, Flame, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatPrice } from "@/lib/format";
 import { categoryProducts } from "@/data/mock-data";
+import { NewProductBadge } from "@/components/NewProductBadge";
 
 const CategoryProducts = () => {
   const { category } = useParams<{ category: string }>();
@@ -122,6 +123,12 @@ const CategoryProducts = () => {
                   alt={product.name}
                   className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
                 />
+                {/* NEW Badge */}
+                {product.createdAt && (
+                  <div className="absolute top-2 left-2">
+                    <NewProductBadge createdAt={product.createdAt} />
+                  </div>
+                )}
                 {/* Time Badge */}
                 <div className="absolute top-2 right-2">
                   <Badge className="bg-black/70 text-white backdrop-blur-sm">
