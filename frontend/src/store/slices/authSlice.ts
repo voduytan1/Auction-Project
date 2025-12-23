@@ -25,6 +25,10 @@ export const loginUser = createAsyncThunk(
         vaitro: response.vaitro,
         anhDaiDien: response.anhDaiDien,
         hoVaTen: response.hoVaTen,
+        // Add mock rating data for demo (would come from backend in production)
+        tyLeDanhGiaTot: 85, // 85% positive ratings
+        diemDanhGia: 85,
+        soLuotDanhGia: 20,
       };
 
       // Lưu user info vào localStorage để restore sau khi F5
@@ -58,6 +62,10 @@ export const registerUser = createAsyncThunk(
         vaitro: response.vaitro,
         anhDaiDien: response.anhDaiDien,
         hoVaTen: response.hoVaTen,
+        // Add mock rating data for demo (would come from backend in production)
+        tyLeDanhGiaTot: 85, // 85% positive ratings
+        diemDanhGia: 85,
+        soLuotDanhGia: 20,
       };
 
       // Lưu user info vào localStorage để restore sau khi F5
@@ -113,7 +121,14 @@ const getUserFromStorage = (): User | null => {
   try {
     const userStr = localStorage.getItem("user");
     if (userStr) {
-      return JSON.parse(userStr) as User;
+      const user = JSON.parse(userStr) as User;
+      // Add default rating for demo if not present
+      if (user.tyLeDanhGiaTot === undefined) {
+        user.tyLeDanhGiaTot = 85; // Default 85% good rating for demo
+        user.diemDanhGia = 85;
+        user.soLuotDanhGia = 20;
+      }
+      return user;
     }
   } catch (error) {
     console.error("Error parsing user from localStorage:", error);

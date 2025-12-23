@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
-// import { useAppSelector } from "../../store/hooks";
+import { useAppSelector } from "../../store/hooks";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -7,21 +7,18 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
-  // TODO: Replace with Redux state when auth slices are ready
-  const accessToken = localStorage.getItem("accessToken");
-  const isAuthenticated = !!accessToken;
+  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
 
-  // Get user from localStorage temporarily
-  const userStr = localStorage.getItem("user");
-  const user = userStr ? JSON.parse(userStr) : null;
+  // Verify token còn tồn tại trong localStorage
+  // Nếu Redux state có isAuthenticated=true nhưng localStorage không có token
+  // => User đã logout nhưng bấm back button => Phải redirect về login
+  const hasToken = !!localStorage.getItem("accessToken");
 
-  // const { isAuthenticated, user } = useAppSelector((state) => state.auth);
-
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !hasToken) {
     return <Navigate to="/auth/login" replace />;
   }
 
-  if (requiredRole && user?.role !== requiredRole) {
+  if (requiredRole && user?.vaitro !== requiredRole) {
     return <Navigate to="/unauthorized" replace />;
   }
 
