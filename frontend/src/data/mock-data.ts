@@ -691,6 +691,7 @@ export interface CategoryProduct {
   endTime: string;
   category: string;
   subcategory: string;
+  createdAt?: string; // For NEW badge display
 }
 
 // Danh sách 30 sản phẩm để test phân trang
@@ -705,6 +706,7 @@ export const categoryProducts: CategoryProduct[] = [
     endTime: "2 giờ",
     category: "Điện tử",
     subcategory: "Điện thoại",
+    createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 minutes ago - NEW
   },
   {
     id: "2",
@@ -716,6 +718,7 @@ export const categoryProducts: CategoryProduct[] = [
     endTime: "3 giờ",
     category: "Điện tử",
     subcategory: "Laptop",
+    createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(), // 3 hours ago
   },
   {
     id: "3",
@@ -727,6 +730,7 @@ export const categoryProducts: CategoryProduct[] = [
     endTime: "5 giờ",
     category: "Điện tử",
     subcategory: "Điện thoại",
+    createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(), // 45 minutes ago - NEW
   },
   {
     id: "4",

@@ -1,119 +1,89 @@
 import api from "./api";
-import type {
-  MessageResponse,
-  Transaction,
-  UserResponse,
-  CreateUserRequest,
-  UpdateUserRequest,
-  Rating,
-} from "@/types/types";
+import type { User } from "@/features/auth/types";
+
+interface PaginationParams {
+  size?: number;
+  page?: number;
+  search?: string;
+  sortBy?: string;
+}
+
+interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    size: number;
+    totalElements: number;
+    totalPages: number;
+    search?: string;
+  };
+}
+
+export interface CreateUserRequest {
+  username: string;
+  password: string;
+  email: string;
+  vaitro: "BIDDER" | "SELLER" | "ADMIN";
+  hoVaTen?: string;
+}
+
+export interface UpdateUserRequest {
+  password?: string;
+  hoVaTen?: string;
+  diaChi?: string;
+  soDienThoai?: string;
+  ngaySinh?: string;
+  anhDaiDien?: string;
+}
 
 /**
- * User API endpoints
- * Includes user management, ratings, and transactions
+ * User API endpoints - Aligned with backend UserController
  */
 export const userAPI = {
-  // ============= User Management =============
   /**
-   * Get all users (admin only)
+   * GET /users - Get all users with pagination (admin only)
    */
-  getAll: (params?: { page?: number; limit?: number; role?: string }) =>
-    api.get<{
-      users: UserResponse[];
-      total: number;
-      page: number;
-      limit: number;
-    }>("/users", { params }),
+  getAll: (params?: PaginationParams) =>
+    api.get<PaginatedResponse<User>>("/users", { params }),
 
   /**
-   * Create new user (admin only)
+   * GET /users/me - Get current user profile
    */
-  create: (data: CreateUserRequest) =>
-    api.post<{ user: UserResponse }>("/users", data),
+  getMe: () => api.get<User>("/users/me"),
 
   /**
-   * Get user by ID
+   * GET /users/{id} - Get user by ID
    */
-  getById: (id: string) => api.get<{ user: UserResponse }>(`/users/${id}`),
+  getById: (id: string) => api.get<User>(`/users/${id}`),
 
   /**
-   * Update user
+   * POST /users - Create new user (registration)
+   */
+  create: (data: CreateUserRequest) => api.post<User>("/users", data),
+
+  /**
+   * POST /users/request-seller - Request seller upgrade
+   */
+  requestSeller: () => api.post<void>("/users/request-seller"),
+
+  /**
+   * PUT /users/{id} - Update user
    */
   update: (id: string, data: UpdateUserRequest) =>
-    api.put<{ user: UserResponse }>(`/users/${id}`, data),
+    api.put<User>(`/users/${id}`, data),
 
   /**
-   * Delete user (admin only)
+   * POST /users/{id}/reset-password - Reset user password (admin only)
    */
-  delete: (id: string) => api.delete(`/users/${id}`),
+  resetPassword: (id: string) => api.post<void>(`/users/${id}/reset-password`),
 
   /**
-   * Update user profile (self)
+   * DELETE /users/{id} - Delete user (admin only)
    */
-  updateProfile: (data: UpdateUserRequest) =>
-    api.put<{ user: UserResponse }>("/users/profile", data),
+  delete: (id: string) => api.delete<void>(`/users/${id}`),
 
   /**
-   * Change password
+   * POST /users/logout - Logout user
    */
-  changePassword: (data: { currentPassword: string; newPassword: string }) =>
-    api.post<MessageResponse>("/users/change-password", data),
-
-  // ============= Bidder Upgrade =============
-  /**
-   * Request upgrade to Seller role
-   */
-  requestUpgrade: (lyDoYeuCau?: string) =>
-    api.post<MessageResponse>("/users/request-upgrade", { lyDoYeuCau }),
-
-  // ============= Rating Management =============
-  /**
-   * Get ratings for a user
-   */
-  getRatings: (userId: string) =>
-    api.get<{
-      ratings: Rating[];
-      stats: { positive: number; negative: number; percentage: number };
-    }>(`/users/${userId}/ratings`),
-
-  /**
-   * Rate a user (after transaction completion)
-   */
-  rateUser: (
-    userId: string,
-    diem: 1 | -1,
-    productId: number,
-    nhanXet?: string
-  ) =>
-    api.post<{ rating: Rating }>(`/users/${userId}/rate`, {
-      diem,
-      productId,
-      nhanXet,
-    }),
-
-  // ============= Transaction Management =============
-  /**
-   * Get all transactions for current user
-   */
-  getMyTransactions: (params?: { status?: string }) =>
-    api.get<{ transactions: Transaction[] }>("/me/transactions", { params }),
-
-  /**
-   * Get transaction by ID
-   */
-  getTransactionById: (transactionId: number) =>
-    api.get<{ transaction: Transaction }>(`/transactions/${transactionId}`),
-
-  /**
-   * Update transaction status
-   */
-  updateTransactionStatus: (
-    transactionId: number,
-    status: string,
-    data?: Partial<Transaction>
-  ) =>
-    api.put<{ transaction: Transaction }>(
-      `/transactions/${transactionId}/status`,
-      { status, ...data }
-    ),
+  logout: () => api.post<void>("/users/logout"),
 };

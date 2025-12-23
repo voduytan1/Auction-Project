@@ -45,14 +45,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PageLoader } from "@/components/PageLoader";
 import { Search, UserPlus, Edit, Trash2, Loader2 } from "lucide-react";
 import { userAPI } from "@/services/user.api";
-import type {
-  UserResponse,
-  CreateUserRequest,
-  UpdateUserRequest,
-} from "@/types/types";
+import type { User } from "@/features/auth/types";
+import type { CreateUserRequest, UpdateUserRequest } from "@/types/types";
 
 interface UserFormData {
   username: string;
@@ -64,15 +61,15 @@ interface UserFormData {
 }
 
 export function UsersTable() {
-  const [users, setUsers] = useState<UserResponse[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<UserResponse | null>(null);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
-    user: UserResponse | null;
+    user: User | null;
   }>({ open: false, user: null });
 
   const {
@@ -93,13 +90,10 @@ export function UsersTable() {
     try {
       setIsLoading(true);
       const response = await userAPI.getAll();
-      const userData = Array.isArray(response.data)
-        ? response.data
-        : response.data.users || [];
+
+      // Handle both response structures: direct array or wrapped object
+      const userData = Array.isArray(response.data) ? response.data : [];
       setUsers(userData);
-    } catch (error) {
-      console.error("Error loading users:", error);
-      toast.error("Không thể tải danh sách users!");
     } finally {
       setIsLoading(false);
     }
@@ -118,7 +112,7 @@ export function UsersTable() {
     setIsDialogOpen(true);
   };
 
-  const handleEdit = (user: UserResponse) => {
+  const handleEdit = (user: User) => {
     setEditingUser(user);
     reset({
       username: user.username,
@@ -130,7 +124,7 @@ export function UsersTable() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (user: UserResponse) => {
+  const handleDelete = (user: User) => {
     setDeleteDialog({ open: true, user });
   };
 
@@ -146,7 +140,7 @@ export function UsersTable() {
           hoVaTen: data.hoVaTen,
           anhDaiDien: data.anhDaiDien,
         };
-        await userAPI.update(editingUser.id, updateData);
+        await userAPI.update(editingUser.userid, updateData);
         toast.success("Cập nhật user thành công!");
       } else {
         // Create new user
@@ -177,7 +171,7 @@ export function UsersTable() {
     if (!deleteDialog.user) return;
 
     try {
-      await userAPI.delete(deleteDialog.user.id);
+      await userAPI.delete(deleteDialog.user.userid);
       toast.success("Xóa user thành công!");
       await loadUsers();
       setDeleteDialog({ open: false, user: null });
@@ -197,12 +191,8 @@ export function UsersTable() {
   if (isLoading) {
     return (
       <Card>
-        <CardHeader>
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-4 w-64" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-[400px] w-full" />
+        <CardContent className="py-12">
+          <PageLoader message="Đang tải danh sách users..." />
         </CardContent>
       </Card>
     );
@@ -262,7 +252,7 @@ export function UsersTable() {
                   </TableRow>
                 ) : (
                   filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
+                    <TableRow key={user.userid}>
                       <TableCell className="font-medium">
                         {user.username}
                       </TableCell>

@@ -1,84 +1,74 @@
 import api from "./api";
-import type { DashboardStats, User } from "@/types/types";
 
 /**
- * Admin-specific API endpoints
+ * Admin DTOs matching backend AdminController
+ */
+export interface UpgradeRequestResponse {
+  requestid: number;
+  userid: string;
+  username: string;
+  trangThai: "PENDING" | "APPROVED" | "REJECTED";
+  lyDo?: string;
+  approvedByAdmin?: string;
+  ghiChuAdmin?: string;
+}
+
+interface PaginationParams {
+  size?: number;
+  page?: number;
+  search?: string;
+}
+
+interface PaginatedResponse<T> {
+  content?: T[]; // For backward compatibility
+  data?: T[]; // Backend uses 'data'
+  metadata?: {
+    totalElements: number;
+    totalPages: number;
+    currentPage: number;
+    pageSize: number;
+    hasNext: boolean;
+    hasPrevious: boolean;
+    sortBy?: string;
+    sortOrder?: string;
+    search?: string;
+  };
+  pagination?: {
+    page: number;
+    size: number;
+    totalElements: number;
+    totalPages: number;
+    search?: string;
+  };
+}
+
+/**
+ * Admin API endpoints - Aligned with backend AdminController
  */
 export const adminAPI = {
-  // ============= Dashboard =============
   /**
-   * Get admin dashboard statistics
+   * GET /admin/request - Get all upgrade requests with pagination
+   * Query params: size, page, search (username search)
    */
-  getDashboard: () => api.get<DashboardStats>("/admin/dashboard"),
-
-  // ============= User Management =============
-  /**
-   * Get all users
-   */
-  getUsers: (params?: {
-    page?: number;
-    limit?: number;
-    role?: string;
-    search?: string;
-  }) => api.get("/admin/users", { params }),
+  getAllRequests: (params?: PaginationParams) =>
+    api.get<PaginatedResponse<UpgradeRequestResponse>>("/admin/request", {
+      params,
+    }),
 
   /**
-   * Get upgrade requests
+   * GET /admin/request/pending - Get pending upgrade requests
+   * Query params: size, page, search (username search)
    */
-  getUpgradeRequests: (params?: { status?: string }) =>
-    api.get<{ users: User[] }>("/admin/upgrade-requests", { params }),
+  getPendingRequests: (params?: PaginationParams) =>
+    api.get<PaginatedResponse<UpgradeRequestResponse>>(
+      "/admin/request/pending",
+      { params }
+    ),
 
   /**
-   * Approve upgrade request
+   * POST /admin/requests/{id} - Approve or reject upgrade request
+   * Body: { approve: boolean }
    */
-  approveUpgrade: (userId: string) =>
-    api.post(`/admin/users/${userId}/approve-upgrade`),
-
-  /**
-   * Reject upgrade request
-   */
-  rejectUpgrade: (userId: string, reason?: string) =>
-    api.post(`/admin/users/${userId}/reject-upgrade`, { reason }),
-
-  /**
-   * Delete user (admin only)
-   */
-  deleteUser: (userId: string) => api.delete(`/admin/users/${userId}`),
-
-  // ============= Auction Management =============
-  /**
-   * Get all auctions (admin view)
-   */
-  getAllAuctions: (params?: {
-    page?: number;
-    limit?: number;
-    status?: string;
-    search?: string;
-  }) => api.get("/admin/auctions", { params }),
-
-  /**
-   * Remove auction
-   */
-  removeAuction: (auctionId: string) =>
-    api.delete(`/admin/auctions/${auctionId}`),
-
-  // ============= System Settings =============
-  /**
-   * Get system settings
-   */
-  getSettings: () =>
-    api.get<{
-      autoExtendTrigger: number;
-      autoExtendDuration: number;
-      newProductMinutes: number;
-    }>("/admin/settings"),
-
-  /**
-   * Update system settings
-   */
-  updateSettings: (data: {
-    autoExtendTrigger?: number;
-    autoExtendDuration?: number;
-    newProductMinutes?: number;
-  }) => api.put("/admin/settings", data),
+  processRequest: (id: number, approve: boolean) =>
+    api.post<void>(`/admin/requests/${id}`, { approve }),
 };

@@ -1,6 +1,15 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Home, LogOut, User as UserIcon } from "lucide-react";
+import {
+  Search,
+  Home,
+  LogOut,
+  User as UserIcon,
+  Heart,
+  Package,
+  TrendingUp,
+  LayoutDashboard,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,9 +26,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { logoutUser } from "@/store/slices/authSlice";
 import {
@@ -29,6 +40,7 @@ import {
   selectCategoriesError,
   selectIsCacheValid,
 } from "@/store/slices/categorySlice";
+import { cn } from "@/lib/utils";
 
 export default function Header() {
   const navigate = useNavigate();
@@ -57,8 +69,48 @@ export default function Header() {
   };
 
   const handleLogout = async () => {
+    const currentPath = window.location.pathname;
+    const protectedPaths = ["/app", "/seller", "/bidder", "/admin"];
+    const isProtectedRoute = protectedPaths.some((path) =>
+      currentPath.startsWith(path)
+    );
+
     await dispatch(logoutUser());
-    navigate("/");
+
+    // Chỉ redirect về login nếu đang ở protected route
+    // Dùng replace: true để không thể back lại
+    if (isProtectedRoute) {
+      navigate("/auth/login", { replace: true });
+    } else {
+      // Reload page để clear Redux state cache
+      window.location.reload();
+    }
+  };
+
+  const getRoleBadgeColor = (role: string) => {
+    switch (role) {
+      case "ADMIN":
+        return "bg-destructive text-destructive-foreground";
+      case "SELLER":
+        return "bg-blue-500 text-white";
+      case "BIDDER":
+        return "bg-green-500 text-white";
+      default:
+        return "bg-secondary";
+    }
+  };
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case "ADMIN":
+        return "Quản trị";
+      case "SELLER":
+        return "Người bán";
+      case "BIDDER":
+        return "Người mua";
+      default:
+        return role;
+    }
   };
 
   return (
@@ -102,44 +154,121 @@ export default function Header() {
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
-                      className="flex items-center gap-3 h-auto py-2"
+                      className="flex items-center gap-3 h-auto py-2 px-3"
                     >
                       <div className="text-sm text-right hidden sm:block">
                         <p className="font-medium">
                           {user.hoVaTen || user.username}
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          {user.username}
-                        </p>
+                        <div className="flex items-center gap-1.5 justify-end">
+                          <Badge
+                            className={cn(
+                              "text-xs px-1.5 py-0",
+                              getRoleBadgeColor(user.vaitro)
+                            )}
+                          >
+                            {getRoleLabel(user.vaitro)}
+                          </Badge>
+                        </div>
                       </div>
-                      <Avatar className="h-10 w-10">
+                      <Avatar className="h-10 w-10 ring-2 ring-primary/10">
                         <AvatarImage
                           src={user.anhDaiDien}
                           alt={user.username}
                         />
-                        <AvatarFallback>
+                        <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                           {user.username.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuContent align="end" className="w-64">
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">
+                          {user.hoVaTen || user.username}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+
+                    {/* Common items */}
                     <DropdownMenuItem onClick={() => navigate("/app/profile")}>
                       <UserIcon className="mr-2 h-4 w-4" />
                       Trang cá nhân
                     </DropdownMenuItem>
+
+                    {/* Role-specific items */}
                     {user.vaitro === "ADMIN" && (
-                      <DropdownMenuItem onClick={() => navigate("/admin")}>
-                        <UserIcon className="mr-2 h-4 w-4" />
-                        Quản trị
-                      </DropdownMenuItem>
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel className="text-xs text-muted-foreground">
+                          Quản trị
+                        </DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => navigate("/admin")}>
+                          <LayoutDashboard className="mr-2 h-4 w-4" />
+                          Dashboard
+                        </DropdownMenuItem>
+                      </>
                     )}
+
+                    {user.vaitro === "SELLER" && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel className="text-xs text-muted-foreground">
+                          Người bán
+                        </DropdownMenuLabel>
+                        <DropdownMenuItem
+                          onClick={() => navigate("/seller/products")}
+                        >
+                          <Package className="mr-2 h-4 w-4" />
+                          Sản phẩm của tôi
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => navigate("/seller/products/create")}
+                        >
+                          <TrendingUp className="mr-2 h-4 w-4" />
+                          Đăng sản phẩm
+                        </DropdownMenuItem>
+                      </>
+                    )}
+
+                    {user.vaitro === "BIDDER" && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel className="text-xs text-muted-foreground">
+                          Người mua
+                        </DropdownMenuLabel>
+                        <DropdownMenuItem
+                          onClick={() => navigate("/bidder/profile")}
+                        >
+                          <UserIcon className="mr-2 h-4 w-4" />
+                          Hồ sơ của tôi
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => navigate("/bidder/watchlist")}
+                        >
+                          <Heart className="mr-2 h-4 w-4" />
+                          Danh sách yêu thích
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => navigate("/bidder/upgrade-request")}
+                        >
+                          <TrendingUp className="mr-2 h-4 w-4" />
+                          Nâng cấp Seller
+                        </DropdownMenuItem>
+                      </>
+                    )}
+
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={handleLogout}
-                      className="text-destructive"
+                      className="text-destructive focus:text-destructive"
                     >
-                      <LogOut className="mr-2 h-4 w-4 text-destructive" />
+                      <LogOut className="mr-2 h-4 w-4" />
                       Đăng xuất
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -185,7 +314,7 @@ export default function Header() {
                     {categories.map((category) => (
                       <NavigationMenuItem key={category.id}>
                         <NavigationMenuTrigger
-                          className="h-10 bg-transparent hover:bg-transparent hover:underline hover:text-accent focus:bg-transparent focus:underline focus:text-accent data-[state=open]:bg-transparent"
+                          className="h-10 bg-transparent hover:bg-muted hover:text-primary focus:bg-muted focus:text-primary data-[state=open]:bg-muted data-[state=open]:text-primary rounded-md transition-colors"
                           onClick={() => navigate(`/category/${category.slug}`)}
                         >
                           {category.name}
@@ -193,13 +322,13 @@ export default function Header() {
                         {category.subcategories &&
                           category.subcategories.length > 0 && (
                             <NavigationMenuContent>
-                              <ul className="grid w-[200px] gap-2 p-2">
+                              <ul className="grid w-[200px] gap-1 p-2">
                                 {category.subcategories.map((sub) => (
                                   <li key={sub.id}>
                                     <NavigationMenuLink asChild>
                                       <Link
                                         to={`/category/${sub.slug}`}
-                                        className="block select-none rounded-md p-3 leading-none outline-none"
+                                        className="block select-none rounded-md p-3 leading-none outline-none hover:bg-accent hover:text-accent-foreground transition-colors"
                                       >
                                         <div className="text-sm font-medium">
                                           {sub.name}

@@ -47,7 +47,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PageLoader } from "@/components/PageLoader";
 import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
 import { categoryApi } from "@/services/category.api";
 import type { CategoryResponse, CategoryDisplay } from "@/types/types";
@@ -233,12 +233,8 @@ export function CategoriesTable() {
   if (isLoadingCategories) {
     return (
       <Card>
-        <CardHeader>
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-4 w-64" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-[400px] w-full" />
+        <CardContent className="py-12">
+          <PageLoader message="Đang tải danh mục..." />
         </CardContent>
       </Card>
     );

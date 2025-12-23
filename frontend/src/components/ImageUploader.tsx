@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Upload, X, Loader2, Image as ImageIcon } from "lucide-react";
+import { Upload, X, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -7,10 +7,11 @@ import { toast } from "sonner";
 
 interface ImageUploaderProps {
   mode: "single" | "multiple";
-  onUploadComplete: (files: File | File[]) => Promise<void>;
+  onUploadComplete: (files: File | File[]) => void;
   currentImage?: string;
   maxFiles?: number;
   className?: string;
+  showConfirmButton?: boolean; // If false, auto-select on file change
 }
 
 export function ImageUploader({
@@ -19,10 +20,10 @@ export function ImageUploader({
   currentImage,
   maxFiles = 5,
   className,
+  showConfirmButton = true,
 }: ImageUploaderProps) {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,6 +56,18 @@ export function ImageUploader({
 
     setSelectedFiles(filesToUse);
     setPreviewUrls(newPreviewUrls);
+
+    // Auto-confirm if showConfirmButton is false
+    if (!showConfirmButton) {
+      if (mode === "single") {
+        onUploadComplete(filesToUse[0]);
+      } else {
+        onUploadComplete(filesToUse);
+      }
+      toast.success(
+        `Đã chọn ${filesToUse.length} ảnh. Nhấn "Đăng sản phẩm" để upload.`
+      );
+    }
   };
 
   const handleRemoveImage = (index: number) => {
@@ -75,30 +88,20 @@ export function ImageUploader({
     }
   };
 
-  const handleConfirm = async () => {
+  const handleConfirm = () => {
     if (selectedFiles.length === 0) {
       toast.error("Vui lòng chọn ảnh");
       return;
     }
 
-    setIsUploading(true);
-    try {
-      // Call the callback with selected files and wait for upload to complete
-      // Parent component will handle the actual upload to Cloudinary
-      if (mode === "single") {
-        await onUploadComplete(selectedFiles[0]);
-      } else {
-        await onUploadComplete(selectedFiles);
-      }
-
-      // Clean up after successful upload
-      handleCancel();
-    } catch (error) {
-      console.error("Upload error:", error);
-      toast.error("Upload ảnh thất bại");
-    } finally {
-      setIsUploading(false);
+    // Just pass files to parent, actual upload happens on form submit
+    if (mode === "single") {
+      onUploadComplete(selectedFiles[0]);
+    } else {
+      onUploadComplete(selectedFiles);
     }
+
+    toast.success(`Đã chọn ${selectedFiles.length} ảnh.`);
   };
 
   const handleBrowseClick = () => {
@@ -168,38 +171,24 @@ export function ImageUploader({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-2 mt-4">
-            <Button
-              onClick={handleConfirm}
-              disabled={isUploading}
-              className="flex-1"
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Đang upload...
-                </>
-              ) : (
-                <>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Xác nhận
-                </>
-              )}
-            </Button>
-            <Button
-              onClick={handleCancel}
-              variant="outline"
-              disabled={isUploading}
-            >
-              Hủy
-            </Button>
-          </div>
+          {showConfirmButton && (
+            <div className="flex gap-2 mt-4">
+              <Button type="button" onClick={handleConfirm} className="flex-1">
+                <Upload className="h-4 w-4 mr-2" />
+                Xác nhận
+              </Button>
+              <Button type="button" onClick={handleCancel} variant="outline">
+                Hủy
+              </Button>
+            </div>
+          )}
         </Card>
       )}
 
       {/* Browse Button */}
       {previewUrls.length === 0 && (
         <Button
+          type="button"
           onClick={handleBrowseClick}
           variant="outline"
           className="w-full h-32 border-dashed"
@@ -220,10 +209,10 @@ export function ImageUploader({
         mode === "multiple" &&
         previewUrls.length < maxFiles && (
           <Button
+            type="button"
             onClick={handleBrowseClick}
             variant="outline"
             className="w-full"
-            disabled={isUploading}
           >
             <Upload className="h-4 w-4 mr-2" />
             Thêm ảnh khác

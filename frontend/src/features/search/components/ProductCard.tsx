@@ -1,25 +1,21 @@
 import { Link } from "react-router";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, TrendingUp, Sparkles, User, ShoppingCart } from "lucide-react";
-import { formatCurrency, getTimeRemaining, isNewProduct } from "../helpers";
+import { Clock, TrendingUp, User, ShoppingCart } from "lucide-react";
+import { formatCurrency, getTimeRemaining } from "../helpers";
 import type { Product } from "@/types/types";
+import { NewProductBadge } from "@/components/NewProductBadge";
 
 interface ProductCardProps {
   product: Product;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const isNew = isNewProduct(product.createdAt);
   const timeRemaining = getTimeRemaining(product.thoiGianKetThuc);
 
   return (
     <Link to={`/products/${product.productid}`} className="group">
-      <Card
-        className={`overflow-hidden transition-all hover:shadow-lg ${
-          isNew ? "ring-2 ring-yellow-400 shadow-yellow-100" : ""
-        }`}
-      >
+      <Card className="overflow-hidden transition-all hover:shadow-lg">
         {/* Image */}
         <div className="relative aspect-square overflow-hidden bg-muted">
           <img
@@ -27,12 +23,9 @@ export function ProductCard({ product }: ProductCardProps) {
             alt={product.tenSanPham}
             className="object-cover w-full h-full group-hover:scale-105 transition-transform"
           />
-          {isNew && (
-            <Badge className="absolute top-2 left-2 bg-yellow-500 hover:bg-yellow-600">
-              <Sparkles className="h-3 w-3 mr-1" />
-              Mới đăng
-            </Badge>
-          )}
+          <div className="absolute top-2 left-2">
+            <NewProductBadge createdAt={product.createdAt} />
+          </div>
           {product.giaMuaNgay && (
             <Badge className="absolute top-2 right-2" variant="secondary">
               <ShoppingCart className="h-3 w-3 mr-1" />
