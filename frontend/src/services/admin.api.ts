@@ -4,13 +4,13 @@ import api from "./api";
  * Admin DTOs matching backend AdminController
  */
 export interface UpgradeRequestResponse {
-  id: number;
+  requestid: number;
+  userid: string;
   username: string;
-  email: string;
-  hoVaTen?: string;
-  requestedAt: string; // LocalDateTime
-  status: "PENDING" | "APPROVED" | "REJECTED";
-  processedAt?: string; // LocalDateTime
+  trangThai: "PENDING" | "APPROVED" | "REJECTED";
+  lyDo?: string;
+  approvedByAdmin?: string;
+  ghiChuAdmin?: string;
 }
 
 interface PaginationParams {
@@ -20,8 +20,20 @@ interface PaginationParams {
 }
 
 interface PaginatedResponse<T> {
-  content: T[];
-  pagination: {
+  content?: T[]; // For backward compatibility
+  data?: T[]; // Backend uses 'data'
+  metadata?: {
+    totalElements: number;
+    totalPages: number;
+    currentPage: number;
+    pageSize: number;
+    hasNext: boolean;
+    hasPrevious: boolean;
+    sortBy?: string;
+    sortOrder?: string;
+    search?: string;
+  };
+  pagination?: {
     page: number;
     size: number;
     totalElements: number;

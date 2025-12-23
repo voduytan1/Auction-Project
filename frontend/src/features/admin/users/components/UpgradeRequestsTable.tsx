@@ -7,6 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -16,7 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Eye } from "lucide-react";
+import { Check, X, Eye, Search } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -35,12 +36,26 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { PageLoader } from "@/components/PageLoader";
 import { toast } from "sonner";
 import { adminAPI, type UpgradeRequestResponse } from "@/services/admin.api";
 
 export function UpgradeRequestsTable() {
   const [requests, setRequests] = useState<UpgradeRequestResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalElements, setTotalElements] = useState(0);
+  const pageSize = 10;
   const [detailDialog, setDetailDialog] = useState<{
     open: boolean;
     request: UpgradeRequestResponse | null;
@@ -53,19 +68,38 @@ export function UpgradeRequestsTable() {
 
   useEffect(() => {
     loadRequests();
-  }, []);
+  }, [currentPage, searchTerm]);
 
   const loadRequests = async () => {
     try {
       setIsLoading(true);
-      const response = await adminAPI.getPendingRequests({ size: 50, page: 1 });
-      setRequests(response.data?.content || []);
+      const response = await adminAPI.getPendingRequests({
+        size: pageSize,
+        page: currentPage,
+        search: searchTerm || undefined,
+      });
+      // Handle both response structures: direct array or wrapped object
+      const requestsData = Array.isArray(response.data)
+        ? response.data
+        : response.data?.data || response.data?.content || [];
+      setRequests(requestsData);
+
+      // Backend uses 'metadata' field when wrapped
+      const meta = response.data?.metadata || response.data?.pagination;
+
+      setTotalPages(meta?.totalPages || 1);
+      setTotalElements(meta?.totalElements || requestsData.length);
     } catch (error) {
       console.error("Error loading requests:", error);
       toast.error("Không thể tải danh sách yêu cầu!");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1); // Reset to first page on new search
   };
 
   const handleApprove = (request: UpgradeRequestResponse) => {
@@ -81,7 +115,7 @@ export function UpgradeRequestsTable() {
 
     try {
       const approve = confirmDialog.action === "approve";
-      await adminAPI.processRequest(confirmDialog.request.id, approve);
+      await adminAPI.processRequest(confirmDialog.request.requestid, approve);
 
       toast.success(
         approve ? "Đã duyệt yêu cầu thành công!" : "Đã từ chối yêu cầu!"
@@ -100,8 +134,8 @@ export function UpgradeRequestsTable() {
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="py-8">
-          <div className="text-center text-muted-foreground">Đang tải...</div>
+        <CardContent className="py-12">
+          <PageLoader message="Đang tải danh sách yêu cầu..." />
         </CardContent>
       </Card>
     );
@@ -119,14 +153,29 @@ export function UpgradeRequestsTable() {
               </CardDescription>
             </div>
             <Badge variant="secondary" className="text-base px-3 py-1">
-              {requests.length} chờ duyệt
+              {totalElements} yêu cầu
             </Badge>
           </div>
         </CardHeader>
         <CardContent>
+          {/* Search Bar */}
+          <div className="flex items-center gap-2 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Tìm theo username..."
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+          </div>
+
           {requests.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Không có yêu cầu nào đang chờ duyệt
+              {searchTerm
+                ? "Không tìm thấy yêu cầu nào"
+                : "Không có yêu cầu nào đang chờ duyệt"}
             </div>
           ) : (
             <div className="border rounded-lg">
@@ -134,42 +183,37 @@ export function UpgradeRequestsTable() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Người dùng</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Ngày yêu cầu</TableHead>
+                    <TableHead>Lý do</TableHead>
+                    <TableHead>Ghi chú Admin</TableHead>
                     <TableHead>Trạng thái</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-right">Thao tác</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {requests.map((request) => (
-                    <TableRow key={request.id}>
+                    <TableRow key={request.requestid}>
                       <TableCell className="font-medium">
-                        <div>
-                          <div>{request.hoVaTen || request.username}</div>
-                          <div className="text-xs text-muted-foreground">
-                            @{request.username}
-                          </div>
-                        </div>
+                        {request.username}
                       </TableCell>
-                      <TableCell className="text-sm">{request.email}</TableCell>
                       <TableCell className="text-sm">
-                        {new Date(request.requestedAt).toLocaleDateString(
-                          "vi-VN"
-                        )}
+                        {request.lyDo || "Không có"}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {request.ghiChuAdmin || "-"}
                       </TableCell>
                       <TableCell>
                         <Badge
                           variant={
-                            request.status === "PENDING"
+                            request.trangThai === "PENDING"
                               ? "secondary"
-                              : request.status === "APPROVED"
+                              : request.trangThai === "APPROVED"
                               ? "default"
                               : "destructive"
                           }
                         >
-                          {request.status === "PENDING"
+                          {request.trangThai === "PENDING"
                             ? "Chờ duyệt"
-                            : request.status === "APPROVED"
+                            : request.trangThai === "APPROVED"
                             ? "Đã duyệt"
                             : "Đã từ chối"}
                         </Badge>
@@ -185,7 +229,7 @@ export function UpgradeRequestsTable() {
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          {request.status === "PENDING" && (
+                          {request.trangThai === "PENDING" && (
                             <>
                               <Button
                                 size="sm"
@@ -213,6 +257,68 @@ export function UpgradeRequestsTable() {
               </Table>
             </div>
           )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-4">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() =>
+                        currentPage > 1 && setCurrentPage(currentPage - 1)
+                      }
+                      className={
+                        currentPage === 1
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
+                  </PaginationItem>
+
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(
+                      (page) =>
+                        page === 1 ||
+                        page === totalPages ||
+                        Math.abs(page - currentPage) <= 1
+                    )
+                    .map((page, index, array) => (
+                      <>
+                        {index > 0 && array[index - 1] !== page - 1 && (
+                          <PaginationItem key={`ellipsis-${page}`}>
+                            <span className="px-2">...</span>
+                          </PaginationItem>
+                        )}
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(page)}
+                            isActive={currentPage === page}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      </>
+                    ))}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() =>
+                        currentPage < totalPages &&
+                        setCurrentPage(currentPage + 1)
+                      }
+                      className={
+                        currentPage === totalPages
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -235,29 +341,25 @@ export function UpgradeRequestsTable() {
               <div>
                 <div className="text-sm font-medium">Người dùng</div>
                 <div className="text-sm text-muted-foreground">
-                  {detailDialog.request.hoVaTen ||
-                    detailDialog.request.username}{" "}
-                  ({detailDialog.request.email})
-                </div>
-              </div>
-              <div>
-                <div className="text-sm font-medium">Username</div>
-                <div className="text-sm text-muted-foreground">
                   @{detailDialog.request.username}
                 </div>
               </div>
               <div>
-                <div className="text-sm font-medium">Ngày yêu cầu</div>
+                <div className="text-sm font-medium">User ID</div>
+                <div className="text-sm text-muted-foreground font-mono">
+                  {detailDialog.request.userid}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm font-medium">Lý do xin nâng cấp</div>
                 <div className="text-sm text-muted-foreground">
-                  {new Date(
-                    detailDialog.request.requestedAt
-                  ).toLocaleDateString("vi-VN", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                  {detailDialog.request.lyDo || "Không có lý do"}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm font-medium">Ghi chú của Admin</div>
+                <div className="text-sm text-muted-foreground">
+                  {detailDialog.request.ghiChuAdmin || "Chưa có ghi chú"}
                 </div>
               </div>
               <div>
@@ -265,16 +367,16 @@ export function UpgradeRequestsTable() {
                 <div className="mt-1">
                   <Badge
                     variant={
-                      detailDialog.request.status === "PENDING"
+                      detailDialog.request.trangThai === "PENDING"
                         ? "secondary"
-                        : detailDialog.request.status === "APPROVED"
+                        : detailDialog.request.trangThai === "APPROVED"
                         ? "default"
                         : "destructive"
                     }
                   >
-                    {detailDialog.request.status === "PENDING"
+                    {detailDialog.request.trangThai === "PENDING"
                       ? "Chờ duyệt"
-                      : detailDialog.request.status === "APPROVED"
+                      : detailDialog.request.trangThai === "APPROVED"
                       ? "Đã duyệt"
                       : "Đã từ chối"}
                   </Badge>
@@ -283,7 +385,7 @@ export function UpgradeRequestsTable() {
             </div>
           )}
           <DialogFooter>
-            {detailDialog.request?.status === "PENDING" && (
+            {detailDialog.request?.trangThai === "PENDING" && (
               <>
                 <Button
                   variant="outline"

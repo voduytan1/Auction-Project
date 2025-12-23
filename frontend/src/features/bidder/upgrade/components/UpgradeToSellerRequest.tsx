@@ -34,14 +34,21 @@ export function UpgradeToSellerRequest() {
     formState: { errors },
   } = useForm<UpgradeRequestFormData>();
 
-  const onSubmit = async (data: UpgradeRequestFormData) => {
+  const onSubmit = async () => {
     try {
       setIsSubmitting(true);
 
-      // Call real API to submit upgrade request
+      // TODO: Backend cần cập nhật để nhận body (lyDo, kiNhangBanHang, etc.)
+      // Hiện tại API chỉ dùng JWT token để tạo request
       await userAPI.requestSeller();
 
-      console.log("Submitting upgrade request:", data);
+      // TODO: Khi backend hỗ trợ body, uncomment và sửa API:
+      // await userAPI.requestSeller({
+      //   lyDo: data.lyDo,
+      //   kiNhangBanHang: data.kiNhangBanHang,
+      //   linkMangXaHoi: data.linkMangXaHoi,
+      //   soDienThoai: data.soDienThoai
+      // });
 
       toast.success("Yêu cầu nâng cấp đã được gửi thành công!");
       toast.info("Admin sẽ xem xét và phản hồi trong vòng 24-48 giờ", {

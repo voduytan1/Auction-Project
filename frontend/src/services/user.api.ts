@@ -9,7 +9,7 @@ interface PaginationParams {
 }
 
 interface PaginatedResponse<T> {
-  content: T[];
+  data: T[];
   pagination: {
     page: number;
     size: number;

@@ -45,7 +45,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PageLoader } from "@/components/PageLoader";
 import { Search, UserPlus, Edit, Trash2, Loader2 } from "lucide-react";
 import { userAPI } from "@/services/user.api";
 import type { User } from "@/features/auth/types";
@@ -90,12 +90,10 @@ export function UsersTable() {
     try {
       setIsLoading(true);
       const response = await userAPI.getAll();
-      // Response.data is PaginatedResponse<User> with content array
-      const userData = response.data?.content || [];
+
+      // Handle both response structures: direct array or wrapped object
+      const userData = Array.isArray(response.data) ? response.data : [];
       setUsers(userData);
-    } catch (error) {
-      console.error("Error loading users:", error);
-      toast.error("Không thể tải danh sách users!");
     } finally {
       setIsLoading(false);
     }
@@ -193,12 +191,8 @@ export function UsersTable() {
   if (isLoading) {
     return (
       <Card>
-        <CardHeader>
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-4 w-64" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-[400px] w-full" />
+        <CardContent className="py-12">
+          <PageLoader message="Đang tải danh sách users..." />
         </CardContent>
       </Card>
     );

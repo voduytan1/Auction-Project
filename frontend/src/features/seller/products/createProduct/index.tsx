@@ -104,9 +104,6 @@ export function CreateProductForm() {
   };
 
   const onSubmit = async (data: ProductFormData) => {
-    console.log("Form submitted with data:", data);
-    console.log("Selected images:", selectedImages);
-
     try {
       setIsSubmitting(true);
 
@@ -115,11 +112,8 @@ export function CreateProductForm() {
         toast.error("Vui lòng chọn ít nhất 3 ảnh cho sản phẩm!");
         return;
       }
-
-      console.log("Uploading images...");
       // Upload images first
       const imageUrls = await handleImageUpload();
-      console.log("Image URLs:", imageUrls);
 
       if (imageUrls.length < 3) {
         toast.error("Không thể upload ảnh. Vui lòng thử lại!");
@@ -140,18 +134,14 @@ export function CreateProductForm() {
         choPhepBidderChuaDanhGia: data.choPhepBidderChuaDanhGia,
       };
 
-      console.log("Creating product with data:", productData);
       // Call API to create product
       await productAPI.create(productData);
 
       toast.success("Đăng sản phẩm thành công!");
       navigate("/seller/products");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error creating product:", error);
-      console.error("Error response:", error.response);
-      console.error("Error data:", error.response?.data);
-      const errorMessage =
-        error.response?.data?.message || "Có lỗi xảy ra. Vui lòng thử lại!";
+      const errorMessage = "Có lỗi xảy ra. Vui lòng thử lại!";
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);

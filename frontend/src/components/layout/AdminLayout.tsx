@@ -37,10 +37,10 @@ const AdminLayout = () => {
 
   const navItems = [
     { to: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { to: "/admin/users", icon: Users, label: "Quản lý Users" },
+    { to: "/admin/users", icon: Users, label: "Người dùng" },
     { to: "/admin/categories", icon: FolderTree, label: "Danh mục" },
     { to: "/admin/products", icon: Package, label: "Sản phẩm" },
-    { to: "/admin/auctions", icon: Gavel, label: "Auctions" },
+    { to: "/admin/auctions", icon: Gavel, label: "Đấu giá" },
     { to: "/admin/upgrade-requests", icon: UserCog, label: "Yêu cầu nâng cấp" },
   ];
 
