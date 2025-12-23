@@ -4,7 +4,6 @@ import type {
   UpdateProfileData,
   ChangePasswordData,
   UserRating,
-  RatingStats,
 } from "@/features/profile/types";
 
 /**
@@ -15,15 +14,16 @@ export const profileAPI = {
    * Get current user profile
    */
   getMe: async () => {
-    const response = await api.get<UserProfile>("/profile/me");
+    const response = await api.get<UserProfile>("/users/me");
     return response.data;
   },
 
   /**
    * Update current user profile
    */
-  updateProfile: async (data: UpdateProfileData) => {
-    const response = await api.put<UserProfile>("/profile/me", data);
+  updateProfile: async (userId: string, data: UpdateProfileData) => {
+    const response = await api.put<UserProfile>(`/users/${userId}`, data);
+    console.log("Updated profile response:", response.data);
     return response.data;
   },
 
@@ -32,23 +32,23 @@ export const profileAPI = {
    */
   changePassword: async (data: ChangePasswordData) => {
     const response = await api.post<{ message: string }>(
-      "/profile/change-password",
+      "/users/change-password",
       {
-        oldPassword: data.oldPassword,
+        currentPassword: data.oldPassword,
         newPassword: data.newPassword,
       }
     );
     return response.data;
   },
 
-  /**
-   * Get user ratings
-   */
-  getMyRatings: async () => {
+  // /**
+  //  * Get user ratings
+  //  */
+  getMyRatings: async (userId: string) => {
     const response = await api.get<{
       ratings: UserRating[];
-      stats: RatingStats;
-    }>("/profile/me/ratings");
+      stats: { positive: number; negative: number; percentage: number };
+    }>(`/users/${userId}/ratings`);
     return response.data;
   },
 

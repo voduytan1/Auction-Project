@@ -262,7 +262,10 @@ export function CategoriesTable() {
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+          <Tabs
+            value={activeTab}
+            onValueChange={(v) => setActiveTab(v as "level1" | "level2")}
+          >
             <TabsList className="grid w-full max-w-md grid-cols-2">
               <TabsTrigger value="level1">
                 Cấp 1 - Danh mục Cha ({level1Categories.length})
