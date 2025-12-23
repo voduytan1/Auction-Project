@@ -19,9 +19,7 @@ public class Configuration {
     @Column(name = "id")
     Long id;
 
-    String variable;
+    ConfigVariable variable;
 
     int value;
-
-
 }
