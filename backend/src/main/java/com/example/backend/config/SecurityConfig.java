@@ -43,18 +43,30 @@ public class SecurityConfig {
             "PUBLIC", Map.of(
                     HttpMethod.GET, new String[]{"/auth/**", "/actuator/**", "/categories","/categories/{id}"},
                     HttpMethod.POST, new String[]{"/auth/login", "/users"},
-                    HttpMethod.PUT, new String[]{"/users/{id}"}
+                    HttpMethod.PUT, new String[]{}
             ),
             "ADMIN", Map.of(
-                    HttpMethod.GET, new String[]{},
-                    HttpMethod.POST, new String[]{"/categories"},
-                    HttpMethod.PATCH, new String[]{"/categories/{id}"},
-                    HttpMethod.DELETE, new String[]{"/users/{id}","/categories/{id}"}
+                    HttpMethod.GET, new String[]{"/admin/**"},
+                    HttpMethod.POST, new String[]{"/categories","/admin/**"},
+                    HttpMethod.PATCH, new String[]{"/categories/{id}","/admin/**"},
+                    HttpMethod.DELETE, new String[]{"/users/{id}","/categories/{id}","/admin/**"}
             ),
-            "AUTHENTICATED",Map.of(
+            "SELLER",Map.of(
+                    HttpMethod.GET, new String[]{},
+                    HttpMethod.POST, new String[]{"/products"},
+                    HttpMethod.PATCH, new String[]{},
+                    HttpMethod.DELETE, new String[]{}
+            ),
+            "BIDDER",Map.of(
                     HttpMethod.GET, new String[]{},
                     HttpMethod.POST, new String[]{},
                     HttpMethod.PATCH, new String[]{},
+                    HttpMethod.DELETE, new String[]{}
+            ),
+            "AUTHENTICATED",Map.of(
+                    HttpMethod.GET, new String[]{"/users/me"},
+                    HttpMethod.POST, new String[]{"/users/request-seller", "/images/**","/image/**"},
+                    HttpMethod.PUT, new String[]{"/users/{id}"},
                     HttpMethod.DELETE, new String[]{}
             )
     );
@@ -92,6 +104,19 @@ public class SecurityConfig {
             authenticatedEndpoints.forEach((method, endpoints) ->
                     request.requestMatchers(method, endpoints).authenticated()
             );
+
+            //SELLER endpoint
+            var sellerEndpoints = ROLE_BASED_ENDPOINTS.get("SELLER");
+            sellerEndpoints.forEach((method, endpoints) ->
+                    request.requestMatchers(method, endpoints).hasRole("SELLER")
+            );
+
+            //BIDDER endpoint
+            var bidderEndpoints = ROLE_BASED_ENDPOINTS.get("BIDDER");
+            bidderEndpoints.forEach((method, endpoints) ->
+                    request.requestMatchers(method, endpoints).hasRole("BIDDER")
+            );
+
 
             //ADMIN endpoint
             var adminEndpoints = ROLE_BASED_ENDPOINTS.get("ADMIN");

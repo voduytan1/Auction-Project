@@ -3,6 +3,7 @@ package com.example.backend.service;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.example.backend.dto.image.imageResponse;
+import com.example.backend.entity.ProductImage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,7 +25,6 @@ public class CloudinaryService {
                 ObjectUtils.asMap(
                         "folder", "products"
                 ));
-
         return imageResponse.builder()
                 .url((String) uploadResult.get("secure_url"))
                 .publicId((String) uploadResult.get("public_id"))

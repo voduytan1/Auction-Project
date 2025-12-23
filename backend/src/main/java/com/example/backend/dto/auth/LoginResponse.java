@@ -23,6 +23,8 @@ public class LoginResponse {
 
     Role vaitro;
 
+    LocalDateTime thoiHanBanHang;
+
     String hoVaTen;
 
     String diaChi;
@@ -30,6 +32,8 @@ public class LoginResponse {
     String soDienThoai;
 
     LocalDate ngaySinh;
+
+    Double diemDanhGia;
 
     String anhDaiDien;
 }

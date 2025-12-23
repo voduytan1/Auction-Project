@@ -14,13 +14,15 @@ import java.util.UUID;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserResponse {
-    UUID id;
+    UUID userid;
 
     String username;
 
     String email;
 
     Role vaitro;
+
+    LocalDateTime thoiHanBanHang;
 
     String hoVaTen;
 
@@ -31,6 +33,8 @@ public class UserResponse {
     LocalDate ngaySinh;
 
     String anhDaiDien;
+
+    Double diemDanhGia;
 
     LocalDateTime createdAt;
 

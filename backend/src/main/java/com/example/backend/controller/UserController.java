@@ -7,6 +7,7 @@ import com.example.backend.dto.user.CreateUserRequest;
 import com.example.backend.dto.user.UpdateUserRequest;
 import com.example.backend.dto.user.UserResponse;
 import com.example.backend.mapper.UserMapper;
+import com.example.backend.service.UpgradeRequestService;
 import com.example.backend.service.UserService;
 import com.example.backend.utils.PageUtils;
 import jakarta.persistence.EntityNotFoundException;
@@ -17,6 +18,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +32,7 @@ import java.util.UUID;
 public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
+    private final UpgradeRequestService upgradeRequestService;
 
     @GetMapping
     public ResponseEntity<@NotNull ApiResponse<List<UserResponse>>> getAllUser(@Valid @ModelAttribute PaginationRequest request) {
@@ -71,6 +74,16 @@ public class UserController {
         UserResponse user = userService.createOne(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Tạo user thành công",  user));
+    }
+
+    @PostMapping("/request-seller")
+    public ResponseEntity<@NotNull Void> requestSeller(@AuthenticationPrincipal Jwt jwt) {
+        String sub = jwt != null ? jwt.getSubject() : null;
+        if(sub == null) {
+            throw new BadCredentialsException("Lỗi access token không hợp lệ");
+        }
+        upgradeRequestService.CreateRequest(UUID.fromString(sub));
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{id}")

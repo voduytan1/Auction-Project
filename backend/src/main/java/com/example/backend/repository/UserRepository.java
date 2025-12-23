@@ -3,17 +3,21 @@ package com.example.backend.repository;
 
 import com.example.backend.entity.User;
 import io.lettuce.core.dynamic.annotation.Param;
+import jakarta.transaction.Transactional;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, UUID> {
+public interface UserRepository extends JpaRepository<@NotNull User, @NotNull UUID> {
     Optional<User> findUserByUsername(String username);
     Optional<User> findUserByEmail(String email);
 
@@ -29,4 +33,9 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     Boolean existsByUsername(String username);
     Boolean existsByEmail(String email);
+
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query("UPDATE User u SET u.vaitro = 'USER', u.thoiHanBanHang = NULL WHERE u.vaitro = 'SELLER' AND u.thoiHanBanHang < :now")
+    int revokeExpiredSellers(@Param("now") LocalDateTime now);
 }

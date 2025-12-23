@@ -5,6 +5,7 @@ import com.example.backend.entity.JWTToken;
 import com.example.backend.mapper.JWTTokenMapper;
 import com.example.backend.repository.RedisRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -40,10 +41,12 @@ public class RedisService {
     /**
      * Xóa token khi người dùng đăng xuất
      */
+    @Transactional
     public void deleteToken(String jti) {
         redisRepository.deleteById(jti);
     }
 
+    @Transactional
     public void createAndSaveJwtToken(TokenPair tokenPair, String userId,
                                       JWTTokenMapper jwtTokenMapper, RedisRepository redisRepository) {
         JWTToken jwtToken = jwtTokenMapper.toEntity(tokenPair);

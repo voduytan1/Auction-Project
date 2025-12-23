@@ -1,7 +1,6 @@
 
 package com.example.backend.entity;
 
-import com.example.backend.entity.ProductStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;

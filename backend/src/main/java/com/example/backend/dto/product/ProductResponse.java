@@ -12,18 +12,23 @@ import java.util.List;
 @Data
 @Builder
 public class ProductResponse {
-    private Long id;
-    private String name;
-    private String description;
-    private BigDecimal priceStart;
-    private BigDecimal priceCurrent;
-    private BigDecimal priceBuyNow;
-    private LocalDateTime createdAt;
-    private LocalDateTime endAt;
-    private ProductStatus status;
+    private Long productid;
 
-    private String categoryName;
-    private String sellerName;
+    private String tenSanPham;
+    private String moTa;
+
+    private BigDecimal giaKhoiDiem;
+    private BigDecimal buocGia;
+    private BigDecimal giaHienTai;
+    private BigDecimal giaMuaNgay;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime thoiGianKetThuc;
+
+    private ProductStatus trangThai;
+
+    private String tenCategory;
+    private String tenSeller;
 
     private List<String> images;
     private List<DescriptionHistoryResponse> descriptionUpdates;

@@ -5,6 +5,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 
 @Data
@@ -24,6 +25,8 @@ public class LoginResponseWithRefreshToken {
     String email;
 
     Role vaitro;
+
+    LocalDateTime thoiHanBanHang;
 
     String hoVaTen;
 

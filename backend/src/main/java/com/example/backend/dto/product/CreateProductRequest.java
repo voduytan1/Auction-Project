@@ -14,29 +14,33 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CreateProductRequest {
     @NotBlank(message = "Tên sản phẩm không được để trống")
-    private String name;
+    String tenSanPham;
 
     @NotBlank(message = "Mô tả không được để trống")
-    private String description;
+    String moTa;
 
-    @NotNull(message = "iá khởi điểm tối thiểu là 1000 VNĐ")
+    @NotNull(message = "Giá khởi điểm không được để trống")
     @Min(value = 1000, message = "Giá khởi điểm tối thiểu là 1000 VNĐ")
-    private BigDecimal priceStart;
+    BigDecimal giaKhoiDiem;
 
-    @NotNull(message = "Bước giá tối thiểu là 1000 VNĐ")
+    @NotNull(message = "Bước giá không được để trống")
     @Min(value = 1000, message = "Bước giá tối thiểu là 1000 VNĐ")
-    private BigDecimal priceStep;
+    BigDecimal buocGia;
 
-    private BigDecimal priceBuyNow;
+    BigDecimal giaMuaNgay;
 
     @NotNull(message = "Vui lòng chọn danh mục")
-    private Long categoryId;
+    Long categoryId;
 
     @NotNull(message = "Thời gian tối thiểu là 1 giờ")
     @Min(value = 1, message = "Thời gian tối thiểu là 1 giờ")
-    private Integer durationInHours; // User nhập số giờ muốn đấu giá (ví dụ: 24h, 48h)
+    Integer durationInHours;
 
-    @NotEmpty(message = "Vui lòng tải lên tối thiểu 3 ảnh")
-    @Size(min = 3, message = "Vui lòng tải lên tối thiểu 3 ảnh")
-    private List<String> imageUrls;
+    @NotEmpty(message = "Vui lòng tải lên tối thiểu 4 ảnh")
+    @Size(min = 3, message = "Vui lòng tải lên tối thiểu 4 ảnh")
+    List<String> images;
+
+    Boolean choPhepTuDongGiaHan = false;
+
+    Boolean choPhepBidderChuaDanhGia = true;
 }

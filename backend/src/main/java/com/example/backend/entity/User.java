@@ -43,7 +43,10 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "vai_tro", nullable = false)
-    Role vaitro;
+    Role vaitro = Role.BIDDER;
+
+    @Column(name = "thoi_han_ban_hang")
+    LocalDateTime thoiHanBanHang;
 
     @Column(name = "ho_va_ten", length = 50, columnDefinition = "nvarchar(50)")
     String hoVaTen;
@@ -52,10 +55,13 @@ public class User {
     String diaChi;
 
     @Column(name = "so_dien_thoai", length = 10)
-    private String soDienThoai;
+    String soDienThoai;
 
     @Column(name = "ngay_sinh")
-    private LocalDate ngaySinh;
+    LocalDate ngaySinh;
+
+    @Column(name = "diem_danh_gia")
+    Double diemDanhGia;
 
     @Column(name = "anh_dai_dien", length = 255)
     String anhDaiDien;

@@ -25,8 +25,7 @@ public class CreateUserRequest {
     @Email(message = "Email không đúng định dạng")
     String email;
 
-    @NotNull(message = "Vai trò không được để trống")
-    Role vaitro;
+    Role vaitro = Role.BIDDER;
 
     @Size(max = 100, message = "Họ và tên không quá 100 ký tự")
     String hoVaTen;
