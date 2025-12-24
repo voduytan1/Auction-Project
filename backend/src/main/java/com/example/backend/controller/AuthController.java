@@ -41,9 +41,16 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ApiResponse<String> logout(@CookieValue("refresh_token") String refreshToken, HttpServletResponse res) {
+    public ApiResponse<String> logout(
+            @CookieValue(name = "refresh_token", required = false) String refreshToken,
+            HttpServletResponse res) {
+
         cookieUtils.clearRefreshCookie(res);
-        authService.logout(refreshToken);
+
+        if (refreshToken != null && !refreshToken.isEmpty()) {
+            authService.logout(refreshToken);
+        }
+
         return ApiResponse.success("Log out successfully");
     }
 }
