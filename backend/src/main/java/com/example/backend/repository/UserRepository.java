@@ -29,13 +29,15 @@ public interface UserRepository extends JpaRepository<@NotNull User, @NotNull UU
                     ":search IS NULL OR " +
                     "LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
                     "LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))")
-    Page<User> findUsersWithSearch(@Param("search") String search, Pageable pageable);
+    Page<@NotNull User> findUsersWithSearch(@Param("search") String search, Pageable pageable);
 
     Boolean existsByUsername(String username);
     Boolean existsByEmail(String email);
 
     @Modifying(clearAutomatically = true)
     @Transactional
-    @Query("UPDATE User u SET u.vaitro = 'USER', u.thoiHanBanHang = NULL WHERE u.vaitro = 'SELLER' AND u.thoiHanBanHang < :now")
+    @Query("UPDATE User u SET u.vaitro = 'BIDDER', u.thoiHanBanHang = NULL " +
+            "WHERE u.vaitro = 'SELLER' " +
+            "AND (u.thoiHanBanHang IS NULL OR u.thoiHanBanHang < :now)")
     int revokeExpiredSellers(@Param("now") LocalDateTime now);
 }

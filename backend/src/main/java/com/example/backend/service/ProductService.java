@@ -2,11 +2,17 @@ package com.example.backend.service;
 
 import com.example.backend.dto.product.CreateProductRequest;
 import com.example.backend.dto.product.ProductResponse;
+import com.example.backend.dto.product.filtercriteria.ProductFilterRequest;
 import com.example.backend.entity.*;
 import com.example.backend.mapper.ProductMapper;
 import com.example.backend.repository.*;
+import com.example.backend.specification.ProductSpecification;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -34,8 +40,7 @@ public class ProductService {
 
     @Transactional
     public ProductResponse createProduct(UUID sellerId, CreateProductRequest request) {
-        // 1. Lấy thông tin Seller & Category
-        User seller = userRepository.findById(sellerId)
+       User seller = userRepository.findById(sellerId)
                 .orElseThrow(() -> new EntityNotFoundException("Người dùng không tồn tại"));
 
         if (seller.getVaitro() != Role.SELLER) {
@@ -77,5 +82,13 @@ public class ProductService {
         ProductResponse result = productMapper.toResponse(savedProduct);
         result.setImages(request.getImages());
         return result;
+    }
+
+    public Page<@NotNull ProductResponse> getAllProducts(ProductFilterRequest criteria, Pageable pageable) {
+        Specification<@NotNull Product> spec = ProductSpecification.getFilter(criteria);
+
+        Page<@NotNull Product> productPage = productRepository.findAll(spec, pageable);
+
+        return productPage.map(productMapper::toResponse);
     }
 }

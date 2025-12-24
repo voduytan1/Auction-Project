@@ -1,6 +1,7 @@
 
 package com.example.backend.entity;
 
+import com.example.backend.utils.MyStringUtils;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -18,7 +19,8 @@ import java.util.List;
         @Index(name = "idx_product_end_time", columnList = "thoi_gian_ket_thuc"),
         @Index(name = "idx_product_created", columnList = "created_at"),
         @Index(name = "idx_product_category", columnList = "categoryid"),
-        @Index(name = "idx_product_seller", columnList = "sellerid")
+        @Index(name = "idx_product_seller", columnList = "sellerid"),
+        @Index(name = "idx_product_search_text", columnList = "search_text")
 })
 @Data
 @AllArgsConstructor
@@ -88,4 +90,17 @@ public class Product {
     @UpdateTimestamp
     @Column(name = "updated_at")
     LocalDateTime updatedAt;
+
+    @Column(name = "search_text", columnDefinition = "TEXT")
+    private String searchText;
+
+    @PrePersist // Chạy trước khi INSERT
+    @PreUpdate  // Chạy trước khi UPDATE
+    public void generateSearchText() {
+        // Gom tất cả các thuộc tính muốn search vào đây (Tên + Mô tả + ...)
+        String rawText = this.tenSanPham + " " + (this.moTa != null ? this.moTa : "");
+
+        // Gọi hàm bỏ dấu và lưu vào cột search_text
+        this.searchText = MyStringUtils.removeAccents(rawText);
+    }
 }
