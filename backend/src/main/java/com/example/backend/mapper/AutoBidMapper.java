@@ -3,8 +3,10 @@ package com.example.backend.mapper;
 import com.example.backend.dto.bid.AutoBidResponse;
 import com.example.backend.dto.bid.PlaceAutoBidRequest;
 import com.example.backend.entity.AutoBid;
+import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+@Mapper(componentModel = "spring")
 public interface AutoBidMapper {
     @Mapping(source = "product.productid", target = "productid")
     @Mapping(source = "product.tenSanPham", target = "tenSanPham")
