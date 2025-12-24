@@ -29,6 +29,7 @@ export function ProductDescriptionField({
       <Label htmlFor="moTa">
         Mô tả chi tiết <span className="text-destructive">*</span>
       </Label>
+
       <Controller
         name="moTa"
         control={control}
@@ -51,9 +52,7 @@ export function ProductDescriptionField({
           />
         )}
       />
-      {errors.moTa && (
-        <p className="text-sm text-destructive">{errors.moTa.message}</p>
-      )}
+
       <p className="text-xs text-muted-foreground">
         Sử dụng các công cụ định dạng để làm nổi bật thông tin quan trọng
       </p>

@@ -51,6 +51,23 @@ export const productAPI = {
   create: (data: CreateProductRequest) =>
     api.post<ProductResponse>("/products", data),
 
+  /**
+   * POST /products/{id}/description - Append description to product
+   * Seller only - appends new content to existing description
+   */
+  appendDescription: (id: number | string, content: string) =>
+    api.post<DescriptionHistoryResponse>(`/products/${id}/description`, {
+      content,
+    }),
+
+  /**
+   * GET /products/{id}/description-history - Get all description updates
+   */
+  getDescriptionHistory: (id: number | string) =>
+    api.get<DescriptionHistoryResponse[]>(
+      `/products/${id}/description-history`
+    ),
+
   // TODO: Add when backend implements these endpoints
   // getAll: (params?: { page?: number; size?: number; search?: string; categoryId?: number; status?: string }) =>
   //   api.get<PaginatedResponse<ProductResponse>>("/products", { params }),
@@ -63,9 +80,6 @@ export const productAPI = {
 
   // delete: (id: number) =>
   //   api.delete<void>(`/products/${id}`),
-
-  // appendDescription: (id: number, content: string) =>
-  //   api.post<DescriptionHistoryResponse>(`/products/${id}/description`, { content }),
 
   // placeBid: (id: number, amount: number) =>
   //   api.post<BidHistoryResponse>(`/products/${id}/bids`, { amount }),
