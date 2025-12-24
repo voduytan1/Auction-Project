@@ -5,7 +5,6 @@ import { createBrowserRouter, Navigate } from "react-router";
 import AuthLayout from "../components/layout/AuthLayout";
 import AdminLayout from "../components/layout/AdminLayout";
 import MainLayout from "../components/layout/MainLayout";
-import UserLayout from "../components/layout/UserLayout";
 
 // Auth Guard
 import ProtectedRoute from "../components/auth/ProtectedRoute";
@@ -232,7 +231,7 @@ export const router = createBrowserRouter([
     path: "/seller",
     element: (
       <ProtectedRoute requiredRole="SELLER">
-        <UserLayout />
+        <MainLayout />
       </ProtectedRoute>
     ),
     children: [
@@ -264,7 +263,7 @@ export const router = createBrowserRouter([
     path: "/bidder",
     element: (
       <ProtectedRoute requiredRole="BIDDER">
-        <UserLayout />
+        <MainLayout />
       </ProtectedRoute>
     ),
     children: [

@@ -45,7 +45,8 @@ const AdminLayout = () => {
   ];
 
   const handleLogout = async () => {
-    await dispatch(logoutUser());
+    // Wait for logout to complete (clears localStorage)
+    await dispatch(logoutUser()).unwrap();
     // Admin layout luôn redirect về login vì tất cả admin routes đều protected
     // Dùng replace: true để không thể back lại trang admin
     navigate("/auth/login", { replace: true });

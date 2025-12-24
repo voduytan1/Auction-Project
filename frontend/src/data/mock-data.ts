@@ -69,7 +69,7 @@ export interface ProductDetail {
 export const productDetailData: ProductDetail = {
   id: 1,
   name: "iPhone 15 Pro Max 256GB - Like New",
-  mainImage: "https://placehold.co/800x600/4a90e2/white?text=iPhone+15+Pro+Max",
+  mainImage: "https://placehold.co/800x600/4a90e2/white?text=Main+View",
   images: [
     "https://placehold.co/800x600/4a90e2/white?text=Front+View",
     "https://placehold.co/800x600/50c878/white?text=Back+View",

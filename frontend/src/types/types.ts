@@ -326,8 +326,22 @@ export interface ProductSearchParams extends PaginationParams {
 // ============= API Response Types =============
 export interface ApiResponse<T> {
   success: boolean;
-  data: T;
   message?: string;
+  data: T;
+  metadata?: PaginationMetadata;
+  timestamp?: string;
+}
+
+export interface PaginationMetadata {
+  totalElements: number;
+  totalPages: number;
+  currentPage: number;
+  pageSize: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+  sortBy?: string | null;
+  sortOrder?: string | null;
+  search?: string | null;
 }
 
 export interface MessageResponse {

@@ -102,8 +102,19 @@ export const refreshAccessToken = createAsyncThunk(
 );
 
 export const logoutUser = createAsyncThunk("auth/logout", async () => {
-  await authAPI.logout();
+  try {
+    await authAPI.logout();
+  } catch (error) {
+    // Ignore logout errors - we still want to clear local state
+    console.warn(
+      "Logout API call failed, but clearing local state anyway:",
+      error
+    );
+  }
+  // Clear all auth data from localStorage
   localStorage.removeItem("accessToken");
+  localStorage.removeItem("userId");
+  localStorage.removeItem("user");
   return null;
 });
 

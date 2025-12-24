@@ -1,8 +1,13 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+  useSearchParams,
+  useLocation,
+} from "react-router-dom";
 import {
   Search,
-  Home,
+  X,
   LogOut,
   User as UserIcon,
   Heart,
@@ -45,8 +50,21 @@ import { cn } from "@/lib/utils";
 export default function Header() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+
+  // Sync search input with URL params when on search page
+  useEffect(() => {
+    if (location.pathname === "/search") {
+      const query = searchParams.get("q") || "";
+      setSearchQuery(query);
+    } else {
+      setSearchQuery("");
+    }
+  }, [location.pathname, searchParams]);
 
   // Get categories from Redux store
   const categories = useAppSelector(selectCategories);
@@ -63,8 +81,23 @@ export default function Header() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+    const trimmed = searchQuery.trim();
+    if (trimmed) {
+      navigate(`/search?q=${encodeURIComponent(trimmed)}`);
+      setIsSearchExpanded(false);
+    } else if (location.pathname === "/search") {
+      // Clear search if empty on search page
+      navigate("/search");
+      setIsSearchExpanded(false);
+    }
+  };
+
+  const toggleSearch = () => {
+    if (isSearchExpanded) {
+      setSearchQuery("");
+      setIsSearchExpanded(false);
+    } else {
+      setIsSearchExpanded(true);
     }
   };
 
@@ -75,7 +108,8 @@ export default function Header() {
       currentPath.startsWith(path)
     );
 
-    await dispatch(logoutUser());
+    // Wait for logout to complete (clears localStorage)
+    await dispatch(logoutUser()).unwrap();
 
     // Chỉ redirect về login nếu đang ở protected route
     // Dùng replace: true để không thể back lại
@@ -115,40 +149,109 @@ export default function Header() {
 
   return (
     <>
-      {/* ================= TOP HEADER ================= */}
-      <header className="border-b bg-background">
+      {/* ================= MAIN HEADER ================= */}
+      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
         <div className="container mx-auto px-4">
-          <div className="flex h-16 items-center gap-4 justify-between">
+          <div className="flex h-16 items-center gap-4">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2 shrink-0">
-              <img src="/logo.png" className="h-10 w-10" />
+              <img src="/logo.png" className="h-10 w-10" alt="Logo" />
               <span className="text-xl font-bold hidden sm:block">
                 AuctionHub
               </span>
             </Link>
 
-            {/* Search */}
-            <form onSubmit={handleSearch} className="flex-1 max-w-2xl">
-              <div className="relative">
-                <Input
-                  placeholder="Tìm kiếm sản phẩm..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pr-10"
-                />
-                <Button
-                  type="submit"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full"
-                >
-                  <Search className="h-4 w-4" />
-                </Button>
-              </div>
-            </form>
+            {/* Categories - Hidden when search expanded */}
+            {!isSearchExpanded &&
+              !categoriesLoading &&
+              !categoriesError &&
+              categories &&
+              categories.length > 0 && (
+                <div className="flex items-center gap-1 flex-1">
+                  <NavigationMenu>
+                    <NavigationMenuList>
+                      {categories.map((category) => (
+                        <NavigationMenuItem key={category.id}>
+                          <NavigationMenuTrigger
+                            className="h-10 bg-transparent hover:bg-muted hover:text-primary focus:bg-muted focus:text-primary data-[state=open]:bg-muted data-[state=open]:text-primary rounded-md transition-colors"
+                            onClick={() =>
+                              navigate(`/category/${category.slug}`)
+                            }
+                          >
+                            {category.name}
+                          </NavigationMenuTrigger>
+                          {category.subcategories &&
+                            category.subcategories.length > 0 && (
+                              <NavigationMenuContent>
+                                <ul className="grid w-[200px] gap-1 p-2">
+                                  {category.subcategories.map((sub) => (
+                                    <li key={sub.id}>
+                                      <NavigationMenuLink asChild>
+                                        <Link
+                                          to={`/category/${sub.slug}`}
+                                          className="block select-none rounded-md p-3 leading-none outline-none hover:bg-accent hover:text-accent-foreground transition-colors"
+                                        >
+                                          <div className="text-sm font-medium">
+                                            {sub.name}
+                                          </div>
+                                        </Link>
+                                      </NavigationMenuLink>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </NavigationMenuContent>
+                            )}
+                        </NavigationMenuItem>
+                      ))}
+                    </NavigationMenuList>
+                  </NavigationMenu>
+                </div>
+              )}
 
-            {/* Auth / User Menu */}
-            <div className="flex gap-2 shrink-0">
+            {/* Search - Expanded when active */}
+            {isSearchExpanded && (
+              <form
+                onSubmit={handleSearch}
+                className="flex-1 flex items-center gap-2"
+              >
+                <div className="relative flex-1">
+                  <Input
+                    placeholder="Tìm kiếm sản phẩm..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pr-10"
+                    autoFocus
+                  />
+                  <Button
+                    type="submit"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full"
+                  >
+                    <Search className="h-4 w-4" />
+                  </Button>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleSearch}
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </form>
+            )}
+
+            {/* Right side actions */}
+            <div className="flex gap-2 shrink-0 ml-auto">
+              {/* Search Toggle Button - Hidden when expanded */}
+              {!isSearchExpanded && (
+                <Button variant="ghost" size="icon" onClick={toggleSearch}>
+                  <Search className="h-5 w-5" />
+                </Button>
+              )}
+
+              {/* Auth / User Menu */}
               {isAuthenticated && user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -290,64 +393,6 @@ export default function Header() {
           </div>
         </div>
       </header>
-
-      {/* ================= CATEGORY BAR ================= */}
-      <div className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
-        <div className="container mx-auto px-4">
-          <div className="flex h-12 items-center gap-1">
-            {/* Home */}
-            <Link
-              to="/"
-              className="flex items-center gap-1 px-3 h-10 text-sm font-medium hover:text-primary"
-            >
-              <Home className="h-4 w-4" />
-              Trang chủ
-            </Link>
-
-            {/* Categories - Success State (only show if we have categories) */}
-            {!categoriesLoading &&
-              !categoriesError &&
-              categories &&
-              categories.length > 0 && (
-                <NavigationMenu>
-                  <NavigationMenuList>
-                    {categories.map((category) => (
-                      <NavigationMenuItem key={category.id}>
-                        <NavigationMenuTrigger
-                          className="h-10 bg-transparent hover:bg-muted hover:text-primary focus:bg-muted focus:text-primary data-[state=open]:bg-muted data-[state=open]:text-primary rounded-md transition-colors"
-                          onClick={() => navigate(`/category/${category.slug}`)}
-                        >
-                          {category.name}
-                        </NavigationMenuTrigger>
-                        {category.subcategories &&
-                          category.subcategories.length > 0 && (
-                            <NavigationMenuContent>
-                              <ul className="grid w-[200px] gap-1 p-2">
-                                {category.subcategories.map((sub) => (
-                                  <li key={sub.id}>
-                                    <NavigationMenuLink asChild>
-                                      <Link
-                                        to={`/category/${sub.slug}`}
-                                        className="block select-none rounded-md p-3 leading-none outline-none hover:bg-accent hover:text-accent-foreground transition-colors"
-                                      >
-                                        <div className="text-sm font-medium">
-                                          {sub.name}
-                                        </div>
-                                      </Link>
-                                    </NavigationMenuLink>
-                                  </li>
-                                ))}
-                              </ul>
-                            </NavigationMenuContent>
-                          )}
-                      </NavigationMenuItem>
-                    ))}
-                  </NavigationMenuList>
-                </NavigationMenu>
-              )}
-          </div>
-        </div>
-      </div>
     </>
   );
 }

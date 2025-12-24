@@ -57,7 +57,7 @@ export function SearchFilters({
         <div className="flex flex-wrap gap-4">
           {/* Category filter */}
           <Select value={categoryFilter} onValueChange={onCategoryChange}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-50">
               <SelectValue placeholder="Chọn danh mục" />
             </SelectTrigger>
             <SelectContent>
@@ -75,7 +75,7 @@ export function SearchFilters({
 
           {/* Sort filter */}
           <Select value={sortBy} onValueChange={onSortChange}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-50">
               <SelectValue placeholder="Sắp xếp theo" />
             </SelectTrigger>
             <SelectContent>

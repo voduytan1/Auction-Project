@@ -18,3 +18,9 @@ export const store = configureStore({
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
+export type AppStore = typeof store;
+
+// Attach store to window for api interceptors
+if (typeof window !== "undefined") {
+  (window as any).__REDUX_STORE__ = store;
+}
