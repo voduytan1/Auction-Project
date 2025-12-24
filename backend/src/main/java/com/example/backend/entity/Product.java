@@ -62,7 +62,7 @@ public class Product {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "trang_thai", nullable = false)
-    ProductStatus trangThai = ProductStatus.PENDING;
+    ProductStatus trangThai = ProductStatus.ACTIVE;
 
     @Column(name = "thoi_gian_ket_thuc", nullable = false)
     LocalDateTime thoiGianKetThuc;
