@@ -32,5 +32,5 @@ public class ProductDescriptionHistory {
 
     @CreationTimestamp
     @Column(name = "thoi_gian_them", nullable = false)
-    LocalDateTime thoiGianThem;
+    LocalDateTime thoiGianThem = LocalDateTime.now();
 }

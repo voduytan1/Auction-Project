@@ -5,7 +5,10 @@ import com.example.backend.dto.common.PaginationInfo;
 import com.example.backend.dto.common.PaginationRequest;
 import com.example.backend.dto.product.CreateProductRequest;
 import com.example.backend.dto.product.ProductResponse;
+import com.example.backend.dto.product.descriptionhistory.AppendDescriptionRequest;
+import com.example.backend.dto.product.descriptionhistory.DescriptionHistoryResponse;
 import com.example.backend.dto.product.filtercriteria.ProductFilterRequest;
+import com.example.backend.service.ProductDescriptionHistoryService;
 import com.example.backend.service.ProductService;
 import com.example.backend.utils.PageUtils;
 import jakarta.validation.Valid;
@@ -25,9 +28,11 @@ import java.util.UUID;
 @RequestMapping("/products")
 public class ProductController {
     private final ProductService productService;
+    private final ProductDescriptionHistoryService productDescriptionHistoryService;
 
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService, ProductDescriptionHistoryService productDescriptionHistoryService) {
         this.productService = productService;
+        this.productDescriptionHistoryService = productDescriptionHistoryService;
     }
 
     @GetMapping
@@ -60,5 +65,16 @@ public class ProductController {
         }
         ProductResponse result = productService.createProduct(UUID.fromString(sub), request);
         return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    @PatchMapping
+    public ResponseEntity<@NotNull ApiResponse<DescriptionHistoryResponse>> appendDescription(@RequestBody @Valid AppendDescriptionRequest request, @AuthenticationPrincipal Jwt jwt) {
+        String sub = jwt != null ? jwt.getSubject() : null;
+        if(sub == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Lỗi access token không hợp lệ"));
+        }
+        DescriptionHistoryResponse result = productDescriptionHistoryService.createOne(request, UUID.fromString(sub));
+
+        return  ResponseEntity.ok(ApiResponse.success(result));
     }
 }

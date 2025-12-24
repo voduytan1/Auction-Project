@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 public class DescriptionHistoryResponse {
     private Long id;
-    private String content;
-    private LocalDateTime createdAt;
+    private Long productId;
+    private String noiDungThem;
+    private LocalDateTime thoiGianThem;
 }

@@ -54,7 +54,7 @@ public class SecurityConfig {
             "SELLER",Map.of(
                     HttpMethod.GET, new String[]{},
                     HttpMethod.POST, new String[]{"/products"},
-                    HttpMethod.PATCH, new String[]{},
+                    HttpMethod.PATCH, new String[]{"/products"},
                     HttpMethod.DELETE, new String[]{}
             ),
             "BIDDER",Map.of(

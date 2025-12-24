@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -28,14 +27,12 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final ProductImageRepository  productImageRepository;
-    private final UpgradeRequestRepository upgradeRequestRepository;
     private final ProductMapper productMapper;
     public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, UserRepository userRepository, ProductImageRepository productImageRepository, UpgradeRequestRepository upgradeRequestRepository, ProductMapper productMapper) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
         this.productImageRepository = productImageRepository;
-        this.upgradeRequestRepository = upgradeRequestRepository;
         this.productMapper = productMapper;
     }
 
@@ -85,6 +82,7 @@ public class ProductService {
         return result;
     }
 
+    @Transactional
     public Page<@NotNull ProductResponse> getAllProducts(ProductFilterRequest criteria, Pageable pageable) {
         Specification<@NotNull Product> spec = ProductSpecification.getFilter(criteria);
 
@@ -93,6 +91,7 @@ public class ProductService {
         return productPage.map(productMapper::toResponse);
     }
 
+    @Transactional
     public ProductResponse getProductById(Long id) {
          Product product = productRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("Không tìm thấy product với id "+ id));
          return productMapper.toResponse(product);

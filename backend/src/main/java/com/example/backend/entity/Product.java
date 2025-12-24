@@ -82,6 +82,12 @@ public class Product {
     @JoinColumn(name = "current_bidderid")
     User currentBidder;
 
+    @Column(name = "search_text", columnDefinition = "TEXT")
+    String searchText;
+
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
+    private List<ProductDescriptionHistory> productDescriptionHistories;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     LocalDateTime createdAt;
@@ -90,8 +96,7 @@ public class Product {
     @Column(name = "updated_at")
     LocalDateTime updatedAt;
 
-    @Column(name = "search_text", columnDefinition = "TEXT")
-    String searchText;
+
 
     @PrePersist // Chạy trước khi INSERT
     @PreUpdate  // Chạy trước khi UPDATE
