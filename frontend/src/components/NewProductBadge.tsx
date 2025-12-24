@@ -21,7 +21,7 @@ export function NewProductBadge({
   }
 
   return (
-    <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 shadow-lg animate-pulse">
+    <Badge className="bg-linear-to-r from-orange-500 to-red-500 text-white border-0 shadow-lg animate-pulse">
       <Sparkles className="h-3 w-3 mr-1" />
       MỚI
     </Badge>

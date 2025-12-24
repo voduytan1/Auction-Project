@@ -172,3 +172,8 @@
   --shadow-xl: var(--shadow-xl);
   --shadow-2xl: var(--shadow-2xl);
 }
+
+.ck.ck-editor__main > .ck-editor__editable {
+  min-height: 300px !important;
+  max-height: 600px; /* Nếu dài quá thì hiện thanh cuộn */
+}

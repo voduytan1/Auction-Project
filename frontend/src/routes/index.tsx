@@ -5,6 +5,7 @@ import { createBrowserRouter, Navigate } from "react-router";
 import AuthLayout from "../components/layout/AuthLayout";
 import AdminLayout from "../components/layout/AdminLayout";
 import MainLayout from "../components/layout/MainLayout";
+import UserLayout from "../components/layout/UserLayout";
 
 // Auth Guard
 import ProtectedRoute from "../components/auth/ProtectedRoute";
@@ -13,7 +14,7 @@ import ProtectedRoute from "../components/auth/ProtectedRoute";
 import { PageWrapper } from "../components/PageWrapper";
 
 // Lazy load pages
-const HomePage = lazy(() => import("./Homepage"));
+const HomePage = lazy(() => import("./homepage"));
 const UnauthorizedPage = lazy(() => import("./unauthorized"));
 const ProductDetailPage = lazy(() => import("./product-detail"));
 const CategoryProductsPage = lazy(() => import("./category-products"));
@@ -91,6 +92,26 @@ export const router = createBrowserRouter([
         element: (
           <PageWrapper title="Tìm kiếm sản phẩm">
             <SearchPage />
+          </PageWrapper>
+        ),
+      },
+    ],
+  },
+
+  // Profile route (protected)
+  {
+    path: "/profile",
+    element: (
+      <ProtectedRoute>
+        <MainLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        index: true,
+        element: (
+          <PageWrapper title="Hồ sơ cá nhân">
+            <ProfilePage />
           </PageWrapper>
         ),
       },
@@ -206,68 +227,12 @@ export const router = createBrowserRouter([
     ],
   },
 
-  // Authenticated user routes (Bidders, Sellers)
-  {
-    path: "/app",
-    element: (
-      <ProtectedRoute>
-        <MainLayout />
-      </ProtectedRoute>
-    ),
-    children: [
-      {
-        path: "auctions",
-        element: (
-          <PageWrapper title="Danh sách đấu giá">
-            <div>Auctions List</div>
-          </PageWrapper>
-        ),
-      },
-      {
-        path: "auctions/:id",
-        element: (
-          <PageWrapper title="Chi tiết đấu giá">
-            <div>Auction Details</div>
-          </PageWrapper>
-        ),
-      },
-      {
-        path: "my-bids",
-        element: (
-          <PageWrapper title="Lượt đấu của tôi">
-            <div>My Bids</div>
-          </PageWrapper>
-        ),
-      },
-      {
-        path: "my-auctions",
-        element: (
-          <PageWrapper title="Đấu giá của tôi">
-            <div>My Auctions (Seller)</div>
-          </PageWrapper>
-        ),
-      },
-      {
-        path: "profile",
-        element: (
-          <PageWrapper title="Hồ sơ cá nhân">
-            <ProfilePage />
-          </PageWrapper>
-        ),
-      },
-      {
-        index: true,
-        element: <Navigate to="/app/auctions" replace />,
-      },
-    ],
-  },
-
   // Seller routes
   {
     path: "/seller",
     element: (
       <ProtectedRoute requiredRole="SELLER">
-        <MainLayout />
+        <UserLayout />
       </ProtectedRoute>
     ),
     children: [
@@ -299,7 +264,7 @@ export const router = createBrowserRouter([
     path: "/bidder",
     element: (
       <ProtectedRoute requiredRole="BIDDER">
-        <MainLayout />
+        <UserLayout />
       </ProtectedRoute>
     ),
     children: [

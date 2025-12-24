@@ -1,148 +1,211 @@
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Placeholder from "@tiptap/extension-placeholder";
+import { useState, useEffect } from "react";
+import { CKEditor } from "@ckeditor/ckeditor5-react";
+
 import {
+  ClassicEditor,
+  // Basic styles
   Bold,
   Italic,
+  Underline,
+  Strikethrough,
+  Subscript,
+  Superscript,
+  Code,
+  // Font
+  FontBackgroundColor,
+  FontColor,
+  FontFamily,
+  FontSize,
+  // Layout & Alignment
+  Alignment,
+  Indent,
+  IndentBlock,
+  // Content blocks
+  BlockQuote,
+  Heading,
+  HorizontalLine,
+  Link,
   List,
-  ListOrdered,
-  Heading2,
+  Paragraph,
+  // Tables
+  Table,
+  TableToolbar,
+  TableCellProperties,
+  TableProperties,
+  TableCaption,
+  TableColumnResize,
+  // Media & Images
+  Image,
+  ImageCaption,
+  ImageResize,
+  ImageStyle,
+  ImageToolbar,
+  ImageUpload,
+  Base64UploadAdapter,
+  MediaEmbed,
+  // Utils
+  Essentials,
+  Autoformat,
+  SourceEditing,
   Undo,
-  Redo,
-} from "lucide-react";
-import { Button } from "./ui/button";
-import { cn } from "@/lib/utils";
+} from "ckeditor5";
+
+import "ckeditor5/ckeditor5.css";
 
 interface RichTextEditorProps {
-  content: string;
-  onChange: (content: string) => void;
+  content?: string;
+  onChange?: (value: string) => void;
   placeholder?: string;
   error?: string;
 }
 
 export function RichTextEditor({
-  content,
+  content = "",
   onChange,
-  placeholder = "Nhập nội dung...",
+  placeholder,
   error,
 }: RichTextEditorProps) {
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Placeholder.configure({
-        placeholder,
-      }),
-    ],
-    content,
-    onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
-    },
-    editorProps: {
-      attributes: {
-        class: cn(
-          "prose prose-sm max-w-none min-h-[150px] px-3 py-2 focus:outline-none",
-          error && "border-destructive"
-        ),
-      },
-    },
-  });
+  const [data, setData] = useState<string>(content);
 
-  if (!editor) {
-    return null;
-  }
+  useEffect(() => {
+    setData(content);
+  }, [content]);
 
   return (
-    <div
-      className={cn(
-        "border rounded-md bg-background",
-        error && "border-destructive"
-      )}
-    >
-      {/* Toolbar */}
-      <div className="border-b p-2 flex flex-wrap gap-1">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          className={cn("h-8 w-8 p-0", editor.isActive("bold") && "bg-muted")}
-        >
-          <Bold className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={cn("h-8 w-8 p-0", editor.isActive("italic") && "bg-muted")}
-        >
-          <Italic className="h-4 w-4" />
-        </Button>
-        <div className="w-px h-8 bg-border mx-1" />
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 2 }).run()
-          }
-          className={cn(
-            "h-8 w-8 p-0",
-            editor.isActive("heading", { level: 2 }) && "bg-muted"
-          )}
-        >
-          <Heading2 className="h-4 w-4" />
-        </Button>
-        <div className="w-px h-8 bg-border mx-1" />
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={cn(
-            "h-8 w-8 p-0",
-            editor.isActive("bulletList") && "bg-muted"
-          )}
-        >
-          <List className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={cn(
-            "h-8 w-8 p-0",
-            editor.isActive("orderedList") && "bg-muted"
-          )}
-        >
-          <ListOrdered className="h-4 w-4" />
-        </Button>
-        <div className="w-px h-8 bg-border mx-1" />
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().undo().run()}
-          disabled={!editor.can().undo()}
-          className="h-8 w-8 p-0"
-        >
-          <Undo className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().redo().run()}
-          disabled={!editor.can().redo()}
-          className="h-8 w-8 p-0"
-        >
-          <Redo className="h-4 w-4" />
-        </Button>
+    <div className="space-y-1">
+      <div
+        className={`border rounded-lg bg-white ${
+          error ? "border-red-500" : "border-input"
+        }`}
+      >
+        <CKEditor
+          editor={ClassicEditor}
+          config={{
+            licenseKey: "GPL",
+            placeholder: placeholder,
+            // Cấu hình Toolbar đầy đủ
+            toolbar: {
+              items: [
+                "undo",
+                "redo",
+                "|",
+                "sourceEditing", // Xem mã HTML
+                "|",
+                "heading",
+                "|",
+                "fontFamily",
+                "fontSize",
+                "fontColor",
+                "fontBackgroundColor",
+                "|",
+                "bold",
+                "italic",
+                "underline",
+                "strikethrough",
+                "subscript",
+                "superscript",
+                "code",
+                "|",
+                "alignment", // Căn trái/phải/giữa/đều
+                "outdent",
+                "indent",
+                "|",
+                "bulletedList",
+                "numberedList",
+                "|",
+                "link",
+                "insertTable",
+                "mediaEmbed",
+                "imageUpload",
+                "blockQuote",
+                "horizontalLine",
+              ],
+              shouldNotGroupWhenFull: false, // Tự động nhóm vào dấu 3 chấm nếu màn hình nhỏ
+            },
+            // Cấu hình Plugin
+            plugins: [
+              // Core
+              Essentials,
+              Autoformat,
+              Undo,
+              // Layout
+              Alignment,
+              Indent,
+              IndentBlock,
+              Heading,
+              // Font
+              FontFamily,
+              FontSize,
+              FontColor,
+              FontBackgroundColor,
+              // Text Formatting
+              Bold,
+              Italic,
+              Underline,
+              Strikethrough,
+              Subscript,
+              Superscript,
+              Code,
+              // Content
+              BlockQuote,
+              HorizontalLine,
+              Link,
+              List,
+              Paragraph,
+              SourceEditing,
+              // Media
+              Image,
+              ImageCaption,
+              ImageResize,
+              ImageStyle,
+              ImageToolbar,
+              ImageUpload,
+              Base64UploadAdapter,
+              MediaEmbed,
+              // Table
+              Table,
+              TableToolbar,
+              TableCellProperties,
+              TableProperties,
+              TableCaption,
+              TableColumnResize,
+            ],
+            // Cấu hình hiển thị ảnh
+            image: {
+              toolbar: [
+                "imageStyle:inline",
+                "imageStyle:block",
+                "imageStyle:side",
+                "|",
+                "toggleImageCaption",
+                "imageTextAlternative",
+              ],
+            },
+            // Cấu hình hiển thị bảng
+            table: {
+              contentToolbar: [
+                "tableColumn",
+                "tableRow",
+                "mergeTableCells",
+                "tableCellProperties",
+                "tableProperties",
+              ],
+            },
+            // Cấu hình Link
+            link: {
+              addTargetToExternalLinks: true, // Tự động mở link tab mới
+            },
+          }}
+          data={data}
+          onChange={(_, editor) => {
+            const html = editor.getData();
+            setData(html);
+            onChange?.(html);
+          }}
+        />
       </div>
 
-      {/* Editor Content */}
-      <EditorContent editor={editor} />
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
 }
