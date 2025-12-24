@@ -12,6 +12,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 import tools.jackson.databind.exc.InvalidFormatException;
 
 
@@ -87,6 +88,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleTokenExpired(TokenExpiredException ex, HttpServletRequest req) {
         // Dùng HttpStatus.UNAUTHORIZED (401)
         return build(HttpStatus.UNAUTHORIZED, ex.getMessage(), req);
+    }
+    @ExceptionHandler(HttpClientErrorException.Forbidden.class)
+    public ResponseEntity<ApiError> Forbidden(HttpClientErrorException.Forbidden ex, HttpServletRequest req) {
+        return build(HttpStatus.FORBIDDEN, ex.getMessage(), req);
     }
 
     @ExceptionHandler(Exception.class)
