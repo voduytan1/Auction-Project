@@ -1,22 +1,30 @@
 import {
   Clock,
   Gavel,
-  Tag,
   TrendingUp,
   User,
   Star,
   ShoppingCart,
+  Heart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import type { ProductDetail } from "../types";
+// Import thêm Tooltip components
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+import type { ProductResponse } from "@/services/product.api";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
 
 interface ProductInfoProps {
-  product: ProductDetail;
+  product: ProductResponse;
 }
 
 export function ProductInfo({ product }: ProductInfoProps) {
@@ -28,12 +36,11 @@ export function ProductInfo({ product }: ProductInfoProps) {
   };
 
   const getTimeRemaining = () => {
-    const endDate = new Date(product.endTime);
+    const endDate = new Date(product.thoiGianKetThuc);
     const now = new Date();
     const diffInMs = endDate.getTime() - now.getTime();
     const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
 
-    // Nếu < 3 ngày thì hiển thị relative time
     if (diffInDays < 3) {
       return formatDistanceToNow(endDate, { addSuffix: true, locale: vi });
     }
@@ -47,68 +54,95 @@ export function ProductInfo({ product }: ProductInfoProps) {
     });
   };
 
-  const getRatingPercent = (user: { rating: number; totalRatings: number }) => {
-    return `${user.rating.toFixed(1)}/10 (${user.totalRatings} đánh giá)`;
-  };
-
   return (
     <div className="space-y-6">
       {/* Title & Category */}
-      <div>
-        <div className="mb-2 flex items-center gap-2 text-sm text-slate-600">
-          <Tag className="h-4 w-4" />
-          <span>{product.category}</span>
-          <span>›</span>
-          <span>{product.subcategory}</span>
-        </div>
-        <h1 className="text-3xl font-bold">{product.name}</h1>
+      <div className="mb-4">
+        <h1 className="text-3xl font-bold">{product.tenSanPham}</h1>
       </div>
 
       {/* Price Info */}
       <Card className="border-primary bg-primary/5">
         <CardContent className="p-6">
-          <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="text-sm text-slate-600">Giá hiện tại</div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-primary">
-                  {formatCurrency(product.currentBid)}
-                </span>
-                <Badge variant="secondary" className="text-xs">
-                  <TrendingUp className="mr-1 h-3 w-3" />
-                  {product.totalBids} lượt ra giá
-                </Badge>
+              <div className="text-4xl font-bold text-primary leading-none my-1">
+                {formatCurrency(product.giaHienTai)}
               </div>
+              <Badge variant="secondary" className="text-xs mt-2">
+                <TrendingUp className="mr-1 h-3 w-3" />
+                156 lượt ra giá
+              </Badge>
             </div>
 
-            {product.buyNowPrice && (
+            {product.giaMuaNgay && (
               <div>
                 <div className="text-sm text-slate-600">Giá mua ngay</div>
-                <div className="text-2xl font-semibold text-accent">
-                  {formatCurrency(product.buyNowPrice)}
+                <div className="text-2xl font-semibold text-accent leading-none my-1">
+                  {formatCurrency(product.giaMuaNgay)}
                 </div>
               </div>
             )}
+          </div>
 
-            <Separator />
+          <Separator className="my-4" />
 
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <div className="text-slate-600">Giá khởi điểm</div>
-                <div className="font-semibold">
-                  {formatCurrency(product.startingPrice)}
-                </div>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <div className="text-slate-600">Giá khởi điểm</div>
+              <div className="font-semibold">
+                {formatCurrency(product.giaKhoiDiem)}
               </div>
-              <div>
-                <div className="text-slate-600">Bước giá</div>
-                <div className="font-semibold">
-                  {formatCurrency(product.bidIncrement)}
-                </div>
+            </div>
+            <div>
+              <div className="text-slate-600">Bước giá</div>
+              <div className="font-semibold">
+                {formatCurrency(product.buocGia)}
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Action Buttons - Đã chỉnh sửa */}
+      <div className="flex items-stretch gap-3">
+        {/* Nút Đặt giá - Luôn hiện và giãn rộng */}
+        <Button size="lg" className="flex-1 text-lg">
+          <Gavel className="mr-2 h-5 w-5" />
+          Đặt giá 
+        </Button>
+
+        {/* Nút Mua ngay - Nếu có thì giãn rộng cùng nút Đặt giá */}
+        {product.giaMuaNgay && (
+          <Button
+            size="lg"
+            variant="default"
+            className="flex-1 bg-accent text-lg hover:bg-accent/90"
+          >
+            <ShoppingCart className="mr-2 h-5 w-5" />
+            Mua ngay
+          </Button>
+        )}
+
+        {/* Nút Wishlist - Icon Only với Tooltip */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="lg" // Dùng size lg để chiều cao bằng các nút bên cạnh
+                className="aspect-square px-0" // aspect-square để thành hình vuông
+              >
+                <Heart className="h-5 w-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Thêm vào yêu thích</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
 
       {/* Time Info */}
       <div className="grid grid-cols-2 gap-4">
@@ -135,7 +169,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
               <div>
                 <div className="text-xs text-slate-600">Đã đăng</div>
                 <div className="font-semibold">
-                  {formatDistanceToNow(new Date(product.postedAt), {
+                  {formatDistanceToNow(new Date(product.createdAt), {
                     addSuffix: true,
                     locale: vi,
                   })}
@@ -157,78 +191,19 @@ export function ProductInfo({ product }: ProductInfoProps) {
                 </div>
                 <div>
                   <div className="text-xs text-slate-600">Người bán</div>
-                  <div className="font-semibold">{product.seller.name}</div>
+                  <div className="font-semibold">
+                    {product.tenSeller || "Người bán"}
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-1 text-accent">
                 <Star className="h-4 w-4 fill-current" />
-                <span className="font-semibold">
-                  {getRatingPercent(product.seller)}
-                </span>
+                <span className="font-semibold text-sm">9.5/10</span>
               </div>
             </div>
-
-            {product.highestBidder && (
-              <>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-full bg-accent/10 p-3">
-                      <TrendingUp className="h-5 w-5 text-accent" />
-                    </div>
-                    <div>
-                      <div className="text-xs text-slate-600">
-                        Người đặt giá cao nhất
-                      </div>
-                      <div className="font-semibold">
-                        {product.highestBidder.name}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 text-accent">
-                    <Star className="h-4 w-4 fill-current" />
-                    <span className="font-semibold">
-                      {getRatingPercent(product.highestBidder)}
-                    </span>
-                  </div>
-                </div>
-              </>
-            )}
           </div>
         </CardContent>
       </Card>
-
-      {/* Action Buttons */}
-      <div className="space-y-3">
-        <Button size="lg" className="w-full text-lg">
-          <Gavel className="mr-2 h-5 w-5" />
-          Đặt giá ngay
-        </Button>
-        {product.buyNowPrice && (
-          <Button
-            size="lg"
-            variant="default"
-            className="w-full bg-accent text-lg hover:bg-accent/90"
-          >
-            <ShoppingCart className="mr-2 h-5 w-5" />
-            Mua ngay - {formatCurrency(product.buyNowPrice)}
-          </Button>
-        )}
-      </div>
-
-      {/* Auto Renew Badge */}
-      {product.autoRenew && (
-        <div className="rounded-lg bg-blue-50 p-3 text-sm text-blue-900">
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            <span className="font-medium">Tự động gia hạn:</span>
-          </div>
-          <p className="mt-1 text-xs">
-            Nếu có lượt đấu giá mới trong 5 phút cuối, sản phẩm tự động gia hạn
-            thêm 10 phút.
-          </p>
-        </div>
-      )}
     </div>
   );
 }

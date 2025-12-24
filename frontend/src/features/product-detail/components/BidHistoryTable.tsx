@@ -1,14 +1,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { History } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { History, Lock } from "lucide-react";
 import type { BidHistory } from "../types";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
+import { useAppSelector } from "@/hooks/use-redux";
+import { useNavigate } from "react-router";
 
 interface BidHistoryTableProps {
   bidHistory: BidHistory[];
 }
 
 export function BidHistoryTable({ bidHistory }: BidHistoryTableProps) {
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const navigate = useNavigate();
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -17,11 +23,11 @@ export function BidHistoryTable({ bidHistory }: BidHistoryTableProps) {
   };
 
   return (
-    <Card>
+    <Card className="relative">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <History className="h-5 w-5" />
-          Lịch sử đấu giá ({bidHistory.length} lượt)
+          Lịch sử đấu giá gần nhất
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -85,6 +91,26 @@ export function BidHistoryTable({ bidHistory }: BidHistoryTableProps) {
           </div>
         )}
       </CardContent>
+
+      {/* Overlay khi chưa đăng nhập */}
+      {!isAuthenticated && (
+        <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-white/95 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <div className="rounded-full bg-accent/10 p-4">
+              <Lock className="h-8 w-8 text-accent" />
+            </div>
+            <div>
+              <h3 className="mb-1 text-lg font-semibold">Yêu cầu đăng nhập</h3>
+              <p className="text-sm text-slate-600">
+                Vui lòng đăng nhập để xem lịch sử đấu giá
+              </p>
+            </div>
+            <Button onClick={() => navigate("/auth/login")} className="mt-2">
+              Đăng nhập ngay
+            </Button>
+          </div>
+        </div>
+      )}
     </Card>
   );
 }

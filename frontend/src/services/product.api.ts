@@ -1,4 +1,5 @@
 import api from "./api";
+import type { ApiResponse } from "@/types/types";
 
 /**
  * Product DTOs matching backend
@@ -38,6 +39,10 @@ export interface ProductResponse {
   tenSeller: string;
   images: string[];
   descriptionUpdates: DescriptionHistoryResponse[];
+  highestBidder?: {
+    name: string;
+    rating: number;
+  };
 }
 
 /**
@@ -68,12 +73,29 @@ export const productAPI = {
       `/products/${id}/description-history`
     ),
 
+  /**
+   * GET /products/{id} - Get product by ID
+   */
+  getById: (id: number | string) => api.get<ProductResponse>(`/products/${id}`),
+
+  /**
+   * GET /products - Search products with filters
+   * Query params: search, size, page, categoryId, minPrice, maxPrice
+   * Backend handles Vietnamese full-text search automatically
+   * Response: ApiResponse<ProductResponse[]> with metadata field
+   */
+  search: (params?: {
+    search?: string;
+    size?: number;
+    page?: number;
+    categoryId?: number;
+    minPrice?: number;
+    maxPrice?: number;
+  }) => api.get<ApiResponse<ProductResponse[]>>("/products", { params }),
+
   // TODO: Add when backend implements these endpoints
   // getAll: (params?: { page?: number; size?: number; search?: string; categoryId?: number; status?: string }) =>
   //   api.get<PaginatedResponse<ProductResponse>>("/products", { params }),
-
-  // getById: (id: number) =>
-  //   api.get<ProductResponse>(`/products/${id}`),
 
   // update: (id: number, data: UpdateProductRequest) =>
   //   api.put<ProductResponse>(`/products/${id}`, data),

@@ -1,6 +1,6 @@
-import { Link } from "react-router-dom";
-import { ArrowLeft, Heart } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Link, useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { productAPI, type ProductResponse } from "@/services/product.api";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { productDetailData, relatedProducts } from "@/data/mock-data";
@@ -10,13 +10,37 @@ import { BidHistoryTable } from "./components/BidHistoryTable";
 import { QASection } from "./components/QASection";
 import { ProductInfo } from "./components/ProductInfo";
 import { RelatedProducts } from "./components/RelatedProducts";
+import { PageLoader } from "@/components/PageLoader";
 
 const ProductDetail = () => {
-  //   const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{ id: string }>();
+  const [product, setProduct] = useState<ProductResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // TODO: Fetch product by ID from API
-  // For now, using mock data
-  const product = productDetailData;
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!id) return;
+
+      try {
+        setLoading(true);
+        const response = await productAPI.getById(id);
+        setProduct(response.data);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching product:", err);
+        setError("Không thể tải thông tin sản phẩm");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
+
+  if (loading) {
+    return <PageLoader message="Đang tải sản phẩm..." />;
+  }
 
   if (!product) {
     return (
@@ -30,41 +54,44 @@ const ProductDetail = () => {
   }
 
   return (
-    <div className="bg-slate-50">
-      <div className="container px-4 py-6 mx-auto">
+    <div className="bg-slate-50 px-36 py-6">
+      <div className="bg-white container px-4 py-6 mx-auto">
+        {/* Error Banner */}
+        {error && (
+          <div className="mb-4 rounded-lg bg-yellow-50 border border-yellow-200 p-4">
+            <p className="text-sm text-yellow-800">
+              {error}. Hiển thị dữ liệu mẫu.
+            </p>
+          </div>
+        )}
+
         {/* Breadcrumb */}
-        <div className="mb-6 flex items-center gap-4">
-          <Link to="/">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Quay lại
-            </Button>
-          </Link>
+        <div className="mb-4 flex items-center gap-4">
           <div className="flex items-center gap-2 text-sm text-slate-600">
             <Link to="/" className="hover:text-primary">
               Trang chủ
             </Link>
             <span>›</span>
             <Link
-              to={`/categories/${product.category}`}
+              to={`/categories/${product.tenCategory}`}
               className="hover:text-primary"
             >
-              {product.category}
+              {product.tenCategory || "Danh mục"}
             </Link>
             <span>›</span>
-            <span className="text-slate-900">{product.subcategory}</span>
+            <span className="text-slate-900">{product.tenSanPham}</span>
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-6 lg:grid-cols-2">
           {/* Left Column - Images */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-1">
             <div className="space-y-6">
               <ImageGallery
-                mainImage={product.mainImage}
-                images={product.images}
-                productName={product.name}
+                mainImage={product.images?.[0] || productDetailData.mainImage}
+                images={product.images?.slice(1) || productDetailData.images}
+                productName={product.tenSanPham}
               />
 
               {/* Tabs for Description, Bid History, Q&A */}
@@ -72,27 +99,29 @@ const ProductDetail = () => {
                 <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="description">Mô tả</TabsTrigger>
                   <TabsTrigger value="history">
-                    Lịch sử ({product.bidHistory.length})
+                    Lịch sử ({productDetailData.bidHistory.length})
                   </TabsTrigger>
                   <TabsTrigger value="qa">
-                    Hỏi đáp ({product.questions.length})
+                    Hỏi đáp ({productDetailData.questions.length})
                   </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="description" className="mt-4">
                   <ProductDescription
-                    description={product.description}
-                    productName={product.name}
+                    description={product.moTa}
+                    productName={product.tenSanPham}
                   />
                 </TabsContent>
 
                 <TabsContent value="history" className="mt-4">
-                  <BidHistoryTable bidHistory={product.bidHistory} />
+                  {/* TODO: API chưa trả về bid history */}
+                  <BidHistoryTable bidHistory={productDetailData.bidHistory} />
                 </TabsContent>
 
                 <TabsContent value="qa" className="mt-4">
+                  {/* TODO: API chưa trả về Q&A */}
                   <QASection
-                    questions={product.questions}
+                    questions={productDetailData.questions}
                     onAskQuestion={(question) => {
                       console.log("New question:", question);
                       // TODO: Handle submit question
@@ -107,21 +136,16 @@ const ProductDetail = () => {
           <div className="lg:col-span-1">
             <div className="sticky top-6 space-y-4">
               <ProductInfo product={product} />
-
-              {/* Wishlist Button */}
-              <Button variant="outline" className="w-full" size="lg">
-                <Heart className="mr-2 h-5 w-5" />
-                Thêm vào yêu thích
-              </Button>
             </div>
           </div>
         </div>
 
         {/* Related Products */}
+        {/* TODO: API cần trả về 5 sản phẩm khác cùng chuyên mục */}
         <div className="mt-12">
           <RelatedProducts
             products={relatedProducts}
-            currentCategory={product.subcategory}
+            currentCategory={product.tenCategory || ""}
           />
         </div>
       </div>
