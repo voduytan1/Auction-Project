@@ -64,9 +64,9 @@ public class SecurityConfig {
                     HttpMethod.DELETE, new String[]{}
             ),
             "AUTHENTICATED",Map.of(
-                    HttpMethod.GET, new String[]{"/users/me"},
-                    HttpMethod.POST, new String[]{"/users/request-seller", "/images/**","/image/**"},
-                    HttpMethod.PUT, new String[]{"/users/{id}"},
+                    HttpMethod.GET, new String[]{"/users/me", "/api/v1/bids/**"},
+                    HttpMethod.POST, new String[]{"/users/request-seller", "/images/**","/image/**", "/api/v1/bids/**"},
+                    HttpMethod.PUT, new String[]{"/users/{id}", "/api/v1/bids/**"},
                     HttpMethod.DELETE, new String[]{}
             )
     );
@@ -92,6 +92,7 @@ public class SecurityConfig {
 
         httpSecurity.authorizeHttpRequests(request -> {
             request.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll(); //Preflight
+            request.requestMatchers("/ws/**").permitAll();
 
             //Public endpoint
             var publicEnpoints = ROLE_BASED_ENDPOINTS.get("PUBLIC");

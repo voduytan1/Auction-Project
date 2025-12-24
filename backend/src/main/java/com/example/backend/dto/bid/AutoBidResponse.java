@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -14,7 +15,7 @@ public class AutoBidResponse {
     private Long autobidid;
     private Long productid;
     private String tenSanPham;
-    private Long bidderid;
+    private UUID bidderid;
     private String tenBidder;
     private BigDecimal giaToiDa;
     private BigDecimal giaHienTai;
