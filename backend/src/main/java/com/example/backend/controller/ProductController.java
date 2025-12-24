@@ -45,6 +45,13 @@ public class ProductController {
                 paginationInfo
         ));
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<@NotNull ApiResponse<ProductResponse>> getProductById(@PathVariable @NotNull Long id) {
+        ProductResponse result =  productService.getProductById(id);
+        return  ResponseEntity.ok(ApiResponse.success(result));
+    }
+
     @PostMapping
     public ResponseEntity<@NotNull ApiResponse<ProductResponse>> addProduct(@AuthenticationPrincipal Jwt jwt, @RequestBody @Valid CreateProductRequest request) {
         String sub = jwt != null ? jwt.getSubject() : null;

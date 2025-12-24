@@ -19,8 +19,7 @@ import java.util.List;
         @Index(name = "idx_product_end_time", columnList = "thoi_gian_ket_thuc"),
         @Index(name = "idx_product_created", columnList = "created_at"),
         @Index(name = "idx_product_category", columnList = "categoryid"),
-        @Index(name = "idx_product_seller", columnList = "sellerid"),
-        @Index(name = "idx_product_search_text", columnList = "search_text")
+        @Index(name = "idx_product_seller", columnList = "sellerid")
 })
 @Data
 @AllArgsConstructor
@@ -92,7 +91,7 @@ public class Product {
     LocalDateTime updatedAt;
 
     @Column(name = "search_text", columnDefinition = "TEXT")
-    private String searchText;
+    String searchText;
 
     @PrePersist // Chạy trước khi INSERT
     @PreUpdate  // Chạy trước khi UPDATE

@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -90,5 +91,10 @@ public class ProductService {
         Page<@NotNull Product> productPage = productRepository.findAll(spec, pageable);
 
         return productPage.map(productMapper::toResponse);
+    }
+
+    public ProductResponse getProductById(Long id) {
+         Product product = productRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("Không tìm thấy product với id "+ id));
+         return productMapper.toResponse(product);
     }
 }
