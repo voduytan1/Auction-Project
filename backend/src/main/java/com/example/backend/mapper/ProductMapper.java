@@ -42,6 +42,9 @@ public abstract class ProductMapper {
 
     @Named("maskBidderName")
     protected String maskBidderName(String fullName) {
+        if(fullName == null || fullName.trim().isBlank()){
+            return null;
+        }
         return MyStringUtils.maskBidderName(fullName);
     }
 
