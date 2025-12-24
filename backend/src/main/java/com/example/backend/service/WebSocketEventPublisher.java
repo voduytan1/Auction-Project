@@ -5,12 +5,17 @@ import com.example.backend.dto.websocket.BidUpdateMessage;
 import com.example.backend.dto.websocket.ProductStatusMessage;
 import com.example.backend.entity.BidHistory;
 import com.example.backend.entity.Product;
+import com.example.backend.repository.BidHistoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Service để publish WebSocket events
@@ -21,6 +26,7 @@ import java.time.LocalDateTime;
 public class WebSocketEventPublisher {
 
     private final SimpMessagingTemplate messagingTemplate;
+    private final BidHistoryRepository bidHistoryRepository;
 
     /**
      * Broadcast bid update cho tất cả clients đang xem sản phẩm
@@ -50,33 +56,45 @@ public class WebSocketEventPublisher {
             log.info("Published bid update for product {} - Type: {}", 
                     product.getProductid(), eventType);
         } catch (Exception e) {
-            log.error("Error publishing bid update for product {}", product.getProductid(), e);
+            log.error("Error publishing bid update for product {}", 
+                    product.getProductid(), e);
         }
     }
 
     /**
-     * Publish bid history item mới
+     * Broadcast 5 lượt đặt giá gần nhất
      * 
-     * @param bidHistory BidHistory mới
+     * @param bidHistory BidHistory mới (trigger để load 5 items gần nhất)
      */
     public void publishNewBidHistory(BidHistory bidHistory) {
         try {
-            BidHistoryItemMessage message = BidHistoryItemMessage.builder()
-                    .bidHistoryId(bidHistory.getBidHistoryid())
-                    .productId(bidHistory.getProduct().getProductid())
-                    .bidderName(maskBidderName(bidHistory.getBidder().getHoVaTen()))
-                    .giaDat(bidHistory.getGiaDat())
-                    .thoiGianDat(bidHistory.getThoiGianDat())
-                    .build();
+            Long productId = bidHistory.getProduct().getProductid();
+            
+            // Query 5 bid history gần nhất
+            Pageable topFive = PageRequest.of(0, 5);
+            List<BidHistory> latestBids = bidHistoryRepository
+                    .findByProductProductidOrderByThoiGianDatDesc(productId, topFive)
+                    .getContent();
+            
+            // Convert sang DTO
+            List<BidHistoryItemMessage> messages = latestBids.stream()
+                    .map(bh -> BidHistoryItemMessage.builder()
+                            .bidHistoryId(bh.getBidHistoryid())
+                            .productId(bh.getProduct().getProductid())
+                            .bidderName(maskBidderName(bh.getBidder().getHoVaTen()))
+                            .giaDat(bh.getGiaDat())
+                            .thoiGianDat(bh.getThoiGianDat())
+                            .build())
+                    .collect(Collectors.toList());
 
-            // Broadcast tới topic bid history của sản phẩm
+            // Broadcast list 5 items mới nhất tới topic bid history
             messagingTemplate.convertAndSend(
-                    "/topic/product/" + bidHistory.getProduct().getProductid() + "/history",
-                    message
+                    "/topic/product/" + productId + "/history",
+                    messages
             );
 
-            log.info("Published new bid history for product {}", 
-                    bidHistory.getProduct().getProductid());
+            log.info("Published {} latest bid histories for product {}", 
+                    messages.size(), productId);
         } catch (Exception e) {
             log.error("Error publishing bid history", e);
         }

@@ -1,8 +1,13 @@
 package com.example.backend.controller;
 
+import com.cloudinary.Api;
 import com.example.backend.dto.bid.*;
+import com.example.backend.dto.common.ApiResponse;
+import com.example.backend.dto.common.PaginationInfo;
+import com.example.backend.dto.common.PaginationRequest;
 import com.example.backend.service.AutoBidService;
 import com.example.backend.service.BidService;
+import com.example.backend.utils.PageUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +31,7 @@ import java.util.UUID;
  * - Lịch sử đấu giá
  */
 @RestController
-@RequestMapping("/api/v1/bids")
+@RequestMapping("/bids")
 @RequiredArgsConstructor
 @Slf4j
 public class BidController {
@@ -38,30 +43,30 @@ public class BidController {
      * ĐẶT GIÁ THÔNG THƯỜNG
      * POST /api/v1/bids
      */
-    @PostMapping
-    public ResponseEntity<PlaceBidResponse> placeBid(
-            @Valid @RequestBody PlaceBidRequest request,
-            Authentication authentication) {
-        
-        UUID userId = UUID.fromString(authentication.getName());
-        PlaceBidResponse response = bidService.placeBid(userId, request);
-        
-        return ResponseEntity.ok(response);
-    }
+//    @PostMapping
+//    public ResponseEntity<PlaceBidResponse> placeBid(
+//            @Valid @RequestBody PlaceBidRequest request,
+//            Authentication authentication) {
+//
+//        UUID userId = UUID.fromString(authentication.getName());
+//        PlaceBidResponse response = bidService.placeBid(userId, request);
+//
+//        return ResponseEntity.ok(response);
+//    }
 
     /**
      * ĐẶT GIÁ TỰ ĐỘNG (AUTO-BID)
-     * POST /api/v1/bids/auto
+     * POST /bids/auto
      */
     @PostMapping("/auto")
-    public ResponseEntity<PlaceAutoBidResponse> placeAutoBid(
+    public ResponseEntity<@NotNull ApiResponse<PlaceAutoBidResponse>> placeAutoBid(
             @Valid @RequestBody PlaceAutoBidRequest request,
             Authentication authentication) {
         
         UUID userId = UUID.fromString(authentication.getName());
         PlaceAutoBidResponse response = autoBidService.placeAutoBid(userId, request);
         
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     /**
@@ -69,14 +74,14 @@ public class BidController {
      * POST /api/v1/bids/buy-now/{productId}
      */
     @PostMapping("/buy-now/{productId}")
-    public ResponseEntity<PlaceBidResponse> buyNow(
+    public ResponseEntity<@NotNull ApiResponse<PlaceBidResponse>> buyNow(
             @PathVariable Long productId,
             Authentication authentication) {
         
         UUID userId = UUID.fromString(authentication.getName());
         PlaceBidResponse response = bidService.buyNow(userId, productId);
         
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     /**
@@ -84,13 +89,15 @@ public class BidController {
      * GET /api/v1/bids/history/{productId}
      */
     @GetMapping("/history/{productId}")
-    public ResponseEntity<Page<@NotNull BidHistoryResponse>> getBidHistory(
+    public ResponseEntity<@NotNull ApiResponse<List<@NotNull BidHistoryResponse>>> getBidHistory(
             @PathVariable Long productId,
-            @PageableDefault(size = 20, sort = "thoiGianDat", direction = Sort.Direction.DESC) 
-            Pageable pageable) {
-        
-        Page<BidHistoryResponse> history = bidService.getBidHistory(productId, pageable);
-        return ResponseEntity.ok(history);
+            @PageableDefault(size = 20, sort = "thoiGianDat", direction = Sort.Direction.DESC)
+            PaginationRequest paginationRequest) {
+        Pageable pageable = paginationRequest.getPageable();
+        Page<@NotNull BidHistoryResponse> history = bidService.getBidHistory(productId, pageable);
+        PaginationInfo paginationInfo = PageUtils.fromPage(history, null);
+        String message ="Lấy lịch sử đấu giá thành công";
+        return ResponseEntity.ok(ApiResponse.successWithPagination(message, history.getContent(), paginationInfo));
     }
 
     /**
@@ -98,7 +105,7 @@ public class BidController {
      * GET /api/v1/bids/auto/my
      */
     @GetMapping("/auto/my")
-    public ResponseEntity<List<AutoBidResponse>> getMyAutoBids(
+    public ResponseEntity<@NotNull List<AutoBidResponse>> getMyAutoBids(
             Authentication authentication) {
         
         UUID userId = UUID.fromString(authentication.getName());
@@ -111,14 +118,14 @@ public class BidController {
      * HỦY AUTO-BID
      * DELETE /api/v1/bids/auto/{autoBidId}
      */
-    @DeleteMapping("/auto/{autoBidId}")
-    public ResponseEntity<Void> cancelAutoBid(
-            @PathVariable Long autoBidId,
-            Authentication authentication) {
-        
-        UUID userId = UUID.fromString(authentication.getName());
-        autoBidService.cancelAutoBid(userId, autoBidId);
-        
-        return ResponseEntity.noContent().build();
-    }
+//    @DeleteMapping("/auto/{autoBidId}")
+//    public ResponseEntity<Void> cancelAutoBid(
+//            @PathVariable Long autoBidId,
+//            Authentication authentication) {
+//
+//        UUID userId = UUID.fromString(authentication.getName());
+//        autoBidService.cancelAutoBid(userId, autoBidId);
+//
+//        return ResponseEntity.noContent().build();
+//    }
 }
