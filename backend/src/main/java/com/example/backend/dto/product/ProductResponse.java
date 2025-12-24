@@ -1,6 +1,5 @@
 package com.example.backend.dto.product;
 
-import com.example.backend.dto.product.descriptionhistory.DescriptionHistoryResponse;
 import com.example.backend.entity.ProductStatus;
 import lombok.Builder;
 import lombok.Data;
@@ -27,9 +26,17 @@ public class ProductResponse {
 
     private ProductStatus trangThai;
 
-    private String tenCategory;
+    private Long categoryId;
+    private String tenDanhMuc;
+    private Long parentCategoryId;
+    private String tenDanhMucCha;
+
     private String tenSeller;
+    private Double diemDanhGiaSeller;
+    private String anhDaiDienSeller;
+
+    private String tenBidder;
+    private Double diemDanhGiaBidder;
 
     private List<String> images;
-    private List<DescriptionHistoryResponse> descriptionUpdates;
 }

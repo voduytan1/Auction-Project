@@ -41,7 +41,7 @@ import java.util.Map;
 public class SecurityConfig {
     private static final Map<String, Map<HttpMethod, String[]>> ROLE_BASED_ENDPOINTS = Map.of(
             "PUBLIC", Map.of(
-                    HttpMethod.GET, new String[]{"/auth/**", "/actuator/**", "/categories","/categories/{id}","/products", "/products/{id}"},
+                    HttpMethod.GET, new String[]{"/auth/**", "/actuator/**", "/categories","/categories/{id}","/products", "/products/{id}", "/bids/history/{productId}/get-top"},
                     HttpMethod.POST, new String[]{"/auth/login", "/users"},
                     HttpMethod.PUT, new String[]{}
             ),
@@ -64,7 +64,7 @@ public class SecurityConfig {
                     HttpMethod.DELETE, new String[]{}
             ),
             "AUTHENTICATED",Map.of(
-                    HttpMethod.GET, new String[]{"/users/me", "/bids/**"},
+                    HttpMethod.GET, new String[]{"/users/me", "/bids/**", "/bids/history/{productId}"},
                     HttpMethod.POST, new String[]{"/users/request-seller", "/images/**","/image/**", "/bids/**"},
                     HttpMethod.PUT, new String[]{"/users/{id}", "/api/v1/bids/**"},
                     HttpMethod.DELETE, new String[]{}

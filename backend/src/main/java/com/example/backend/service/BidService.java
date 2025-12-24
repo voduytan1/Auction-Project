@@ -3,6 +3,7 @@ package com.example.backend.service;
 import com.example.backend.dto.bid.BidHistoryResponse;
 import com.example.backend.dto.bid.PlaceBidRequest;
 import com.example.backend.dto.bid.PlaceBidResponse;
+import com.example.backend.dto.websocket.BidHistoryItemMessage;
 import com.example.backend.entity.*;
 import com.example.backend.exception.ForbiddenException;
 import com.example.backend.mapper.BidHistoryMapper;
@@ -18,7 +19,11 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
+import static com.example.backend.utils.MyStringUtils.maskBidderName;
 
 /**
  * Service xử lý đấu giá thông thường (không phải auto-bid)
@@ -241,9 +246,31 @@ public class BidService {
     /**
      * LẤY LỊCH SỬ ĐẤU GIÁ
      */
-    public Page<@NotNull BidHistoryResponse> getBidHistory(Long productId, Pageable pageable) {
+    public Page<@NotNull BidHistoryResponse> getBidHistory(Long productId, Pageable pageable, UUID userid) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(()->new EntityNotFoundException("Không tìm thấy sản phẩm với id "+ productId));
+        if(!userid.equals(product.getSeller().getUserid())){
+            throw new ForbiddenException("Bạn chỉ có thể xem lịch sử đấu giá sản phẩm của bạn");
+        }
         return bidHistoryRepository
-                .findByProductProductidOrderByThoiGianDatDesc(productId, pageable)
+                .findByProductProductidOrderByCreatedAtDesc(productId, pageable)
                 .map(bidHistoryMapper::toResponse);
+    }
+
+    @Transactional
+    public List<BidHistoryItemMessage> getTopBidderByProduct(Long productId, Pageable pageable) {
+        List<BidHistory> latestBids = bidHistoryRepository
+                .findByProductProductidOrderByCreatedAtDesc(productId, pageable)
+                .getContent();
+
+        return latestBids.stream()
+                .map(bh -> BidHistoryItemMessage.builder()
+                        .bidHistoryId(bh.getBidHistoryid())
+                        .productId(bh.getProduct().getProductid())
+                        .bidderName(maskBidderName(bh.getBidder().getHoVaTen()))
+                        .giaDat(bh.getGiaDat())
+                        .thoiGianDat(bh.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
     }
 }

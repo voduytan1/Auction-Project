@@ -17,6 +17,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.example.backend.utils.MyStringUtils.maskBidderName;
+
 /**
  * Service để publish WebSocket events
  */
@@ -73,7 +75,7 @@ public class WebSocketEventPublisher {
             // Query 5 bid history gần nhất
             Pageable topFive = PageRequest.of(0, 5);
             List<BidHistory> latestBids = bidHistoryRepository
-                    .findByProductProductidOrderByThoiGianDatDesc(productId, topFive)
+                    .findByProductProductidOrderByCreatedAtDesc(productId, topFive)
                     .getContent();
             
             // Convert sang DTO
@@ -83,7 +85,7 @@ public class WebSocketEventPublisher {
                             .productId(bh.getProduct().getProductid())
                             .bidderName(maskBidderName(bh.getBidder().getHoVaTen()))
                             .giaDat(bh.getGiaDat())
-                            .thoiGianDat(bh.getThoiGianDat())
+                            .thoiGianDat(bh.getCreatedAt())
                             .build())
                     .collect(Collectors.toList());
 
@@ -153,17 +155,7 @@ public class WebSocketEventPublisher {
         }
     }
 
-    /**
-     * MASK TÊN BIDDER: "Nguyễn Văn Khoa" -> "****Khoa"
-     */
-    private String maskBidderName(String fullName) {
-        if (fullName == null || fullName.isEmpty()) {
-            return "****";
-        }
-        String[] parts = fullName.trim().split("\\s+");
-        String lastName = parts[parts.length - 1];
-        return "****" + lastName;
-    }
+
 
     /**
      * Build message dựa trên event type

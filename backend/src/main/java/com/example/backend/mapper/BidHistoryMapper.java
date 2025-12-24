@@ -8,6 +8,8 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface BidHistoryMapper {
     @Mapping(target = "tenBidder", expression = "java(maskBidderName(bidHistory.getBidder().getHoVaTen()))")
+    @Mapping(target = "thoiGianDat", source = "createdAt")
+
     BidHistoryResponse toResponse(BidHistory bidHistory);
 
     // Mask bidder name: "Nguyễn Văn Khoa" -> "****Khoa"

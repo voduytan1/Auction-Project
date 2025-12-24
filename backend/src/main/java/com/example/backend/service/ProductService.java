@@ -27,12 +27,14 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final ProductImageRepository  productImageRepository;
+    private final BidHistoryRepository bidHistoryRepository;
     private final ProductMapper productMapper;
-    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, UserRepository userRepository, ProductImageRepository productImageRepository, UpgradeRequestRepository upgradeRequestRepository, ProductMapper productMapper) {
+    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, UserRepository userRepository, ProductImageRepository productImageRepository, UpgradeRequestRepository upgradeRequestRepository, BidHistoryRepository bidHistoryRepository, ProductMapper productMapper) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
         this.productImageRepository = productImageRepository;
+        this.bidHistoryRepository = bidHistoryRepository;
         this.productMapper = productMapper;
     }
 

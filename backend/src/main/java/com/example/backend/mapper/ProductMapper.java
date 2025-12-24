@@ -4,10 +4,8 @@ import com.example.backend.dto.product.CreateProductRequest;
 import com.example.backend.dto.product.ProductResponse;
 import com.example.backend.entity.Product;
 import com.example.backend.entity.ProductDescriptionHistory;
-import org.mapstruct.AfterMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
+import com.example.backend.utils.MyStringUtils;
+import org.mapstruct.*;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
@@ -30,7 +28,22 @@ public abstract class ProductMapper {
     public abstract Product toEntity(CreateProductRequest request);
 
     @Mapping(target = "images", ignore = true)
+    @Mapping(target = "categoryId", source = "product.category.categoryid")
+    @Mapping(target = "tenDanhMuc", source = "product.category.tenDanhMuc")
+    @Mapping(target = "parentCategoryId", source = "product.category.parentCategory.categoryid")
+    @Mapping(target = "tenDanhMucCha", source = "product.category.parentCategory.tenDanhMuc")
+    @Mapping(target = "tenSeller", source = "product.seller.hoVaTen")
+    @Mapping(target = "diemDanhGiaSeller", source = "product.seller.diemDanhGia")
+    @Mapping(target = "anhDaiDienSeller", source = "product.seller.anhDaiDien")
+    @Mapping(target = "tenBidder", source = "product.currentBidder.hoVaTen", qualifiedByName = "maskBidderName")
+    @Mapping(target = "diemDanhGiaBidder", source = "product.currentBidder.diemDanhGia")
+
     public abstract ProductResponse toResponse(Product product);
+
+    @Named("maskBidderName")
+    protected String maskBidderName(String fullName) {
+        return MyStringUtils.maskBidderName(fullName);
+    }
 
     @AfterMapping
     protected void enrichDescription(Product product, @MappingTarget ProductResponse response) {

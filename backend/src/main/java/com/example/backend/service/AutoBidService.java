@@ -260,7 +260,7 @@ public class AutoBidService {
      * LẤY LỊCH SỬ ĐẤU GIÁ (MASKED)
      */
     public Page<@NotNull BidHistoryResponse> getBidHistory(Long productid, Pageable pageable) {
-        return bidHistoryRepository.findByProductProductidOrderByThoiGianDatDesc(productid, pageable)
+        return bidHistoryRepository.findByProductProductidOrderByCreatedAtDesc(productid, pageable)
                 .map(bidHistoryMapper::toResponse);
     }
 

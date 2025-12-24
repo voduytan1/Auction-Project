@@ -38,5 +38,5 @@ public class BidHistory {
 
     @CreationTimestamp
     @Column(name = "thoi_gian_dat", nullable = false)
-    LocalDateTime thoiGianDat;
+    LocalDateTime createdAt;
 }

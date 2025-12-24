@@ -5,19 +5,25 @@ import com.example.backend.dto.bid.*;
 import com.example.backend.dto.common.ApiResponse;
 import com.example.backend.dto.common.PaginationInfo;
 import com.example.backend.dto.common.PaginationRequest;
+import com.example.backend.dto.websocket.BidHistoryItemMessage;
 import com.example.backend.service.AutoBidService;
 import com.example.backend.service.BidService;
 import com.example.backend.utils.PageUtils;
+import com.nimbusds.jwt.JWT;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -84,6 +90,13 @@ public class BidController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    @GetMapping("/history/{productId}/get-top")
+    public ResponseEntity<@NotNull ApiResponse<List<BidHistoryItemMessage>>> getTop(@PathVariable Long productId, @RequestParam Integer number){
+        Pageable pageable = PageRequest.of(0, number);
+        List<BidHistoryItemMessage> result = bidService.getTopBidderByProduct(productId, pageable);
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
     /**
      * LẤY LỊCH SỬ ĐẤU GIÁ CỦA SẢN PHẨM
      * GET /api/v1/bids/history/{productId}
@@ -92,9 +105,14 @@ public class BidController {
     public ResponseEntity<@NotNull ApiResponse<List<@NotNull BidHistoryResponse>>> getBidHistory(
             @PathVariable Long productId,
             @PageableDefault(size = 20, sort = "thoiGianDat", direction = Sort.Direction.DESC)
-            PaginationRequest paginationRequest) {
+            PaginationRequest paginationRequest,
+            @AuthenticationPrincipal Jwt jwt) {
+        String sub = jwt != null ? jwt.getSubject() : null;
+        if(sub == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         Pageable pageable = paginationRequest.getPageable();
-        Page<@NotNull BidHistoryResponse> history = bidService.getBidHistory(productId, pageable);
+        Page<@NotNull BidHistoryResponse> history = bidService.getBidHistory(productId, pageable, UUID.fromString(sub));
         PaginationInfo paginationInfo = PageUtils.fromPage(history, null);
         String message ="Lấy lịch sử đấu giá thành công";
         return ResponseEntity.ok(ApiResponse.successWithPagination(message, history.getContent(), paginationInfo));

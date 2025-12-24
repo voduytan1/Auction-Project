@@ -10,5 +10,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface BidHistoryRepository extends JpaRepository<@NotNull BidHistory, @NotNull Long> {
-    Page<BidHistory> findByProductProductidOrderByThoiGianDatDesc(Long productid, Pageable pageable);
+    Page<BidHistory> findByProductProductidOrderByCreatedAtDesc(Long productid, Pageable pageable);
 }

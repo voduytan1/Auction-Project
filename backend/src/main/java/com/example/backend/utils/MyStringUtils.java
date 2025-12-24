@@ -21,4 +21,15 @@ public class MyStringUtils {
         Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
         return pattern.matcher(temp).replaceAll("");
     }
+    /**
+     * MASK TÊN BIDDER: "Nguyễn Văn Khoa" -> "****Khoa"
+     */
+    public static String maskBidderName(String fullName) {
+        if (fullName == null || fullName.isEmpty()) {
+            return "****";
+        }
+        String[] parts = fullName.trim().split("\\s+");
+        String lastName = parts[parts.length - 1];
+        return "****" + lastName;
+    }
 }
