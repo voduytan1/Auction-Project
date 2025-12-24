@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Plus, History, FileText } from "lucide-react";
+import { Plus, History, FileText, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +15,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import {
+  productAPI,
+  type DescriptionHistoryResponse,
+} from "@/services/product.api";
 
 interface AppendDescriptionDialogProps {
   open: boolean;
@@ -28,27 +32,6 @@ interface AppendFormData {
   additionalDescription: string;
 }
 
-interface DescriptionHistory {
-  id: string;
-  content: string;
-  appendedAt: string;
-}
-
-// Mock history data
-const mockHistory: DescriptionHistory[] = [
-  {
-    id: "1",
-    content:
-      "Cập nhật: Sản phẩm đã được test đầy đủ các tính năng, hoạt động tốt 100%",
-    appendedAt: "2024-12-22T10:30:00",
-  },
-  {
-    id: "2",
-    content: "Lưu ý: Đã thêm phụ kiện tai nghe và sạc nhanh vào gói sản phẩm",
-    appendedAt: "2024-12-21T15:45:00",
-  },
-];
-
 export function AppendDescriptionDialog({
   open,
   onOpenChange,
@@ -57,7 +40,9 @@ export function AppendDescriptionDialog({
   currentDescription,
 }: AppendDescriptionDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState<DescriptionHistoryResponse[]>([]);
 
   const {
     register,
@@ -65,6 +50,26 @@ export function AppendDescriptionDialog({
     formState: { errors },
     reset,
   } = useForm<AppendFormData>();
+
+  // Load history when dialog opens
+  useEffect(() => {
+    if (open && showHistory) {
+      loadHistory();
+    }
+  }, [open, showHistory]);
+
+  const loadHistory = async () => {
+    try {
+      setIsLoadingHistory(true);
+      const data = await productAPI.getDescriptionHistory(productId);
+      setHistory(data.data);
+    } catch (error) {
+      console.error("Error loading history:", error);
+      toast.error("Không thể tải lịch sử bổ sung!");
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
 
   const handleClose = () => {
     reset();
@@ -76,17 +81,17 @@ export function AppendDescriptionDialog({
     try {
       setIsSubmitting(true);
 
-      // TODO: Call API to append description
-      // await productApi.appendDescription(productId, data.additionalDescription);
-
-      console.log("Appending description:", {
-        productId,
-        additionalDescription: data.additionalDescription,
-        timestamp: new Date().toISOString(),
-      });
+      // Call API to append description
+      await productAPI.appendDescription(productId, data.additionalDescription);
 
       toast.success("Đã bổ sung mô tả thành công!");
-      handleClose();
+
+      // Reload history
+      if (showHistory) {
+        await loadHistory();
+      }
+
+      reset();
     } catch (error) {
       console.error("Error appending description:", error);
       toast.error("Không thể bổ sung mô tả. Vui lòng thử lại!");
@@ -180,22 +185,34 @@ export function AppendDescriptionDialog({
               size="sm"
               className="w-full"
               onClick={() => setShowHistory(!showHistory)}
+              disabled={isLoadingHistory}
             >
               <History className="h-4 w-4 mr-2" />
-              {showHistory ? "Ẩn lịch sử bổ sung" : "Xem lịch sử bổ sung"}
+              {isLoadingHistory
+                ? "Đang tải..."
+                : showHistory
+                ? "Ẩn lịch sử bổ sung"
+                : "Xem lịch sử bổ sung"}
             </Button>
 
             {showHistory && (
               <div className="rounded-lg border p-3 space-y-3 max-h-[200px] overflow-y-auto">
-                {mockHistory.length === 0 ? (
+                {isLoadingHistory ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    <span className="text-sm text-muted-foreground">
+                      Đang tải...
+                    </span>
+                  </div>
+                ) : history.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">
                     Chưa có lịch sử bổ sung
                   </p>
                 ) : (
-                  mockHistory.map((item) => (
+                  history.map((item) => (
                     <div key={item.id} className="space-y-1">
                       <p className="text-xs text-muted-foreground">
-                        {formatDate(item.appendedAt)}
+                        {formatDate(item.appendedAt)} - bởi {item.appendedBy}
                       </p>
                       <p className="text-sm">{item.content}</p>
                       <Separator className="mt-2" />

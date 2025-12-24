@@ -174,7 +174,7 @@ const AdminLayout = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={() => navigate("/app/profile")}>
+                <DropdownMenuItem onClick={() => navigate("/profile")}>
                   <Settings className="mr-2 h-4 w-4" />
                   Trang cá nhân
                 </DropdownMenuItem>

@@ -196,7 +196,7 @@ export default function Header() {
                     <DropdownMenuSeparator />
 
                     {/* Common items */}
-                    <DropdownMenuItem onClick={() => navigate("/app/profile")}>
+                    <DropdownMenuItem onClick={() => navigate("/profile")}>
                       <UserIcon className="mr-2 h-4 w-4" />
                       Trang cá nhân
                     </DropdownMenuItem>
