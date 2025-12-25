@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 public class AutoBidService {
+    private final BidService  bidService;
     private final AutoBidRepository autoBidRepository;
     private final BidHistoryRepository bidHistoryRepository;
     private final ProductRepository productRepository;
@@ -54,19 +55,25 @@ public class AutoBidService {
         // 3. CHECK ĐIỀU KIỆN ĐẤU GIÁ
         validateBidConditions(bidder, product);
 
-        // 4. CHECK GIÁ TỐI ĐA HỢP LỆ
-        validateMaxPrice(product, request.getGiaToiDa());
+        // 4. CHECK GIÁ MUA NGAY - Nếu giá tối đa >= giá mua ngay → Mua ngay luôn
+        if (product.getGiaMuaNgay() != null && 
+            request.getGiaToiDa().compareTo(product.getGiaMuaNgay()) >= 0) {
+            return handleBuyNowFromAutoBid(bidder, product, request.getGiaToiDa());
+        }
 
-        // 5. XỬ LÝ AUTOBID
+        // 5. CHECK GIÁ TỐI ĐA HỢP LỆ
+        validateMaxPrice(product, request.getGiaToiDa());
+        
+        // 6. XỬ LÝ AUTOBID
         AutoBid autoBid = processAutoBid(bidder, product, request.getGiaToiDa());
 
-        // 6. CHẠY LOGIC COMPETE GIỮA CÁC AUTOBID
+        // 7. CHẠY LOGIC COMPETE GIỮA CÁC AUTOBID
         runAutoBidCompetition(product);
 
-        // 7. TẢI LẠI PRODUCT ĐỂ LẤY DỮ LIỆU MỚI NHẤT
+        // 8. TẢI LẠI PRODUCT ĐỂ LẤY DỮ LIỆU MỚI NHẤT
         product = productRepository.findById(product.getProductid()).get();
 
-        // 8. TẠO RESPONSE
+        // 9. TẠO RESPONSE
         return createResponse(autoBid, product);
     }
 
@@ -235,6 +242,53 @@ public class AutoBidService {
         }
     }
 
+
+    /**
+     * XỬ LÝ MUA NGAY TỪ AUTO-BID
+     * Khi giá tối đa >= giá mua ngay, tự động mua ngay sản phẩm
+     */
+    @Transactional
+    private PlaceAutoBidResponse handleBuyNowFromAutoBid(User bidder, Product product, BigDecimal giaToiDa) {
+        log.info("Auto-bid {} triggered BUY NOW for product {} - Max price: {} >= Buy now: {}", 
+                bidder.getUserid(), product.getProductid(), giaToiDa, product.getGiaMuaNgay());
+
+        // Cập nhật product về trạng thái COMPLETED
+        product.setGiaHienTai(product.getGiaMuaNgay());
+        product.setCurrentBidder(bidder);
+        product.setTrangThai(ProductStatus.COMPLETED);
+        product.setThoiGianKetThuc(LocalDateTime.now());
+        product.setSoLuotRaGia(product.getSoLuotRaGia() + 1);
+        product = productRepository.save(product);
+
+        // Tạo bid history cho mua ngay
+        BidHistory bidHistory = BidHistory.builder()
+                .product(product)
+                .bidder(bidder)
+                .giaDat(product.getGiaMuaNgay())
+                .build();
+        bidHistoryRepository.save(bidHistory);
+
+        // Hủy tất cả auto-bid còn active cho product này
+        List<AutoBid> activeAutoBids = autoBidRepository
+                .findActiveAutoBidsByProductOrderByGiaToiDaDesc(product.getProductid());
+        activeAutoBids.forEach(ab -> ab.setIsActive(false));
+        autoBidRepository.saveAll(activeAutoBids);
+
+        // ⚡ BROADCAST REAL-TIME
+        webSocketEventPublisher.publishBidUpdate(product, "BUY_NOW");
+        webSocketEventPublisher.publishNewBidHistory(bidHistory);
+        webSocketEventPublisher.publishProductStatusChange(
+                product, "COMPLETED", "Sản phẩm đã được mua ngay qua Auto-Bid");
+
+        // Tạo response đặc biệt cho trường hợp mua ngay
+        return PlaceAutoBidResponse.builder()
+                .success(true)
+                .message("Giá tối đa của bạn đã đạt giá mua ngay! Sản phẩm đã được mua thành công.")
+                .autoBid(null) // Không có auto-bid vì đã mua ngay
+                .giaHienTaiSanPham(product.getGiaMuaNgay())
+                .currentWinner(maskBidderName(bidder.getHoVaTen()))
+                .build();
+    }
 
     /**
      * TẠO RESPONSE
