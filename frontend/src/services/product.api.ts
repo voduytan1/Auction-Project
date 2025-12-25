@@ -48,6 +48,7 @@ export interface ProductResponse {
   anhDaiDienSeller?: string;
 
   // Bidder info (highest bidder)
+  bidderId?: string;
   tenBidder?: string;
   diemDanhGiaBidder?: number;
 

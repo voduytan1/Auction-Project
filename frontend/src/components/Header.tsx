@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import {
   Link,
   useNavigate,
@@ -120,7 +120,7 @@ export default function Header() {
     if (isProtectedRoute) {
       navigate("/auth/login", { replace: true });
     } else {
-      window.location.reload();
+      navigate("/", { replace: true });
     }
   };
 
@@ -395,7 +395,9 @@ export default function Header() {
                         <Heart className="mr-2 h-4 w-4" />
                         Danh sách yêu thích
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/bidder/orders") }>
+                      <DropdownMenuItem
+                        onClick={() => navigate("/bidder/purchas")}
+                      >
                         <Package className="mr-2 h-4 w-4" />
                         Đơn hàng của tôi
                       </DropdownMenuItem>

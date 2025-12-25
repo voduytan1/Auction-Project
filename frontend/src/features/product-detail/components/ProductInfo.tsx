@@ -6,6 +6,7 @@ import {
   Star,
   ShoppingCart,
   Heart,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -97,7 +98,24 @@ interface ProductInfoProps {
 
 export function ProductInfo({ product }: ProductInfoProps) {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAppSelector((s) => s.auth);
+  const { isAuthenticated, user } = useAppSelector((s) => s.auth);
+
+  // Check if user is seller or winner (for completed products)
+  const isSeller =
+    product.sellerId && user?.userid
+      ? String(product.sellerId) === String(user.userid)
+      : false;
+  const isWinner =
+    product.bidderId && user?.userid
+      ? String(product.bidderId) === String(user.userid)
+      : false;
+
+  // Show completed card for:
+  // - Not logged in users when product is completed
+  // - Logged in users who are NOT seller or winner
+  const isCompletedForOthers =
+    product.trangThai === "COMPLETED" &&
+    (!isAuthenticated || (!isSeller && !isWinner));
   const [buyDialogOpen, setBuyDialogOpen] = useState(false);
   const [buyLoading, setBuyLoading] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -180,185 +198,221 @@ export function ProductInfo({ product }: ProductInfoProps) {
         </CardContent>
       </Card>
 
-      {/* Action Buttons - Đã chỉnh sửa */}
-      <div className="flex items-stretch gap-3">
-        {/* Nút Đặt giá - Luôn hiện và giãn rộng */}
-        <>
-          <Button
-            size="lg"
-            className="flex-1 text-lg"
-            onClick={() => {
-              if (!isAuthenticated) {
-                navigate("/auth/login");
-                return;
-              }
-              setAutoDialogOpen(true);
-            }}
-          >
-            <Gavel className="mr-2 h-5 w-5" />
-            Đặt giá tự động
-          </Button>
-
-          <Dialog open={autoDialogOpen} onOpenChange={setAutoDialogOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Thiết lập đặt giá tự động</DialogTitle>
-                <DialogDescription>
-                  Nhập mức giá tối đa bạn muốn hệ thống tự động đặt thay cho
-                  bạn.
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="mt-2">
-                <label className="block text-sm text-slate-600 mb-2">
-                  Mức giá tối đa (VND)
-                </label>
-                <Input
-                  type="number"
-                  value={autoValue}
-                  onChange={(e) => setAutoValue(e.target.value)}
-                  placeholder={String(product.giaHienTai)}
-                />
+      {/* Action Buttons OR Completed Card */}
+      {isCompletedForOthers ? (
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-4 text-amber-600">
+              <CheckCircle2 className="h-6 w-6" />
+              <h3 className="text-xl font-semibold">Sản phẩm đã kết thúc</h3>
+            </div>
+            <p className="text-slate-600 mb-4">
+              Phiên đấu giá cho sản phẩm này đã kết thúc.
+            </p>
+            <div className="space-y-3 pb-4 border-b">
+              <div className="flex justify-between">
+                <span className="text-slate-600">Giá cuối cùng:</span>
+                <span className="font-semibold text-accent text-lg">
+                  {formatCurrency(product.giaHienTai)}
+                </span>
               </div>
+              {product.tenBidder && (
+                <div className="flex justify-between">
+                  <span className="text-slate-600">Người thắng:</span>
+                  <span className="font-semibold">{product.tenBidder}</span>
+                </div>
+              )}
+            </div>
+            <div className="mt-4 p-3 bg-slate-50 rounded-lg">
+              <p className="text-sm text-slate-600">
+                Sản phẩm này đã được bán thành công. Cảm ơn bạn đã quan tâm!
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="flex items-stretch gap-3">
+          {/* Nút Đặt giá - Luôn hiện và giãn rộng */}
+          <>
+            <Button
+              size="lg"
+              className="flex-1 text-lg"
+              onClick={() => {
+                if (!isAuthenticated) {
+                  navigate("/auth/login");
+                  return;
+                }
+                setAutoDialogOpen(true);
+              }}
+            >
+              <Gavel className="mr-2 h-5 w-5" />
+              Đặt giá tự động
+            </Button>
 
-              <DialogFooter>
-                <DialogClose>
-                  <Button variant="outline">Hủy</Button>
-                </DialogClose>
-                <Button
-                  onClick={async () => {
-                    const parsed = Number(autoValue);
-                    if (!parsed || parsed <= 0) {
-                      alert("Vui lòng nhập mức giá hợp lệ");
-                      return;
-                    }
-                    if (parsed < product.giaHienTai) {
-                      if (
-                        !confirm("Mức tối đa nhỏ hơn giá hiện tại. Tiếp tục?")
-                      )
-                        return;
-                    }
-                    try {
-                      setAutoLoading(true);
-                      await auctionAPI.createAutoBid({
-                        productid: product.productid,
-                        giaToiDa: parsed,
-                      });
-                      setAutoDialogOpen(false);
-                      alert("Đặt giá tự động thành công");
-                    } catch (error) {
-                      console.error("Auto bid error", error);
-                      const axiosError = error as AxiosError<ApiErrorResponse>;
-                      alert(
-                        axiosError.response?.data?.message ||
-                          "Lỗi khi đặt giá tự động"
-                      );
-                    } finally {
-                      setAutoLoading(false);
-                    }
-                  }}
-                  disabled={autoLoading}
-                >
-                  {autoLoading ? "Đang xử lý..." : "Đặt giá tự động"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </>
+            <Dialog open={autoDialogOpen} onOpenChange={setAutoDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Thiết lập đặt giá tự động</DialogTitle>
+                  <DialogDescription>
+                    Nhập mức giá tối đa bạn muốn hệ thống tự động đặt thay cho
+                    bạn.
+                  </DialogDescription>
+                </DialogHeader>
 
-        {/* Nút Mua ngay - Nếu có thì giãn rộng cùng nút Đặt giá */}
-        <>
-          <Button
-            size="lg"
-            variant="default"
-            className={
-              "flex-1 text-lg " +
-              (product.giaMuaNgay
-                ? "bg-accent hover:bg-accent/90"
-                : "bg-accent cursor-not-allowed")
-            }
-            onClick={() => {
-              if (!product.giaMuaNgay) return; // disabled
-              if (!isAuthenticated) {
-                navigate("/auth/login");
-                return;
-              }
-              setBuyDialogOpen(true);
-            }}
-            disabled={!product.giaMuaNgay || buyLoading}
-            title={product.giaMuaNgay ? "Mua ngay" : "Không có giá mua ngay"}
-          >
-            <ShoppingCart className="mr-2 h-5 w-5" />
-            Mua ngay
-          </Button>
+                <div className="mt-2">
+                  <label className="block text-sm text-slate-600 mb-2">
+                    Mức giá tối đa (VND)
+                  </label>
+                  <Input
+                    type="number"
+                    value={autoValue}
+                    onChange={(e) => setAutoValue(e.target.value)}
+                    placeholder={String(product.giaHienTai)}
+                  />
+                </div>
 
-          {/* Buy Now confirmation dialog (only meaningful when price exists) */}
-          {product.giaMuaNgay && (
-            <AlertDialog open={buyDialogOpen} onOpenChange={setBuyDialogOpen}>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Xác nhận mua ngay</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Bạn sẽ mua sản phẩm này ngay với giá{" "}
-                    {formatCurrency(product.giaMuaNgay as number)}.
-                    <br />
-                    Vui lòng xác nhận để tiếp tục.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel disabled={buyLoading}>
-                    Hủy
-                  </AlertDialogCancel>
-                  <AlertDialogAction
+                <DialogFooter>
+                  <DialogClose>
+                    <Button variant="outline">Hủy</Button>
+                  </DialogClose>
+                  <Button
                     onClick={async () => {
+                      const parsed = Number(autoValue);
+                      if (!parsed || parsed <= 0) {
+                        alert("Vui lòng nhập mức giá hợp lệ");
+                        return;
+                      }
+                      if (parsed < product.giaHienTai) {
+                        if (
+                          !confirm("Mức tối đa nhỏ hơn giá hiện tại. Tiếp tục?")
+                        )
+                          return;
+                      }
                       try {
-                        setBuyLoading(true);
-                        const resp = await auctionAPI.buyNow(product.productid);
-                        const orderId = extractOrderId(resp.data);
-
-                        setBuyNowResponse(resp.data);
-                        setCreatedOrderId(orderId);
-                        setBuyDialogOpen(false);
-                        setPaymentModalOpen(true);
+                        setAutoLoading(true);
+                        await auctionAPI.createAutoBid({
+                          productid: product.productid,
+                          giaToiDa: parsed,
+                        });
+                        setAutoDialogOpen(false);
+                        alert("Đặt giá tự động thành công");
                       } catch (error) {
-                        console.error("Buy now error:", error);
+                        console.error("Auto bid error", error);
                         const axiosError =
                           error as AxiosError<ApiErrorResponse>;
                         alert(
                           axiosError.response?.data?.message ||
-                            "Mua ngay thất bại"
+                            "Lỗi khi đặt giá tự động"
                         );
                       } finally {
-                        setBuyLoading(false);
+                        setAutoLoading(false);
                       }
                     }}
+                    disabled={autoLoading}
                   >
-                    {buyLoading ? "Đang xử lý..." : "Xác nhận mua"}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-        </>
+                    {autoLoading ? "Đang xử lý..." : "Đặt giá tự động"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </>
 
-        {/* Nút Wishlist - Icon Only với Tooltip */}
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="lg" // Dùng size lg để chiều cao bằng các nút bên cạnh
-                className="aspect-square px-0" // aspect-square để thành hình vuông
-              >
-                <Heart className="h-5 w-5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Thêm vào yêu thích</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
+          {/* Nút Mua ngay - Nếu có thì giãn rộng cùng nút Đặt giá */}
+          <>
+            <Button
+              size="lg"
+              variant="default"
+              className={
+                "flex-1 text-lg " +
+                (product.giaMuaNgay
+                  ? "bg-accent hover:bg-accent/90"
+                  : "bg-accent cursor-not-allowed")
+              }
+              onClick={() => {
+                if (!product.giaMuaNgay) return; // disabled
+                if (!isAuthenticated) {
+                  navigate("/auth/login");
+                  return;
+                }
+                setBuyDialogOpen(true);
+              }}
+              disabled={!product.giaMuaNgay || buyLoading}
+              title={product.giaMuaNgay ? "Mua ngay" : "Không có giá mua ngay"}
+            >
+              <ShoppingCart className="mr-2 h-5 w-5" />
+              Mua ngay
+            </Button>
+
+            {/* Buy Now confirmation dialog (only meaningful when price exists) */}
+            {product.giaMuaNgay && (
+              <AlertDialog open={buyDialogOpen} onOpenChange={setBuyDialogOpen}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Xác nhận mua ngay</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Bạn sẽ mua sản phẩm này ngay với giá{" "}
+                      {formatCurrency(product.giaMuaNgay as number)}.
+                      <br />
+                      Vui lòng xác nhận để tiếp tục.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={buyLoading}>
+                      Hủy
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={async () => {
+                        try {
+                          setBuyLoading(true);
+                          const resp = await auctionAPI.buyNow(
+                            product.productid
+                          );
+                          const orderId = extractOrderId(resp.data);
+
+                          setBuyNowResponse(resp.data);
+                          setCreatedOrderId(orderId);
+                          setBuyDialogOpen(false);
+                          setPaymentModalOpen(true);
+                        } catch (error) {
+                          console.error("Buy now error:", error);
+                          const axiosError =
+                            error as AxiosError<ApiErrorResponse>;
+                          alert(
+                            axiosError.response?.data?.message ||
+                              "Mua ngay thất bại"
+                          );
+                        } finally {
+                          setBuyLoading(false);
+                        }
+                      }}
+                    >
+                      {buyLoading ? "Đang xử lý..." : "Xác nhận mua"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </>
+
+          {/* Nút Wishlist - Icon Only với Tooltip */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="lg" // Dùng size lg để chiều cao bằng các nút bên cạnh
+                  className="aspect-square px-0" // aspect-square để thành hình vuông
+                >
+                  <Heart className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Thêm vào yêu thích</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      )}
 
       {/* Time Info */}
       <div className="grid grid-cols-2 gap-4">

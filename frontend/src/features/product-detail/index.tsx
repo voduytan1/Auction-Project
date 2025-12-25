@@ -1,4 +1,4 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { productAPI, type ProductResponse } from "@/services/product.api";
 
@@ -11,9 +11,12 @@ import { QASection } from "./components/QASection";
 import { ProductInfo } from "./components/ProductInfo";
 import { RelatedProducts } from "./components/RelatedProducts";
 import { PageLoader } from "@/components/PageLoader";
+import { useAppSelector } from "@/hooks/use-redux";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAppSelector((state) => state.auth);
   const [product, setProduct] = useState<ProductResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +40,33 @@ const ProductDetail = () => {
 
     fetchProduct();
   }, [id]);
+
+  // Check if current user should be redirected to complete order page
+  useEffect(() => {
+    if (
+      !product ||
+      !isAuthenticated ||
+      !user ||
+      product.trangThai !== "COMPLETED"
+    ) {
+      return;
+    }
+
+    const isSeller = String(product.sellerId) === String(user.userid);
+    const isWinner =
+      product.bidderId && String(product.bidderId) === String(user.userid);
+
+    if (isSeller || isWinner) {
+      // Redirect to complete order page
+      navigate(`/bidder/orders/${product.productid}/complete`, {
+        state: {
+          isSeller,
+          isWinner,
+          product,
+        },
+      });
+    }
+  }, [product, user, isAuthenticated, navigate]);
 
   if (loading) {
     return <PageLoader message="Đang tải sản phẩm..." />;

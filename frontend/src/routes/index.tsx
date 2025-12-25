@@ -17,12 +17,9 @@ const HomePage = lazy(() => import("./homepage"));
 const UnauthorizedPage = lazy(() => import("./unauthorized"));
 const ProductDetailPage = lazy(() => import("./product-detail"));
 const CompleteOrderPage = lazy(() => import("./bidder/complete-order"));
-const CreateOrderPage = lazy(
-  () => import("@/features/bidder/order/components/CreateOrder")
-);
-const OrdersListPage = lazy(
-  () => import("../features/bidder/order/OrdersList")
-);
+// const CreateOrderPage = lazy(
+//   () => import("@/features/bidder/order/components/CreateOrder")
+// );
 const CategoryProductsPage = lazy(() => import("./category-products"));
 const SearchPage = lazy(() => import("./search"));
 const ProfilePage = lazy(() => import("./profile"));
@@ -42,6 +39,7 @@ const AuctionsPage = lazy(() => import("./admin/auctions"));
 const CategoriesPage = lazy(() => import("./admin/categories"));
 const ProductsPage = lazy(() => import("./admin/products"));
 const UpgradeRequestsPage = lazy(() => import("./admin/upgrade-requests"));
+const AdminSettingsPage = lazy(() => import("./admin/settings"));
 
 // Seller Pages
 const SellerProductsPage = lazy(() => import("./seller/products"));
@@ -51,6 +49,16 @@ const CreateProductPage = lazy(() => import("./seller/create-product"));
 const WatchListPage = lazy(() => import("./bidder/watchlist"));
 const BidderProfilePage = lazy(() => import("./bidder/profile"));
 const UpgradeRequestPage = lazy(() => import("./bidder/upgrade-request"));
+
+const TransactionDetailPage = lazy(() => import("./transaction/detail"));
+const PaymentSuccessPage = lazy(() => import("./order/payment-success"));
+const PaymentCancelPage = lazy(() => import("./order/payment-cancel"));
+
+// Bidder Transaction Pages
+const MyPurchasesPage = lazy(() => import("./bidder/my-purchases"));
+
+// Seller Transaction Pages
+const MySalesPage = lazy(() => import("./seller/my-sales"));
 
 /**
  * Router configuration với lazy loading và SEO
@@ -101,20 +109,44 @@ export const router = createBrowserRouter([
           </PageWrapper>
         ),
       },
-      {
-        path: "orders/create",
-        element: (
-          <PageWrapper title="Tạo đơn hàng - Thanh toán">
-            <CreateOrderPage />
-          </PageWrapper>
-        ),
-      },
+      // {
+      //   path: "orders/create",
+      //   element: (
+      //     <PageWrapper title="Tạo đơn hàng - Thanh toán">
+      //       <CreateOrderPage />
+      //     </PageWrapper>
+      //   ),
+      // },
       {
         path: "orders/:id/complete",
         element: (
           <PageWrapper title="Hoàn tất đơn hàng">
             <CompleteOrderPage />
           </PageWrapper>
+        ),
+      },
+      {
+        path: "transactions/:transactionId/detail",
+        element: (
+          <ProtectedRoute>
+            <TransactionDetailPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "payment-success",
+        element: (
+          <ProtectedRoute>
+            <PaymentSuccessPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "payment-cancel",
+        element: (
+          <ProtectedRoute>
+            <PaymentCancelPage />
+          </ProtectedRoute>
         ),
       },
     ],
@@ -237,8 +269,8 @@ export const router = createBrowserRouter([
       {
         path: "settings",
         element: (
-          <PageWrapper title="Cài đặt - Admin">
-            <div>Settings Page Coming Soon</div>
+          <PageWrapper title="Cài đặt hệ thống - Admin">
+            <AdminSettingsPage />
           </PageWrapper>
         ),
       },
@@ -275,6 +307,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "sales",
+        element: (
+          <PageWrapper title="Giao dịch bán">
+            <MySalesPage />
+          </PageWrapper>
+        ),
+      },
+      {
         index: true,
         element: <Navigate to="/seller/products" replace />,
       },
@@ -299,14 +339,6 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "orders",
-        element: (
-          <PageWrapper title="Đơn hàng của tôi">
-            <OrdersListPage />
-          </PageWrapper>
-        ),
-      },
-      {
         path: "profile",
         element: (
           <PageWrapper title="Hồ sơ của tôi">
@@ -319,6 +351,14 @@ export const router = createBrowserRouter([
         element: (
           <PageWrapper title="Yêu cầu nâng cấp Seller">
             <UpgradeRequestPage />
+          </PageWrapper>
+        ),
+      },
+      {
+        path: "purchases",
+        element: (
+          <PageWrapper title="Giao dịch mua">
+            <MyPurchasesPage />
           </PageWrapper>
         ),
       },

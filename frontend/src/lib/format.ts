@@ -4,3 +4,5 @@ export const formatPrice = (price: number) => {
     currency: "VND",
   }).format(price);
 };
+
+export const formatCurrency = formatPrice; // Alias for consistency

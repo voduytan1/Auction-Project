@@ -85,13 +85,13 @@ const PaginationControls = ({
         <ChevronLeft className="h-4 w-4" />
       </Button>
       <div className="text-sm text-slate-600">
-        {page + 1}/{totalPages + 1}
+        {page + 1}/{totalPages}
       </div>
       <Button
         size="sm"
         variant="outline"
-        onClick={() => onPageChange(Math.min(totalPages, page + 1))}
-        disabled={page >= totalPages}
+        onClick={() => onPageChange(Math.min(totalPages - 1, page + 1))}
+        disabled={page >= totalPages - 1}
       >
         <ChevronRight className="h-4 w-4" />
       </Button>
@@ -168,7 +168,8 @@ export function BidHistoryTable({
     fetchBidHistory();
   }, [isAuthenticated, fetchBidHistory]);
 
-  const totalPages = Math.max(0, Math.ceil(total / size) - 1);
+  const totalPages = total > 0 ? Math.ceil(total / size) : 1;
+  const shouldShowPagination = total > size;
 
   return (
     <Card className="relative">
@@ -245,7 +246,7 @@ export function BidHistoryTable({
               </div>
             )}
 
-            {total > 0 && (
+            {shouldShowPagination && (
               <PaginationControls
                 page={page}
                 totalPages={totalPages}

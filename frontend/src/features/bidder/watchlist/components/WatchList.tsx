@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Heart, Eye, Clock, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -153,7 +153,7 @@ export function WatchList() {
           <p className="text-muted-foreground mb-6">
             Bạn chưa thêm sản phẩm nào vào danh sách yêu thích
           </p>
-          <Button onClick={() => (window.location.href = "/products")}>
+          <Button onClick={() => navigate("/products")}>
             Khám phá sản phẩm
           </Button>
         </div>
