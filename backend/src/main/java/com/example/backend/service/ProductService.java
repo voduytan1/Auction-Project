@@ -59,7 +59,7 @@ public class ProductService {
         product.setSeller(seller);
         product.setCategory(category);
         product.setGiaHienTai(request.getGiaKhoiDiem());
-        product.setTrangThai(ProductStatus.PENDING);
+        product.setTrangThai(ProductStatus.ACTIVE);
         product.setThoiGianKetThuc(LocalDateTime.now().plusHours(request.getDurationInHours()));
         product.setSoLuotRaGia(0);
 
