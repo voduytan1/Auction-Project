@@ -4,12 +4,15 @@ import com.example.backend.dto.product.CreateProductRequest;
 import com.example.backend.dto.product.ProductResponse;
 import com.example.backend.entity.Product;
 import com.example.backend.entity.ProductDescriptionHistory;
+import com.example.backend.entity.ProductImage;
 import com.example.backend.utils.MyStringUtils;
 import org.mapstruct.*;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Mapper(componentModel = "spring")
@@ -27,7 +30,7 @@ public abstract class ProductMapper {
     @Mapping(target = "giaHienTai", ignore = true)
     public abstract Product toEntity(CreateProductRequest request);
 
-    @Mapping(target = "images", ignore = true)
+    @Mapping(target = "images",source = "product.images", qualifiedByName = "mapImages")
     @Mapping(target = "categoryId", source = "product.category.categoryid")
     @Mapping(target = "tenDanhMuc", source = "product.category.tenDanhMuc")
     @Mapping(target = "parentCategoryId", source = "product.category.parentCategory.categoryid")
@@ -37,7 +40,6 @@ public abstract class ProductMapper {
     @Mapping(target = "anhDaiDienSeller", source = "product.seller.anhDaiDien")
     @Mapping(target = "tenBidder", source = "product.currentBidder.hoVaTen", qualifiedByName = "maskBidderName")
     @Mapping(target = "diemDanhGiaBidder", source = "product.currentBidder.diemDanhGia")
-
     public abstract ProductResponse toResponse(Product product);
 
     @Named("maskBidderName")
@@ -48,6 +50,15 @@ public abstract class ProductMapper {
         return MyStringUtils.maskBidderName(fullName);
     }
 
+    @Named("mapImages")
+    protected List<String> mapImages(List<ProductImage> images) {
+        if (images == null) {
+            return Collections.emptyList();
+        }
+        return images.stream()
+                .map(ProductImage::getUrlAnh) // Get the 'urlAnh' field
+                .collect(Collectors.toList());
+    }
     @AfterMapping
     protected void enrichDescription(Product product, @MappingTarget ProductResponse response) {
         List<ProductDescriptionHistory> histories = product.getProductDescriptionHistories();
