@@ -3,10 +3,12 @@ package com.example.backend.service;
 import com.example.backend.dto.common.PaginationRequest;
 import com.example.backend.dto.transaction.TransactionResponse;
 import com.example.backend.entity.Transaction;
+import com.example.backend.entity.TransactionStatus;
 import com.example.backend.exception.ForbiddenException;
 import com.example.backend.mapper.TransactionMapper;
 import com.example.backend.repository.TransactionRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -60,6 +62,13 @@ public class TransactionService {
                 .map(transactionMapper::toResponse)
                 .toList();
         return new PageImpl<>(list, pageable, transactions.getTotalElements());
+    }
 
+    @Transactional
+    public Void completePayment(Long transactionId){
+        Transaction transaction = transactionRepository.findById(transactionId).orElseThrow(()-> new EntityNotFoundException("Không tìm thấy giao dịch với id " + transactionId));
+        transaction.setTrangThai(TransactionStatus.PAYMENT_COMPLETED);
+        transactionRepository.save(transaction);
+        return null;
     }
 }
