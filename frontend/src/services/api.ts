@@ -1,7 +1,15 @@
 import axios, { AxiosError } from "axios";
 import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
+import type { AppStore } from "@/store";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+// Declare window.__REDUX_STORE__ type
+declare global {
+  interface Window {
+    __REDUX_STORE__?: AppStore;
+  }
+}
 
 // Create axios instance
 const api = axios.create({
@@ -16,10 +24,8 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // TODO: Add auth token when Redux slices are ready
-    // const state = store.getState();
-    // const token = state.auth?.accessToken;
-    const token = localStorage.getItem("accessToken");
+    const store = window.__REDUX_STORE__;
+    const token = store?.getState()?.auth?.token;
 
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -60,11 +66,11 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        // Lấy user từ state để refresh token
-        const userId = localStorage.getItem("userId");
+        // Get userId from Redux store
+        const store = window.__REDUX_STORE__;
+        const userId = store?.getState()?.auth?.user?.userid;
 
         if (!userId) {
-          localStorage.removeItem("accessToken");
           // Chỉ redirect nếu không đang ở trang login
           if (window.location.pathname !== "/auth/login") {
             window.location.href = "/auth/login";
@@ -82,7 +88,12 @@ api.interceptors.response.use(
         );
 
         const { accessToken } = response.data.data;
-        localStorage.setItem("accessToken", accessToken);
+
+        // Dispatch action to update token in Redux
+        // Note: Token is also stored in localStorage by authSlice
+        if (store) {
+          store.dispatch({ type: "auth/setAccessToken", payload: accessToken });
+        }
 
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
@@ -90,8 +101,12 @@ api.interceptors.response.use(
 
         return api(originalRequest);
       } catch (refreshError) {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("userId");
+        // Dispatch logout action
+        const store = window.__REDUX_STORE__;
+        if (store) {
+          store.dispatch({ type: "auth/logout" });
+        }
+
         if (window.location.pathname !== "/auth/login") {
           window.location.href = "/auth/login";
         }

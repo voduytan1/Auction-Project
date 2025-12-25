@@ -183,16 +183,6 @@ export interface BidHistory {
   thoiGianDat: string; // LocalDateTime
 }
 
-// Helper interface for frontend
-export interface BidDisplay {
-  id: number;
-  productId: number;
-  bidderId: string;
-  bidderName: string;
-  amount: number;
-  placedAt: string;
-}
-
 export interface PlaceBidData {
   productId: number;
   amount: number;
@@ -326,8 +316,22 @@ export interface ProductSearchParams extends PaginationParams {
 // ============= API Response Types =============
 export interface ApiResponse<T> {
   success: boolean;
-  data: T;
   message?: string;
+  data: T;
+  metadata?: PaginationMetadata;
+  timestamp?: string;
+}
+
+export interface PaginationMetadata {
+  totalElements: number;
+  totalPages: number;
+  currentPage: number;
+  pageSize: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+  sortBy?: string | null;
+  sortOrder?: string | null;
+  search?: string | null;
 }
 
 export interface MessageResponse {
@@ -336,9 +340,11 @@ export interface MessageResponse {
 
 // ============= Error Types =============
 export interface ApiErrorResponse {
+  error: string;
   message: string;
+  path: string | null;
   status: number;
-  data: unknown;
+  timestamp: string;
 }
 
 // ============= Dashboard Types =============

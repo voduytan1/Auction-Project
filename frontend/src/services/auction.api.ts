@@ -4,10 +4,11 @@ import type {
   ProductDisplay,
   ProductSearchParams,
   PlaceBidData,
-  BidDisplay,
   WatchList,
   ProductQuestion,
+  ApiResponse,
 } from "@/types/types";
+import type { BidHistory } from "@/features/product-detail/types";
 
 /**
  * Product/Auction API endpoints
@@ -81,13 +82,69 @@ export const auctionAPI = {
    * Place bid on product
    */
   placeBid: (data: PlaceBidData) =>
-    api.post<{ bid: BidDisplay }>(`/products/${data.productId}/bids`, data),
+    api.post<{ bid: BidHistory }>(`/products/${data.productId}/bids`, data),
+
+  /**
+   * Buy now for a product
+   * Backend endpoint: POST /bids/buy-now/{productId}
+   * Response structure:
+   * {
+   *   success: true,
+   *   message: "Mua ngay thành công",
+   *   bidHistory: { bidHistoryid, tenBidder, giaDat, thoiGianDat },
+   *   giaHienTai: number,
+   *   soLuotRaGia: number | null,
+   *   isExtended: boolean | null
+   * }
+   */
+  buyNow: (productId: number) =>
+    api.post<{
+      success: boolean;
+      message: string;
+      bidHistory: {
+        bidHistoryid: number;
+        tenBidder: string;
+        giaDat: number;
+        thoiGianDat: string;
+      };
+      giaHienTai: number;
+      soLuotRaGia: number | null;
+      isExtended: boolean | null;
+    }>(`/bids/buy-now/${productId}`),
+
+  /**
+   * Create or update auto-bid for a product
+   * POST /bids/auto { productid, giaToiDa }
+   */
+  createAutoBid: (payload: { productid: number; giaToiDa: number }) =>
+    api.post(`/bids/auto`, payload),
 
   /**
    * Get bid history for product
    */
   getBidHistory: (productId: number) =>
-    api.get<{ bids: BidDisplay[] }>(`/products/${productId}/bids`),
+    api.get<{ bids: BidHistory[] }>(`/products/${productId}/bids`),
+
+  /**
+   * Get paginated bid history for product
+   * Backend endpoint: GET /bids/history/{productId}?page=&size=
+   */
+  getBidHistoryPaged: (
+    productId: number,
+    params?: { page?: number; size?: number }
+  ) =>
+    api.get<ApiResponse<BidHistory[]>>(`/bids/history/${productId}`, {
+      params,
+    }),
+
+  /**
+   * Get top N bid history entries for a product
+   * GET /bids/history/{productId}/get-top?number=5
+   */
+  getBidHistoryTop: (productId: number, numberOfItems = 5) =>
+    api.get<ApiResponse<BidHistory[]>>(`/bids/history/${productId}/get-top`, {
+      params: { number: numberOfItems },
+    }),
 
   // ============= Watchlist =============
   /**

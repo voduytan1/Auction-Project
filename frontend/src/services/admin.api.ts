@@ -71,4 +71,22 @@ export const adminAPI = {
    */
   processRequest: (id: number, approve: boolean) =>
     api.post<void>(`/admin/requests/${id}`, { approve }),
+
+  /**
+   * GET /admin/config/{variable} - Get config value
+   */
+  getConfig: (variable: string) =>
+    api.get<{ variable: string; value: number | string }>(
+      `/admin/config/${variable}`
+    ),
+
+  /**
+   * POST /admin/config - Update config value
+   * Body: { variable: string, value: number | string }
+   */
+  updateConfig: (data: { variable: string; value: number | string }) =>
+    api.post<{ variable: string; value: number | string }>(
+      `/admin/config`,
+      data
+    ),
 };

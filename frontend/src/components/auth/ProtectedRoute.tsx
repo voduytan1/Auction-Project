@@ -9,12 +9,10 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
 
-  // Verify token còn tồn tại trong localStorage
-  // Nếu Redux state có isAuthenticated=true nhưng localStorage không có token
-  // => User đã logout nhưng bấm back button => Phải redirect về login
-  const hasToken = !!localStorage.getItem("accessToken");
-
-  if (!isAuthenticated || !hasToken) {
+  // Chỉ cần check Redux state isAuthenticated
+  // Token nằm trong memory (Redux state), không còn trong localStorage
+  // Nếu F5, AuthRestoreWrapper sẽ restore session qua refresh token
+  if (!isAuthenticated) {
     return <Navigate to="/auth/login" replace />;
   }
 

@@ -7,16 +7,12 @@ import type {
 } from "@/features/auth/types";
 import { authAPI } from "@/services/auth.api";
 
-// Async thunks - Connect với real Backend API
+// Async thunks
 export const loginUser = createAsyncThunk(
   "auth/login",
   async (credentials: LoginRequest, { rejectWithValue }) => {
     try {
       const response = await authAPI.login(credentials);
-      // Backend trả về: { accessToken, userid, username, vaitro, anhDaiDien, email, hoVaTen }
-      // Refresh token được lưu trong HTTP-only cookie
-      localStorage.setItem("accessToken", response.accessToken);
-      localStorage.setItem("userId", response.userid);
 
       const user: User = {
         userid: response.userid,
@@ -25,14 +21,10 @@ export const loginUser = createAsyncThunk(
         vaitro: response.vaitro,
         anhDaiDien: response.anhDaiDien,
         hoVaTen: response.hoVaTen,
-        // Add mock rating data for demo (would come from backend in production)
-        tyLeDanhGiaTot: 85, // 85% positive ratings
+        tyLeDanhGiaTot: 85,
         diemDanhGia: 85,
         soLuotDanhGia: 20,
       };
-
-      // Lưu user info vào localStorage để restore sau khi F5
-      localStorage.setItem("user", JSON.stringify(user));
 
       return {
         user,
@@ -52,8 +44,6 @@ export const registerUser = createAsyncThunk(
   async (userData: RegisterRequest, { rejectWithValue }) => {
     try {
       const response = await authAPI.register(userData);
-      localStorage.setItem("accessToken", response.accessToken);
-      localStorage.setItem("userId", response.userid);
 
       const user: User = {
         userid: response.userid,
@@ -62,14 +52,10 @@ export const registerUser = createAsyncThunk(
         vaitro: response.vaitro,
         anhDaiDien: response.anhDaiDien,
         hoVaTen: response.hoVaTen,
-        // Add mock rating data for demo (would come from backend in production)
-        tyLeDanhGiaTot: 85, // 85% positive ratings
+        tyLeDanhGiaTot: 85,
         diemDanhGia: 85,
         soLuotDanhGia: 20,
       };
-
-      // Lưu user info vào localStorage để restore sau khi F5
-      localStorage.setItem("user", JSON.stringify(user));
 
       return {
         user,
@@ -86,8 +72,9 @@ export const refreshAccessToken = createAsyncThunk(
   "auth/refresh",
   async (userId: string, { rejectWithValue }) => {
     try {
+      if (!userId) throw new Error("User ID is invalid");
+
       const response = await authAPI.refreshToken(userId);
-      localStorage.setItem("accessToken", response.accessToken);
       return {
         token: response.accessToken,
         expiresIn: response.expiresIn,
@@ -102,51 +89,35 @@ export const refreshAccessToken = createAsyncThunk(
 );
 
 export const logoutUser = createAsyncThunk("auth/logout", async () => {
-  await authAPI.logout();
-  localStorage.removeItem("accessToken");
+  try {
+    await authAPI.logout();
+  } catch (error) {
+    console.warn("Logout API failed, clearing local state anyway:", error);
+  }
   return null;
 });
 
 // State interface
 interface AuthState {
+  userId: string | null;
   user: User | null;
   token: string | null;
   isLoading: boolean;
   error: string | null;
   isAuthenticated: boolean;
+  isInitializing: boolean;
 }
 
-// Helper function để restore user từ localStorage
-const getUserFromStorage = (): User | null => {
-  try {
-    const userStr = localStorage.getItem("user");
-    if (userStr) {
-      const user = JSON.parse(userStr) as User;
-      // Add default rating for demo if not present
-      if (user.tyLeDanhGiaTot === undefined) {
-        user.tyLeDanhGiaTot = 85; // Default 85% good rating for demo
-        user.diemDanhGia = 85;
-        user.soLuotDanhGia = 20;
-      }
-      return user;
-    }
-  } catch (error) {
-    console.error("Error parsing user from localStorage:", error);
-    localStorage.removeItem("user");
-  }
-  return null;
-};
-
-// Initial state - Restore từ localStorage nếu có
 const initialState: AuthState = {
-  user: getUserFromStorage(),
-  token: localStorage.getItem("accessToken"),
+  userId: null,
+  user: null,
+  token: null,
   isLoading: false,
   error: null,
-  isAuthenticated: !!localStorage.getItem("accessToken"),
+  isAuthenticated: false,
+  isInitializing: false,
 };
 
-// Slice - Flux pattern với Redux Toolkit
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -154,18 +125,22 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    setAccessToken: (state, action: PayloadAction<string>) => {
+      state.token = action.payload;
+      state.isAuthenticated = true;
+    },
     setCredentials: (
       state,
-      action: PayloadAction<{ user: User; token: string }>
+      action: PayloadAction<{ user: User; token: string | null }>
     ) => {
+      state.userId = action.payload.user.userid; // Lấy trực tiếp, không clean
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.isAuthenticated = true;
-      localStorage.setItem("accessToken", action.payload.token);
-      localStorage.setItem("user", JSON.stringify(action.payload.user));
-      if (action.payload.user?.userid) {
-        localStorage.setItem("userId", action.payload.user.userid);
-      }
+    },
+    setUserIdFromUser: (state, action: PayloadAction<string>) => {
+      // Listener middleware sẽ gọi action này để extract userId từ user.userid
+      state.userId = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -177,12 +152,10 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false;
+        state.userId = action.payload.user.userid;
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.isAuthenticated = true;
-        localStorage.setItem("accessToken", action.payload.token);
-        localStorage.setItem("userId", action.payload.user.userid);
-        localStorage.setItem("user", JSON.stringify(action.payload.user));
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -197,12 +170,10 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.isLoading = false;
+        state.userId = action.payload.user.userid;
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.isAuthenticated = true;
-        localStorage.setItem("accessToken", action.payload.token);
-        localStorage.setItem("userId", action.payload.user.userid);
-        localStorage.setItem("user", JSON.stringify(action.payload.user));
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -211,13 +182,11 @@ const authSlice = createSlice({
 
     // Logout
     builder.addCase(logoutUser.fulfilled, (state) => {
+      state.userId = null;
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
       state.error = null;
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("userId");
-      localStorage.removeItem("user");
     });
 
     // Refresh Token
@@ -232,15 +201,15 @@ const authSlice = createSlice({
       })
       .addCase(refreshAccessToken.rejected, (state) => {
         state.isLoading = false;
+        state.userId = null;
         state.user = null;
         state.token = null;
         state.isAuthenticated = false;
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("userId");
-        localStorage.removeItem("user");
       });
+
+    // REHYDRATE được handle bởi listener middleware ở store/index.ts
   },
 });
 
-export const { clearError, setCredentials } = authSlice.actions;
+export const { clearError, setCredentials, setAccessToken } = authSlice.actions;
 export default authSlice.reducer;

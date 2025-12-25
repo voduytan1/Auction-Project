@@ -1,114 +1,418 @@
 import {
   Clock,
   Gavel,
-  Tag,
   TrendingUp,
   User,
   Star,
   ShoppingCart,
+  Heart,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import type { ProductDetail } from "../types";
-import { formatDistanceToNow } from "date-fns";
+// Import thêm Tooltip components
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+import type { ProductResponse } from "@/services/product.api";
+import { auctionAPI } from "@/services/auction.api";
+import type { ApiErrorResponse } from "@/types/types";
+import type { AxiosError } from "axios";
+import { useNavigate } from "react-router";
+import { useState } from "react";
+import { useAppSelector } from "@/hooks/use-redux";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
+import { formatDistanceToNow, format, differenceInDays } from "date-fns";
 import { vi } from "date-fns/locale";
 
+// Utility: Format currency
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(amount);
+};
+
+// Utility: Extract order ID from buy now response
+const extractOrderId = (data: unknown): string | number | null => {
+  if (!data || typeof data !== "object") return null;
+
+  const response = data as Record<string, unknown>;
+
+  // Try bidHistory.bidHistoryid first (actual backend response)
+  if (response.bidHistory && typeof response.bidHistory === "object") {
+    const bidHistory = response.bidHistory as Record<string, unknown>;
+    if (bidHistory.bidHistoryid)
+      return bidHistory.bidHistoryid as string | number;
+  }
+
+  // Fallback to other possible fields
+  const order = response.order as Record<string, unknown> | undefined;
+  let orderId = response.orderId ?? response.id ?? order?.id ?? null;
+
+  if (orderId && typeof orderId === "object") {
+    const orderObj = orderId as Record<string, unknown>;
+    orderId = orderObj.id ?? orderObj.orderId ?? null;
+  }
+
+  return orderId as string | number | null;
+};
+
+// Utility: Extract message from response
+const extractResponseMessage = (response: unknown): string => {
+  if (response && typeof response === "object") {
+    const resp = response as { message?: string };
+    if (resp.message) return resp.message;
+  }
+  return JSON.stringify(response);
+};
+
 interface ProductInfoProps {
-  product: ProductDetail;
+  product: ProductResponse;
 }
 
 export function ProductInfo({ product }: ProductInfoProps) {
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(amount);
-  };
+  const navigate = useNavigate();
+  const { isAuthenticated, user } = useAppSelector((s) => s.auth);
+
+  // Check if user is seller or winner (for completed products)
+  const isSeller =
+    product.sellerId && user?.userid
+      ? String(product.sellerId) === String(user.userid)
+      : false;
+  const isWinner =
+    product.bidderId && user?.userid
+      ? String(product.bidderId) === String(user.userid)
+      : false;
+
+  // Show completed card for:
+  // - Not logged in users when product is completed
+  // - Logged in users who are NOT seller or winner
+  const isCompletedForOthers =
+    product.trangThai === "COMPLETED" &&
+    (!isAuthenticated || (!isSeller && !isWinner));
+  const [buyDialogOpen, setBuyDialogOpen] = useState(false);
+  const [buyLoading, setBuyLoading] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [createdOrderId, setCreatedOrderId] = useState<string | number | null>(
+    null
+  );
+  const [buyNowResponse, setBuyNowResponse] = useState<unknown>(null);
+  const [autoDialogOpen, setAutoDialogOpen] = useState(false);
+  const [autoLoading, setAutoLoading] = useState(false);
+  const [autoValue, setAutoValue] = useState<string>("");
 
   const getTimeRemaining = () => {
-    const endDate = new Date(product.endTime);
+    const endDate = new Date(product.thoiGianKetThuc);
     const now = new Date();
     const diffInMs = endDate.getTime() - now.getTime();
-    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
 
-    // Nếu < 3 ngày thì hiển thị relative time
-    if (diffInDays < 3) {
+    // Nếu đã hết hạn
+    if (diffInMs <= 0) {
+      return "Đã kết thúc";
+    }
+
+    // Nếu còn ít hơn 3 ngày -> hiển thị relative
+    const days = differenceInDays(endDate, now);
+    if (days < 3) {
       return formatDistanceToNow(endDate, { addSuffix: true, locale: vi });
     }
 
-    return endDate.toLocaleDateString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const getRatingPercent = (user: { rating: number; totalRatings: number }) => {
-    return `${user.rating.toFixed(1)}/10 (${user.totalRatings} đánh giá)`;
+    // Nếu >= 3 ngày -> hiển thị ngày giờ đầy đủ
+    return format(endDate, "dd/MM/yyyy HH:mm", { locale: vi });
   };
 
   return (
     <div className="space-y-6">
       {/* Title & Category */}
-      <div>
-        <div className="mb-2 flex items-center gap-2 text-sm text-slate-600">
-          <Tag className="h-4 w-4" />
-          <span>{product.category}</span>
-          <span>›</span>
-          <span>{product.subcategory}</span>
-        </div>
-        <h1 className="text-3xl font-bold">{product.name}</h1>
+      <div className="mb-4">
+        <h1 className="text-3xl font-bold">{product.tenSanPham}</h1>
       </div>
 
       {/* Price Info */}
       <Card className="border-primary bg-primary/5">
         <CardContent className="p-6">
-          <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="text-sm text-slate-600">Giá hiện tại</div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-primary">
-                  {formatCurrency(product.currentBid)}
-                </span>
-                <Badge variant="secondary" className="text-xs">
-                  <TrendingUp className="mr-1 h-3 w-3" />
-                  {product.totalBids} lượt ra giá
-                </Badge>
+              <div className="text-4xl font-bold text-primary leading-none my-1">
+                {formatCurrency(product.giaHienTai)}
               </div>
+              <Badge variant="secondary" className="text-xs mt-2">
+                <TrendingUp className="mr-1 h-3 w-3" />
+                156 lượt ra giá
+              </Badge>
             </div>
 
-            {product.buyNowPrice && (
+            {product.giaMuaNgay && (
               <div>
                 <div className="text-sm text-slate-600">Giá mua ngay</div>
-                <div className="text-2xl font-semibold text-accent">
-                  {formatCurrency(product.buyNowPrice)}
+                <div className="text-2xl font-semibold text-accent leading-none my-1">
+                  {formatCurrency(product.giaMuaNgay)}
                 </div>
               </div>
             )}
+          </div>
 
-            <Separator />
+          <Separator className="my-4" />
 
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <div className="text-slate-600">Giá khởi điểm</div>
-                <div className="font-semibold">
-                  {formatCurrency(product.startingPrice)}
-                </div>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <div className="text-slate-600">Giá khởi điểm</div>
+              <div className="font-semibold">
+                {formatCurrency(product.giaKhoiDiem)}
               </div>
-              <div>
-                <div className="text-slate-600">Bước giá</div>
-                <div className="font-semibold">
-                  {formatCurrency(product.bidIncrement)}
-                </div>
+            </div>
+            <div>
+              <div className="text-slate-600">Bước giá</div>
+              <div className="font-semibold">
+                {formatCurrency(product.buocGia)}
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Action Buttons OR Completed Card */}
+      {isCompletedForOthers ? (
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-4 text-amber-600">
+              <CheckCircle2 className="h-6 w-6" />
+              <h3 className="text-xl font-semibold">Sản phẩm đã kết thúc</h3>
+            </div>
+            <p className="text-slate-600 mb-4">
+              Phiên đấu giá cho sản phẩm này đã kết thúc.
+            </p>
+            <div className="space-y-3 pb-4 border-b">
+              <div className="flex justify-between">
+                <span className="text-slate-600">Giá cuối cùng:</span>
+                <span className="font-semibold text-accent text-lg">
+                  {formatCurrency(product.giaHienTai)}
+                </span>
+              </div>
+              {product.tenBidder && (
+                <div className="flex justify-between">
+                  <span className="text-slate-600">Người thắng:</span>
+                  <span className="font-semibold">{product.tenBidder}</span>
+                </div>
+              )}
+            </div>
+            <div className="mt-4 p-3 bg-slate-50 rounded-lg">
+              <p className="text-sm text-slate-600">
+                Sản phẩm này đã được bán thành công. Cảm ơn bạn đã quan tâm!
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="flex items-stretch gap-3">
+          {/* Nút Đặt giá - Luôn hiện và giãn rộng */}
+          <>
+            <Button
+              size="lg"
+              className="flex-1 text-lg"
+              onClick={() => {
+                if (!isAuthenticated) {
+                  navigate("/auth/login");
+                  return;
+                }
+                setAutoDialogOpen(true);
+              }}
+            >
+              <Gavel className="mr-2 h-5 w-5" />
+              Đặt giá tự động
+            </Button>
+
+            <Dialog open={autoDialogOpen} onOpenChange={setAutoDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Thiết lập đặt giá tự động</DialogTitle>
+                  <DialogDescription>
+                    Nhập mức giá tối đa bạn muốn hệ thống tự động đặt thay cho
+                    bạn.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="mt-2">
+                  <label className="block text-sm text-slate-600 mb-2">
+                    Mức giá tối đa (VND)
+                  </label>
+                  <Input
+                    type="number"
+                    value={autoValue}
+                    onChange={(e) => setAutoValue(e.target.value)}
+                    placeholder={String(product.giaHienTai)}
+                  />
+                </div>
+
+                <DialogFooter>
+                  <DialogClose>
+                    <Button variant="outline">Hủy</Button>
+                  </DialogClose>
+                  <Button
+                    onClick={async () => {
+                      const parsed = Number(autoValue);
+                      if (!parsed || parsed <= 0) {
+                        alert("Vui lòng nhập mức giá hợp lệ");
+                        return;
+                      }
+                      if (parsed < product.giaHienTai) {
+                        if (
+                          !confirm("Mức tối đa nhỏ hơn giá hiện tại. Tiếp tục?")
+                        )
+                          return;
+                      }
+                      try {
+                        setAutoLoading(true);
+                        await auctionAPI.createAutoBid({
+                          productid: product.productid,
+                          giaToiDa: parsed,
+                        });
+                        setAutoDialogOpen(false);
+                        alert("Đặt giá tự động thành công");
+                      } catch (error) {
+                        console.error("Auto bid error", error);
+                        const axiosError =
+                          error as AxiosError<ApiErrorResponse>;
+                        alert(
+                          axiosError.response?.data?.message ||
+                            "Lỗi khi đặt giá tự động"
+                        );
+                      } finally {
+                        setAutoLoading(false);
+                      }
+                    }}
+                    disabled={autoLoading}
+                  >
+                    {autoLoading ? "Đang xử lý..." : "Đặt giá tự động"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </>
+
+          {/* Nút Mua ngay - Nếu có thì giãn rộng cùng nút Đặt giá */}
+          <>
+            <Button
+              size="lg"
+              variant="default"
+              className={
+                "flex-1 text-lg " +
+                (product.giaMuaNgay
+                  ? "bg-accent hover:bg-accent/90"
+                  : "bg-accent cursor-not-allowed")
+              }
+              onClick={() => {
+                if (!product.giaMuaNgay) return; // disabled
+                if (!isAuthenticated) {
+                  navigate("/auth/login");
+                  return;
+                }
+                setBuyDialogOpen(true);
+              }}
+              disabled={!product.giaMuaNgay || buyLoading}
+              title={product.giaMuaNgay ? "Mua ngay" : "Không có giá mua ngay"}
+            >
+              <ShoppingCart className="mr-2 h-5 w-5" />
+              Mua ngay
+            </Button>
+
+            {/* Buy Now confirmation dialog (only meaningful when price exists) */}
+            {product.giaMuaNgay && (
+              <AlertDialog open={buyDialogOpen} onOpenChange={setBuyDialogOpen}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Xác nhận mua ngay</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Bạn sẽ mua sản phẩm này ngay với giá{" "}
+                      {formatCurrency(product.giaMuaNgay as number)}.
+                      <br />
+                      Vui lòng xác nhận để tiếp tục.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={buyLoading}>
+                      Hủy
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={async () => {
+                        try {
+                          setBuyLoading(true);
+                          const resp = await auctionAPI.buyNow(
+                            product.productid
+                          );
+                          const orderId = extractOrderId(resp.data);
+
+                          setBuyNowResponse(resp.data);
+                          setCreatedOrderId(orderId);
+                          setBuyDialogOpen(false);
+                          setPaymentModalOpen(true);
+                        } catch (error) {
+                          console.error("Buy now error:", error);
+                          const axiosError =
+                            error as AxiosError<ApiErrorResponse>;
+                          alert(
+                            axiosError.response?.data?.message ||
+                              "Mua ngay thất bại"
+                          );
+                        } finally {
+                          setBuyLoading(false);
+                        }
+                      }}
+                    >
+                      {buyLoading ? "Đang xử lý..." : "Xác nhận mua"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </>
+
+          {/* Nút Wishlist - Icon Only với Tooltip */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="lg" // Dùng size lg để chiều cao bằng các nút bên cạnh
+                  className="aspect-square px-0" // aspect-square để thành hình vuông
+                >
+                  <Heart className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Thêm vào yêu thích</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      )}
 
       {/* Time Info */}
       <div className="grid grid-cols-2 gap-4">
@@ -133,10 +437,9 @@ export function ProductInfo({ product }: ProductInfoProps) {
                 <Gavel className="h-5 w-5 text-slate-600" />
               </div>
               <div>
-                <div className="text-xs text-slate-600">Đã đăng</div>
+                <div className="text-xs text-slate-600">Thời điểm đăng</div>
                 <div className="font-semibold">
-                  {formatDistanceToNow(new Date(product.postedAt), {
-                    addSuffix: true,
+                  {format(new Date(product.createdAt), "dd/MM/yyyy HH:mm", {
                     locale: vi,
                   })}
                 </div>
@@ -152,83 +455,122 @@ export function ProductInfo({ product }: ProductInfoProps) {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="rounded-full bg-primary/10 p-3">
-                  <User className="h-5 w-5 text-primary" />
-                </div>
+                {product.anhDaiDienSeller ? (
+                  <img
+                    src={product.anhDaiDienSeller}
+                    alt={product.tenSeller}
+                    className="h-12 w-12 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="rounded-full bg-primary/10 p-3">
+                    <User className="h-5 w-5 text-primary" />
+                  </div>
+                )}
                 <div>
                   <div className="text-xs text-slate-600">Người bán</div>
-                  <div className="font-semibold">{product.seller.name}</div>
+                  <div className="font-semibold">
+                    {product.tenSeller || "Người bán"}
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-1 text-accent">
-                <Star className="h-4 w-4 fill-current" />
-                <span className="font-semibold">
-                  {getRatingPercent(product.seller)}
-                </span>
-              </div>
+              {product.diemDanhGiaSeller != null ? (
+                <div className="flex items-center gap-1 text-accent">
+                  <Star className="h-4 w-4 fill-current" />
+                  <span className="font-semibold text-sm">
+                    {product.diemDanhGiaSeller.toFixed(1)}/10
+                  </span>
+                </div>
+              ) : (
+                <div className="text-xs text-slate-500">Chưa có đánh giá</div>
+              )}
             </div>
-
-            {product.highestBidder && (
-              <>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-full bg-accent/10 p-3">
-                      <TrendingUp className="h-5 w-5 text-accent" />
-                    </div>
-                    <div>
-                      <div className="text-xs text-slate-600">
-                        Người đặt giá cao nhất
-                      </div>
-                      <div className="font-semibold">
-                        {product.highestBidder.name}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 text-accent">
-                    <Star className="h-4 w-4 fill-current" />
-                    <span className="font-semibold">
-                      {getRatingPercent(product.highestBidder)}
-                    </span>
-                  </div>
-                </div>
-              </>
-            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Action Buttons */}
-      <div className="space-y-3">
-        <Button size="lg" className="w-full text-lg">
-          <Gavel className="mr-2 h-5 w-5" />
-          Đặt giá ngay
-        </Button>
-        {product.buyNowPrice && (
-          <Button
-            size="lg"
-            variant="default"
-            className="w-full bg-accent text-lg hover:bg-accent/90"
-          >
-            <ShoppingCart className="mr-2 h-5 w-5" />
-            Mua ngay - {formatCurrency(product.buyNowPrice)}
-          </Button>
-        )}
-      </div>
-
-      {/* Auto Renew Badge */}
-      {product.autoRenew && (
-        <div className="rounded-lg bg-blue-50 p-3 text-sm text-blue-900">
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            <span className="font-medium">Tự động gia hạn:</span>
-          </div>
-          <p className="mt-1 text-xs">
-            Nếu có lượt đấu giá mới trong 5 phút cuối, sản phẩm tự động gia hạn
-            thêm 10 phút.
-          </p>
-        </div>
+      {/* Highest Bidder Info */}
+      {product.tenBidder && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-full bg-green-100 p-3">
+                    <TrendingUp className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <div className="text-xs text-slate-600">Đang dẫn đầu</div>
+                    <div className="font-semibold">{product.tenBidder}</div>
+                  </div>
+                </div>
+                {product.diemDanhGiaBidder != null ? (
+                  <div className="flex items-center gap-1 text-accent">
+                    <Star className="h-4 w-4 fill-current" />
+                    <span className="font-semibold text-sm">
+                      {product.diemDanhGiaBidder.toFixed(1)}/10
+                    </span>
+                  </div>
+                ) : (
+                  <div className="text-xs text-slate-500">Chưa có đánh giá</div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
+
+      {/* Payment decision modal shown after buyNow response */}
+      <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Thanh toán đơn hàng</DialogTitle>
+            <DialogDescription>
+              Đơn hàng đã được tạo thành công. Bạn có muốn thanh toán ngay bây
+              giờ không?
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-2">
+            <div className="mb-4">
+              <div className="text-sm text-slate-600">Sản phẩm</div>
+              <div className="font-semibold">{product.tenSanPham}</div>
+              <div className="text-sm text-slate-600 mt-2">Giá</div>
+              <div className="font-semibold">
+                {formatCurrency(product.giaMuaNgay as number)}
+              </div>
+              {buyNowResponse ? (
+                <div className="mt-2 text-sm text-slate-600">
+                  Server: {extractResponseMessage(buyNowResponse)}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  if (createdOrderId) {
+                    navigate(`/orders/${createdOrderId}/complete`);
+                  } else {
+                    navigate(`/profile`);
+                  }
+                }}
+              >
+                Thanh toán ngay
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setPaymentModalOpen(false);
+                  navigate(`/profile`);
+                }}
+              >
+                Thanh toán sau
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
