@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -62,7 +62,7 @@ export function RegisterForm() {
           <PageLoader message="Đang tạo tài khoản..." className="py-0" />
         </div>
       )}
-      <CardHeader>
+      <CardHeader className="text-center">
         <CardTitle>Tạo Tài Khoản</CardTitle>
         <CardDescription>Đăng ký để bắt đầu tham gia đấu giá</CardDescription>
       </CardHeader>
@@ -210,6 +210,12 @@ export function RegisterForm() {
               <FaXTwitter className="mr-2 h-5 w-5" />
               Twitter
             </Button>
+          </div>
+          <div className="text-center text-sm mt-4">
+            Đã có tài khoản?{" "}
+            <Link to="/auth/login" className="text-primary hover:underline">
+              Đăng nhập ngay
+            </Link>
           </div>
         </form>
       </CardContent>

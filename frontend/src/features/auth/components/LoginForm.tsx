@@ -75,7 +75,7 @@ export function LoginForm() {
           <PageLoader message="Đang đăng nhập..." className="py-0" />
         </div>
       )}
-      <CardHeader>
+      <CardHeader className="text-center">
         <CardTitle>Đăng Nhập</CardTitle>
         <CardDescription>
           Nhập thông tin đăng nhập để truy cập tài khoản
@@ -100,12 +100,6 @@ export function LoginForm() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Mật khẩu</Label>
-              <Link
-                to="/auth/forgot-password"
-                className="text-sm text-primary hover:underline"
-              >
-                Quên mật khẩu?
-              </Link>
             </div>
             <Input
               id="password"
@@ -113,6 +107,12 @@ export function LoginForm() {
               placeholder="••••••••"
               {...register("password")}
             />
+            <Link
+              to="/auth/forgot-password"
+              className="text-sm text-primary hover:underline text-right block"
+            >
+              Quên mật khẩu?
+            </Link>
             {errors.password && (
               <p className="text-sm text-destructive">
                 {errors.password.message}

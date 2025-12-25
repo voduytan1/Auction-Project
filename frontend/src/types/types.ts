@@ -183,16 +183,6 @@ export interface BidHistory {
   thoiGianDat: string; // LocalDateTime
 }
 
-// Helper interface for frontend
-export interface BidDisplay {
-  id: number;
-  productId: number;
-  bidderId: string;
-  bidderName: string;
-  amount: number;
-  placedAt: string;
-}
-
 export interface PlaceBidData {
   productId: number;
   amount: number;
@@ -350,9 +340,11 @@ export interface MessageResponse {
 
 // ============= Error Types =============
 export interface ApiErrorResponse {
+  error: string;
   message: string;
+  path: string | null;
   status: number;
-  data: unknown;
+  timestamp: string;
 }
 
 // ============= Dashboard Types =============

@@ -1,8 +1,8 @@
 export interface BidHistory {
-  id: number;
-  bidderName: string; // Masked name: ****Khoa
-  amount: number;
-  timestamp: string;
+  bidHistoryid: number;
+  tenBidder: string;
+  giaDat: number;
+  thoiGianDat: string;
 }
 
 export interface ProductQuestion {

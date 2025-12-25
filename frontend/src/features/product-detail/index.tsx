@@ -54,7 +54,7 @@ const ProductDetail = () => {
   }
 
   return (
-    <div className="bg-slate-50 px-36 py-6">
+    <div className="px-20">
       <div className="bg-white container px-4 py-6 mx-auto">
         {/* Error Banner */}
         {error && (
@@ -73,10 +73,17 @@ const ProductDetail = () => {
             </Link>
             <span>›</span>
             <Link
-              to={`/categories/${product.tenCategory}`}
+              to={`/categories/${product.parentCategoryId}`}
               className="hover:text-primary"
             >
-              {product.tenCategory || "Danh mục"}
+              {product.tenDanhMucCha}
+            </Link>
+            <span>›</span>
+            <Link
+              to={`/categories/${product.categoryId}`}
+              className="hover:text-primary"
+            >
+              {product.tenDanhMuc}
             </Link>
             <span>›</span>
             <span className="text-slate-900">{product.tenSanPham}</span>
@@ -114,8 +121,14 @@ const ProductDetail = () => {
                 </TabsContent>
 
                 <TabsContent value="history" className="mt-4">
-                  {/* TODO: API chưa trả về bid history */}
-                  <BidHistoryTable bidHistory={productDetailData.bidHistory} />
+                  {
+                    // derive sellerId from product to avoid refetching inside BidHistoryTable
+                  }
+                  <BidHistoryTable
+                    productId={product.productid}
+                    initialSize={5}
+                    sellerId={product.sellerId}
+                  />
                 </TabsContent>
 
                 <TabsContent value="qa" className="mt-4">
@@ -145,7 +158,7 @@ const ProductDetail = () => {
         <div className="mt-12">
           <RelatedProducts
             products={relatedProducts}
-            currentCategory={product.tenCategory || ""}
+            currentCategory={product.tenDanhMuc || ""}
           />
         </div>
       </div>

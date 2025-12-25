@@ -35,14 +35,24 @@ export interface ProductResponse {
   createdAt: string; // LocalDateTime
   thoiGianKetThuc: string; // LocalDateTime
   trangThai: "PENDING" | "ACTIVE" | "COMPLETED" | "CANCELLED";
-  tenCategory: string;
+
+  // Category info
+  categoryId: number;
+  tenDanhMuc: string;
+  parentCategoryId?: number;
+  tenDanhMucCha?: string;
+
+  // Seller info
   tenSeller: string;
+  diemDanhGiaSeller?: number;
+  anhDaiDienSeller?: string;
+
+  // Bidder info (highest bidder)
+  tenBidder?: string;
+  diemDanhGiaBidder?: number;
+
   images: string[];
-  descriptionUpdates: DescriptionHistoryResponse[];
-  highestBidder?: {
-    name: string;
-    rating: number;
-  };
+  sellerId: string;
 }
 
 /**

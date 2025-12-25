@@ -16,6 +16,13 @@ import { PageWrapper } from "../components/PageWrapper";
 const HomePage = lazy(() => import("./homepage"));
 const UnauthorizedPage = lazy(() => import("./unauthorized"));
 const ProductDetailPage = lazy(() => import("./product-detail"));
+const CompleteOrderPage = lazy(() => import("./bidder/complete-order"));
+const CreateOrderPage = lazy(
+  () => import("@/features/bidder/order/components/CreateOrder")
+);
+const OrdersListPage = lazy(
+  () => import("../features/bidder/order/OrdersList")
+);
 const CategoryProductsPage = lazy(() => import("./category-products"));
 const SearchPage = lazy(() => import("./search"));
 const ProfilePage = lazy(() => import("./profile"));
@@ -91,6 +98,22 @@ export const router = createBrowserRouter([
         element: (
           <PageWrapper title="Tìm kiếm sản phẩm">
             <SearchPage />
+          </PageWrapper>
+        ),
+      },
+      {
+        path: "orders/create",
+        element: (
+          <PageWrapper title="Tạo đơn hàng - Thanh toán">
+            <CreateOrderPage />
+          </PageWrapper>
+        ),
+      },
+      {
+        path: "orders/:id/complete",
+        element: (
+          <PageWrapper title="Hoàn tất đơn hàng">
+            <CompleteOrderPage />
           </PageWrapper>
         ),
       },
@@ -272,6 +295,14 @@ export const router = createBrowserRouter([
         element: (
           <PageWrapper title="Danh sách yêu thích">
             <WatchListPage />
+          </PageWrapper>
+        ),
+      },
+      {
+        path: "orders",
+        element: (
+          <PageWrapper title="Đơn hàng của tôi">
+            <OrdersListPage />
           </PageWrapper>
         ),
       },

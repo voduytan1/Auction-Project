@@ -28,7 +28,6 @@ export default function SearchResults() {
   );
   const [products, setProducts] = useState<ProductResponse[]>([]);
   const [totalPages, setTotalPages] = useState(0);
-  const [totalProducts, setTotalProducts] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,14 +57,19 @@ export default function SearchResults() {
           size: itemsPerPage,
         });
 
-        // Backend returns ApiResponse<ProductResponse[]> with metadata
-        // data is array directly, pagination info in metadata field
-        const productsData = response.data?.data || [];
-        const metadata = response.data?.metadata;
+        // Backend returns plain array ProductResponse[]
+        const resp = response.data;
+        const productsData = Array.isArray(resp) ? resp : resp?.data || [];
+        const metadata = resp?.metadata;
 
-        setProducts(Array.isArray(productsData) ? productsData : []);
-        setTotalPages(metadata?.totalPages || 0);
-        setTotalProducts(metadata?.totalElements || 0);
+        const totalElementsFallback =
+          metadata?.totalElements ?? productsData.length ?? 0;
+        const totalPagesFallback =
+          metadata?.totalPages ??
+          Math.ceil(totalElementsFallback / itemsPerPage);
+
+        setProducts(productsData);
+        setTotalPages(totalPagesFallback);
       } catch (err) {
         console.error("Error fetching products:", err);
         setError("Không thể tải danh sách sản phẩm. Vui lòng thử lại.");
@@ -106,10 +110,10 @@ export default function SearchResults() {
   const categories = Array.from(
     new Map(
       products.map((p) => [
-        p.tenCategory,
+        p.categoryId,
         {
-          categoryid: 0,
-          tenDanhMuc: p.tenCategory,
+          categoryid: p.categoryId,
+          tenDanhMuc: p.tenDanhMuc,
           level: 1,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -141,7 +145,7 @@ export default function SearchResults() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">
