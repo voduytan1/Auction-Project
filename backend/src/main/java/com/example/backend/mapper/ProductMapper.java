@@ -39,6 +39,7 @@ public abstract class ProductMapper {
     @Mapping(target = "tenSeller", source = "product.seller.hoVaTen")
     @Mapping(target = "diemDanhGiaSeller", source = "product.seller.diemDanhGia")
     @Mapping(target = "anhDaiDienSeller", source = "product.seller.anhDaiDien")
+    @Mapping(target = "bidderId", source = "product.currentBidder.userid")
     @Mapping(target = "tenBidder", source = "product.currentBidder.hoVaTen", qualifiedByName = "maskBidderName")
     @Mapping(target = "diemDanhGiaBidder", source = "product.currentBidder.diemDanhGia")
     public abstract ProductResponse toResponse(Product product);
