@@ -36,6 +36,7 @@ public class ProductResponse {
     private Double diemDanhGiaSeller;
     private String anhDaiDienSeller;
 
+    private String bidderId;
     private String tenBidder;
     private Double diemDanhGiaBidder;
 
