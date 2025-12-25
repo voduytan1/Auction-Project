@@ -31,6 +31,7 @@ public class ProductResponse {
     private Long parentCategoryId;
     private String tenDanhMucCha;
 
+    private String sellerId;
     private String tenSeller;
     private Double diemDanhGiaSeller;
     private String anhDaiDienSeller;

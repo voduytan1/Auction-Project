@@ -130,12 +130,18 @@ public class AutoBidService {
     private void validateMaxPrice(Product product, BigDecimal giaToiDa) {
         // Giá tối đa phải >= giá hiện tại + bước giá
         BigDecimal minRequired = product.getGiaHienTai().add(product.getBuocGia());
-
         if (giaToiDa.compareTo(minRequired) < 0) {
             throw new IllegalArgumentException(
                     String.format("Giá tối đa phải >= %s (giá hiện tại + bước giá)",
                             minRequired)
             );
+        }
+
+        BigDecimal difference = giaToiDa.subtract(product.getGiaHienTai());
+        BigDecimal step = product.getBuocGia();
+        if (difference.remainder(step).compareTo(BigDecimal.ZERO) != 0) {
+            BigDecimal examplePrice = giaToiDa.subtract(difference.add(product.getBuocGia()).remainder(step));
+            throw new IllegalArgumentException("Giá tối đa phải có dạng <giá hiện tại + n x bước giá> (ví dụ: " + examplePrice + ")");
         }
     }
 

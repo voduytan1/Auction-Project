@@ -35,6 +35,7 @@ public abstract class ProductMapper {
     @Mapping(target = "tenDanhMuc", source = "product.category.tenDanhMuc")
     @Mapping(target = "parentCategoryId", source = "product.category.parentCategory.categoryid")
     @Mapping(target = "tenDanhMucCha", source = "product.category.parentCategory.tenDanhMuc")
+    @Mapping(target = "sellerId", source = "product.seller.userid")
     @Mapping(target = "tenSeller", source = "product.seller.hoVaTen")
     @Mapping(target = "diemDanhGiaSeller", source = "product.seller.diemDanhGia")
     @Mapping(target = "anhDaiDienSeller", source = "product.seller.anhDaiDien")
