@@ -49,7 +49,7 @@ public class PaymentController {
                 .setSuccessUrl(DOMAIN + "/payment-success?session_id={CHECKOUT_SESSION_ID}")
                 .setCancelUrl(DOMAIN + "/payment-cancel")
                 .addLineItem(lineItem)
-                .putMetadata("auctionId", String.valueOf(transactionId))
+                .putMetadata("transactionId", String.valueOf(transactionId))
                 .putMetadata("userId", String.valueOf(transaction.getBuyer().getUserid()))
                 .build();
 
