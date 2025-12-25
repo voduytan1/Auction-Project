@@ -39,6 +39,7 @@ public class AutoBidService {
     private final AutoBidMapper autoBidMapper;
     private final BidHistoryMapper bidHistoryMapper;
     private final WebSocketEventPublisher webSocketEventPublisher;
+    private final TransactionService transactionService;
 
     @Transactional
     public PlaceAutoBidResponse placeAutoBid(UUID bidderid, PlaceAutoBidRequest request) {
@@ -274,6 +275,17 @@ public class AutoBidService {
         activeAutoBids.forEach(ab -> ab.setIsActive(false));
         autoBidRepository.saveAll(activeAutoBids);
 
+        Transaction transaction = Transaction.builder()
+                .product(product)
+                .buyer(bidder)
+                .seller(product.getSeller())
+                .giaCuoiCung(product.getGiaMuaNgay())
+                .trangThai(TransactionStatus.PENDING_PAYMENT)
+                .paymentMethod("Stripe")
+                .build();
+
+        Transaction transactionResult = transactionService.createTransaction(transaction);
+
         // ⚡ BROADCAST REAL-TIME
         webSocketEventPublisher.publishBidUpdate(product, "BUY_NOW");
         webSocketEventPublisher.publishNewBidHistory(bidHistory);
@@ -287,6 +299,7 @@ public class AutoBidService {
                 .autoBid(null) // Không có auto-bid vì đã mua ngay
                 .giaHienTaiSanPham(product.getGiaMuaNgay())
                 .currentWinner(maskBidderName(bidder.getHoVaTen()))
+                .transactionId(transactionResult.getTransactionid())
                 .build();
     }
 

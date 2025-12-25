@@ -17,4 +17,5 @@ public class PlaceAutoBidResponse {
     private AutoBidResponse autoBid;
     private BigDecimal giaHienTaiSanPham;
     private String currentWinner; // Masked name
+    private Long transactionId;
 }
