@@ -109,7 +109,24 @@ public class AuthService {
 
         long expiresIn = ChronoUnit.SECONDS.between(Instant.now(), tokenPair.getAccessTokenExpirationTime());
 
-        return new FullRefreshTokenResponse(tokenPair.getAccessToken(), tokenPair.getRefreshToken(), expiresIn);
+        FullRefreshTokenResponse response = FullRefreshTokenResponse.builder()
+                .accessToken(tokenPair.getAccessToken())
+                .refreshToken(tokenPair.getRefreshToken())
+                .expiresIn(expiresIn)
+                .userid(String.valueOf(user.getUserid()))
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .vaitro(user.getVaitro())
+                .thoiHanBanHang(user.getThoiHanBanHang())
+                .hoVaTen(user.getHoVaTen())
+                .diaChi(user.getDiaChi())
+                .soDienThoai(user.getSoDienThoai())
+                .ngaySinh(user.getNgaySinh())
+                .diemDanhGia(user.getDiemDanhGia())
+                .anhDaiDien(user.getAnhDaiDien())
+                .build();
+
+        return response;
     }
 
     public void logout(String refreshToken) {

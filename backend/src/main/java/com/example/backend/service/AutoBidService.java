@@ -29,8 +29,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 public class AutoBidService {
-    private final BidService  bidService;
-    private final AutoBidRepository autoBidRepository;
+   private final AutoBidRepository autoBidRepository;
     private final BidHistoryRepository bidHistoryRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
@@ -50,7 +49,7 @@ public class AutoBidService {
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy Bidder với id " + bidderid));
 
         // 2. VALIDATE PRODUCT
-        Product product = productRepository.findById(request.getProductid())
+        Product product = productRepository.findByIdForUpdate(request.getProductid())
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy sản phẩm với id " + request.getProductid()));
 
         // 3. CHECK ĐIỀU KIỆN ĐẤU GIÁ
@@ -70,9 +69,6 @@ public class AutoBidService {
 
         // 7. CHẠY LOGIC COMPETE GIỮA CÁC AUTOBID
         runAutoBidCompetition(product);
-
-        // 8. TẢI LẠI PRODUCT ĐỂ LẤY DỮ LIỆU MỚI NHẤT
-        product = productRepository.findById(product.getProductid()).get();
 
         // 9. TẠO RESPONSE
         return createResponse(autoBid, product);
@@ -248,7 +244,6 @@ public class AutoBidService {
      * XỬ LÝ MUA NGAY TỪ AUTO-BID
      * Khi giá tối đa >= giá mua ngay, tự động mua ngay sản phẩm
      */
-    @Transactional
     private PlaceAutoBidResponse handleBuyNowFromAutoBid(User bidder, Product product, BigDecimal giaToiDa) {
         log.info("Auto-bid {} triggered BUY NOW for product {} - Max price: {} >= Buy now: {}", 
                 bidder.getUserid(), product.getProductid(), giaToiDa, product.getGiaMuaNgay());

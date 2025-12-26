@@ -37,7 +37,7 @@ public class AuthController {
         FullRefreshTokenResponse result = authService.refreshToken(refreshToken);
         cookieUtils.setRefreshTokenCookie(response, result.getRefreshToken());
 
-        return ApiResponse.success(new RefreshTokenResponse(result.getAccessToken(), result.getExpiresIn()));
+        return ApiResponse.success(authMapper.toRefreshTokenResponse(result));
     }
 
     @PostMapping("/logout")
