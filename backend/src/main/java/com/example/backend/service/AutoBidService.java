@@ -58,7 +58,7 @@ public class AutoBidService {
         // 4. CHECK GIÁ MUA NGAY - Nếu giá tối đa >= giá mua ngay → Mua ngay luôn
         if (product.getGiaMuaNgay() != null && 
             request.getGiaToiDa().compareTo(product.getGiaMuaNgay()) >= 0) {
-            return handleBuyNowFromAutoBid(bidder, product, request.getGiaToiDa());
+            return handleBuyNowFromAutoBid(bidder, product);
         }
 
         // 5. CHECK GIÁ TỐI ĐA HỢP LỆ
@@ -244,9 +244,10 @@ public class AutoBidService {
      * XỬ LÝ MUA NGAY TỪ AUTO-BID
      * Khi giá tối đa >= giá mua ngay, tự động mua ngay sản phẩm
      */
-    private PlaceAutoBidResponse handleBuyNowFromAutoBid(User bidder, Product product, BigDecimal giaToiDa) {
-        log.info("Auto-bid {} triggered BUY NOW for product {} - Max price: {} >= Buy now: {}", 
-                bidder.getUserid(), product.getProductid(), giaToiDa, product.getGiaMuaNgay());
+    @Transactional
+    public PlaceAutoBidResponse handleBuyNowFromAutoBid(User bidder, Product product) {
+        log.info("Auto-bid {} triggered BUY NOW for product {} - Buy now: {}",
+                bidder.getUserid(), product.getProductid(), product.getGiaMuaNgay());
 
         // Cập nhật product về trạng thái COMPLETED
         product.setGiaHienTai(product.getGiaMuaNgay());

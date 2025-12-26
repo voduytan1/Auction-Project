@@ -5,6 +5,7 @@ import com.example.backend.service.TransactionService;
 
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,6 +27,10 @@ public class PaymentController {
     @PostMapping("/create-checkout-session")
     public Map<String, String> createCheckoutSession(@RequestBody Long transactionId) throws Exception {
         Transaction transaction = transactionService.getOne(transactionId);
+
+        if(transaction == null){
+            throw new EntityNotFoundException("Không tìm thấy giao dịch với id "+ transactionId);
+        }
         // 1. Create Product Data
         SessionCreateParams.LineItem.PriceData priceData = SessionCreateParams.LineItem.PriceData.builder()
                 .setCurrency("vnd")

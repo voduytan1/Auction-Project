@@ -6,10 +6,16 @@ import com.example.backend.dto.common.ApiResponse;
 import com.example.backend.dto.common.PaginationInfo;
 import com.example.backend.dto.common.PaginationRequest;
 import com.example.backend.dto.websocket.BidHistoryItemMessage;
+import com.example.backend.entity.Product;
+import com.example.backend.entity.User;
+import com.example.backend.repository.ProductRepository;
 import com.example.backend.service.AutoBidService;
 import com.example.backend.service.BidService;
+import com.example.backend.service.ProductService;
+import com.example.backend.service.UserService;
 import com.example.backend.utils.PageUtils;
 import com.nimbusds.jwt.JWT;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +50,9 @@ public class BidController {
 
     private final BidService bidService;
     private final AutoBidService autoBidService;
+    private final UserService userService;
+    private final ProductRepository productRepository;
+
 
     /**
      * ĐẶT GIÁ THÔNG THƯỜNG
@@ -80,12 +89,15 @@ public class BidController {
      * POST /api/v1/bids/buy-now/{productId}
      */
     @PostMapping("/buy-now/{productId}")
-    public ResponseEntity<@NotNull ApiResponse<PlaceBidResponse>> buyNow(
+    public ResponseEntity<@NotNull ApiResponse<PlaceAutoBidResponse>> buyNow(
             @PathVariable Long productId,
             Authentication authentication) {
         
         UUID userId = UUID.fromString(authentication.getName());
-        PlaceBidResponse response = bidService.buyNow(userId, productId);
+        User user = userService.findById(userId).orElseThrow(()->new EntityNotFoundException("Không tìm thấy user " + userId));
+        Product product = productRepository.findById(productId).orElseThrow(()-> new EntityNotFoundException("Không tìm thấy" + productId));
+
+        PlaceAutoBidResponse response = autoBidService.handleBuyNowFromAutoBid(user, product);
         
         return ResponseEntity.ok(ApiResponse.success(response));
     }
