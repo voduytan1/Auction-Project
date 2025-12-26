@@ -137,10 +137,29 @@ const authSlice = createSlice({
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.isAuthenticated = true;
+      // Chỉ set isInitializing = false nếu có token (restore session thành công)
+      // Nếu token = null (hydrate từ localStorage), giữ nguyên isInitializing để restore tiếp
+      if (action.payload.token !== null) {
+        state.isInitializing = false; // Hoàn tất restore session
+      }
     },
     setUserIdFromUser: (state, action: PayloadAction<string>) => {
       // Listener middleware sẽ gọi action này để extract userId từ user.userid
       state.userId = action.payload;
+    },
+    startInitializing: (state) => {
+      state.isInitializing = true;
+    },
+    finishInitializing: (state) => {
+      state.isInitializing = false;
+    },
+    hydrateFromLocalStorage: (state, action: PayloadAction<User>) => {
+      // Hydrate user từ localStorage và set isInitializing = true
+      state.user = action.payload;
+      state.userId = action.payload.userid;
+      state.token = null;
+      state.isInitializing = true; // Cần restore token
+      state.isAuthenticated = false; // Chưa authenticated cho đến khi có token
     },
   },
   extraReducers: (builder) => {
@@ -187,6 +206,7 @@ const authSlice = createSlice({
       state.token = null;
       state.isAuthenticated = false;
       state.error = null;
+      state.isInitializing = false;
     });
 
     // Refresh Token
@@ -205,11 +225,19 @@ const authSlice = createSlice({
         state.user = null;
         state.token = null;
         state.isAuthenticated = false;
+        state.isInitializing = false;
       });
 
     // REHYDRATE được handle bởi listener middleware ở store/index.ts
   },
 });
 
-export const { clearError, setCredentials, setAccessToken } = authSlice.actions;
+export const {
+  clearError,
+  setCredentials,
+  setAccessToken,
+  startInitializing,
+  finishInitializing,
+  hydrateFromLocalStorage,
+} = authSlice.actions;
 export default authSlice.reducer;

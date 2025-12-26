@@ -1,15 +1,12 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router";
+import { useSearchParams } from "react-router-dom";
 import { SearchFilters } from "./components/SearchFilters";
 import { EmptyState } from "./components/EmptyState";
-import { Pagination } from "./components/Pagination";
 import { productAPI, type ProductResponse } from "@/services/product.api";
 import { PageLoader } from "@/components/PageLoader";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Clock, TrendingUp } from "lucide-react";
-import { formatCurrency, getTimeRemaining } from "./helpers";
-import { Link } from "react-router";
+import { ProductCard } from "@/components/ProductCard";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function SearchResults() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -28,10 +25,11 @@ export default function SearchResults() {
   );
   const [products, setProducts] = useState<ProductResponse[]>([]);
   const [totalPages, setTotalPages] = useState(0);
+  const [totalProducts, setTotalProducts] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const itemsPerPage = 10;
+  const ITEMS_PER_PAGE = 8;
 
   // Update URL khi filters thay đổi
   useEffect(() => {
@@ -54,22 +52,21 @@ export default function SearchResults() {
           categoryId:
             categoryFilter !== "all" ? Number(categoryFilter) : undefined,
           page: currentPage,
-          size: itemsPerPage,
+          size: ITEMS_PER_PAGE,
         });
 
-        // Backend returns plain array ProductResponse[]
-        const resp = response.data;
-        const productsData = Array.isArray(resp) ? resp : resp?.data || [];
-        const metadata = resp?.metadata;
+        console.log("[SearchPage] Full Response:", response);
 
-        const totalElementsFallback =
-          metadata?.totalElements ?? productsData.length ?? 0;
-        const totalPagesFallback =
-          metadata?.totalPages ??
-          Math.ceil(totalElementsFallback / itemsPerPage);
+        // Response interceptor đã extract data, metadata ở __raw__
+        const productsData = Array.isArray(response.data) ? response.data : [];
+        const metadata = (response as any).__raw__?.metadata;
+
+        console.log("[SearchPage] Products:", productsData);
+        console.log("[SearchPage] Metadata:", metadata);
 
         setProducts(productsData);
-        setTotalPages(totalPagesFallback);
+        setTotalProducts(metadata?.totalElements ?? 0);
+        setTotalPages(metadata?.totalPages ?? 1);
       } catch (err) {
         console.error("Error fetching products:", err);
         setError("Không thể tải danh sách sản phẩm. Vui lòng thử lại.");
@@ -145,15 +142,20 @@ export default function SearchResults() {
   }
 
   return (
-    <div className="container mx-auto px-4">
+    <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">
-          Kết quả tìm kiếm cho "{submittedQuery}"
+          {submittedQuery
+            ? `Kết quả tìm kiếm cho "${submittedQuery}"`
+            : "Tìm kiếm sản phẩm"}
         </h1>
+        <p className="text-muted-foreground">
+          Tìm thấy {totalProducts} sản phẩm
+        </p>
         {error && (
-          <div className="mt-4 rounded-lg bg-red-50 p-4 text-red-800">
-            {error}
+          <div className="mt-4 rounded-lg bg-red-50 border border-red-200 p-4">
+            <p className="text-sm text-red-800">{error}</p>
           </div>
         )}
       </div>
@@ -177,74 +179,78 @@ export default function SearchResults() {
         <EmptyState />
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {sortedProducts.map((product) => {
-              const timeRemaining = getTimeRemaining(product.thoiGianKetThuc);
-              return (
-                <Link
-                  key={product.productid}
-                  to={`/products/${product.productid}`}
-                  className="group"
-                >
-                  <Card className="overflow-hidden transition-all hover:shadow-lg">
-                    {/* Image */}
-                    <div className="relative aspect-square overflow-hidden bg-muted">
-                      <img
-                        src={product.images?.[0] || "/placeholder.jpg"}
-                        alt={product.tenSanPham}
-                        className="object-cover w-full h-full group-hover:scale-105 transition-transform"
-                      />
-                      {product.giaMuaNgay && (
-                        <Badge
-                          className="absolute top-2 right-2"
-                          variant="secondary"
-                        >
-                          Mua ngay
-                        </Badge>
-                      )}
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-4">
-                      <h3 className="font-semibold line-clamp-2 mb-2 group-hover:text-accent transition-colors">
-                        {product.tenSanPham}
-                      </h3>
-
-                      {/* Price */}
-                      <div className="space-y-1 mb-3">
-                        <div className="flex items-center gap-2">
-                          <TrendingUp className="h-4 w-4 text-accent" />
-                          <span className="text-lg font-bold text-accent">
-                            {formatCurrency(product.giaHienTai)}
-                          </span>
-                        </div>
-                        {product.giaMuaNgay && (
-                          <div className="text-sm text-muted-foreground">
-                            Mua ngay: {formatCurrency(product.giaMuaNgay)}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Time & Seller */}
-                      <div className="space-y-2 text-sm">
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Clock className="h-4 w-4" />
-                          <span>{timeRemaining}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                </Link>
-              );
-            })}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mb-12">
+            {sortedProducts.map((product) => (
+              <ProductCard key={product.productid} product={product} />
+            ))}
           </div>
 
           {/* Pagination */}
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
+          {totalPages > 1 && (
+            <>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="h-9 w-9"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+
+                <div className="flex flex-wrap gap-1 justify-center">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => {
+                      if (
+                        page === 1 ||
+                        page === totalPages ||
+                        (page >= currentPage - 1 && page <= currentPage + 1)
+                      ) {
+                        return (
+                          <Button
+                            key={page}
+                            variant={
+                              currentPage === page ? "default" : "outline"
+                            }
+                            size="icon"
+                            onClick={() => setCurrentPage(page)}
+                            className="h-9 w-9"
+                          >
+                            {page}
+                          </Button>
+                        );
+                      } else if (
+                        page === currentPage - 2 ||
+                        page === currentPage + 2
+                      ) {
+                        return (
+                          <span
+                            key={page}
+                            className="flex items-center px-2 text-sm"
+                          >
+                            ...
+                          </span>
+                        );
+                      }
+                      return null;
+                    }
+                  )}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="h-9 w-9"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+
+            </>
+          )}
         </>
       )}
     </div>

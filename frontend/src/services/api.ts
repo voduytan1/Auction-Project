@@ -41,10 +41,17 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response: AxiosResponse) => {
-    // Backend trả về dạng ApiResponse<T> = { data: T, message, success }
-    // Extract data để dễ sử dụng
+    // Backend trả về dạng ApiResponse<T> = { data: T, metadata, message, success }
+    // Preserve metadata khi extract data
     if (response.data?.data !== undefined) {
-      return { ...response, data: response.data.data };
+      const originalData = response.data;
+      return {
+        ...response,
+        data: originalData.data,
+        // Preserve metadata in custom property
+        __metadata__: originalData.metadata,
+        __raw__: originalData,
+      };
     }
     return response;
   },

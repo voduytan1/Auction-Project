@@ -222,7 +222,7 @@ export default function Header() {
                           {activeCategory.name}
                         </h3>
                         <Link
-                          to={`/category/${activeCategory.slug}`}
+                          to={`/category/${activeCategory.id}`}
                           onClick={() => setShowMegaMenu(false)}
                           className="text-sm font-medium text-primary hover:underline flex items-center group"
                         >
