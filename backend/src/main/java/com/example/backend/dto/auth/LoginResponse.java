@@ -35,5 +35,7 @@ public class LoginResponse {
 
     Double diemDanhGia;
 
+    Integer soLuongDanhGia;
+
     String anhDaiDien;
 }

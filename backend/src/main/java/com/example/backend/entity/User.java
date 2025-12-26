@@ -61,7 +61,10 @@ public class User {
     LocalDate ngaySinh;
 
     @Column(name = "diem_danh_gia")
-    Double diemDanhGia;
+    Double diemDanhGia = Double.NaN;
+
+    @Column(name = "so_luong_danh_gia")
+    Integer soLuongDanhGia = 0;
 
     @Column(name = "anh_dai_dien", length = 255)
     String anhDaiDien;

@@ -36,6 +36,8 @@ public class UserResponse {
 
     Double diemDanhGia;
 
+    Integer soLuongDanhGia;
+
     LocalDateTime createdAt;
 
     LocalDateTime updatedAt;

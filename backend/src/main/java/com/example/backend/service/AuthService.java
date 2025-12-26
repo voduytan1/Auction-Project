@@ -70,6 +70,8 @@ public class AuthService {
                     .ngaySinh(user.getNgaySinh())
                     .soDienThoai(user.getSoDienThoai())
                     .anhDaiDien(user.getAnhDaiDien())
+                    .diemDanhGia(user.getDiemDanhGia())
+                    .soLuongDanhGia(user.getSoLuongDanhGia())
                     .email(user.getEmail())
                     .build();
         }else{
@@ -123,6 +125,7 @@ public class AuthService {
                 .soDienThoai(user.getSoDienThoai())
                 .ngaySinh(user.getNgaySinh())
                 .diemDanhGia(user.getDiemDanhGia())
+                .soLuongDanhGia(user.getSoLuongDanhGia())
                 .anhDaiDien(user.getAnhDaiDien())
                 .build();
 

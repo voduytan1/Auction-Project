@@ -15,10 +15,10 @@ import java.util.UUID;
 @Builder
 public class CreateRatingRequest {
     @NotNull(message = "Product ID không được để trống")
-    private Long productid;
+    private Long transactionId;
 
     @NotNull(message = "Ratee ID (người được đánh giá) không được để trống")
-    private UUID rateeid;
+    private UUID rateeId;
 
     @NotNull(message = "Điểm đánh giá không được để trống")
     @Min(value = -1, message = "Điểm chỉ có thể là +1 hoặc -1")

@@ -33,5 +33,7 @@ public class RefreshTokenResponse {
 
     Double diemDanhGia;
 
+    Integer soLuongDanhGia;
+
     String anhDaiDien;
 }

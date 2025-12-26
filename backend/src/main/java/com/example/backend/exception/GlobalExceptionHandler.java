@@ -24,6 +24,11 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, ex.getMessage(), req);
     }
 
+    @ExceptionHandler({IllegalStateException.class})
+    public ResponseEntity<ApiError> illegalState(IllegalStateException ex, HttpServletRequest req) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), req);
+    }
+
     @ExceptionHandler({DataIntegrityViolationException.class})
     public ResponseEntity<ApiError> conflict(DataIntegrityViolationException ex, HttpServletRequest req) {
         var msg = ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage();
