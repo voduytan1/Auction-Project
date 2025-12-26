@@ -36,5 +36,7 @@ public class FullRefreshTokenResponse {
 
     Double diemDanhGia;
 
+    Integer soLuongDanhGia;
+
     String anhDaiDien;
 }

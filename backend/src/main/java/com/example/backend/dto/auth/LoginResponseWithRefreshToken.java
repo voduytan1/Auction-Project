@@ -37,4 +37,8 @@ public class LoginResponseWithRefreshToken {
     LocalDate ngaySinh;
 
     String anhDaiDien;
+
+    Double diemDanhGia;
+
+    Integer soLuongDanhGia;
 }
