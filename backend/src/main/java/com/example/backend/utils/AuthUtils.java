@@ -1,6 +1,7 @@
 package com.example.backend.utils;
 
 import com.example.backend.dto.auth.TokenDetails;
+import com.example.backend.dto.auth.TokenInfo;
 import com.example.backend.dto.auth.TokenPair;
 import com.example.backend.entity.User;
 import com.example.backend.exception.InvalidTokenException;
@@ -207,5 +208,69 @@ public class AuthUtils {
         //  authentication khác (ví dụ: basic auth, form login)
         // nó vẫn sẽ trả về "name" (thường là username)
         return authentication.getName();
+    }
+
+    public String getUserIdFromRefreshToken(String token) {
+        if (token == null || token.trim().isEmpty()) {
+            throw new InvalidTokenException("Refresh token rỗng");
+        }
+        try {
+            // 1. Parse token
+            SignedJWT signedJWT = SignedJWT.parse(token);
+            JWSVerifier verifier = new MACVerifier(SECRET_KEY.getBytes());
+
+            // 2. Kiểm tra chữ ký (Quan trọng để đảm bảo token không bị giả mạo)
+            if (!signedJWT.verify(verifier)) {
+                throw new InvalidTokenException("Chữ ký token không hợp lệ!");
+            }
+
+            // 3. Lấy Claims
+            JWTClaimsSet claims = signedJWT.getJWTClaimsSet();
+
+            // 4. Kiểm tra hạn
+            if (claims.getExpirationTime().before(new Date())) {
+                throw new InvalidTokenException("Token đã quá hạn!");
+            }
+
+            // 5. Kiểm tra loại token (phải là refresh)
+            if (!Objects.equals(claims.getStringClaim("type"), "refresh")) {
+                throw new InvalidTokenException("Token không phải refresh token!");
+            }
+
+            // 6. Trả về Subject (UserId)
+            return claims.getSubject();
+
+        } catch (ParseException | JOSEException e) {
+            throw new InvalidTokenException("Lỗi đọc thông tin từ Refresh Token: " + e.getMessage());
+        }
+    }
+
+    public TokenInfo validateAndExtractTokenInfo(String token) {
+        // 1. Tận dụng hàm private getClaimsFromRefreshToken tôi đã gợi ý ở câu trả lời trước
+        // Hoặc viết gộp logic parse & verify tại đây
+        try {
+            SignedJWT signedJWT = SignedJWT.parse(token);
+            JWSVerifier verifier = new MACVerifier(SECRET_KEY.getBytes());
+
+            if (!signedJWT.verify(verifier)) {
+                throw new InvalidTokenException("Chữ ký token không hợp lệ!");
+            }
+
+            JWTClaimsSet claims = signedJWT.getJWTClaimsSet();
+
+            if (claims.getExpirationTime().before(new Date())) {
+                throw new InvalidTokenException("Token đã quá hạn!");
+            }
+
+            if (!Objects.equals(claims.getStringClaim("type"), "refresh")) {
+                throw new InvalidTokenException("Token không phải refresh token!");
+            }
+
+            // TRẢ VỀ CẢ 2 CÙNG LÚC
+            return new TokenInfo(claims.getJWTID(), claims.getSubject());
+
+        } catch (ParseException | JOSEException e) {
+            throw new InvalidTokenException("Token lỗi: " + e.getMessage());
+        }
     }
 }
