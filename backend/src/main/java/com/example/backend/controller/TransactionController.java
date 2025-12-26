@@ -4,7 +4,6 @@ import com.example.backend.dto.common.ApiResponse;
 import com.example.backend.dto.common.PaginationInfo;
 import com.example.backend.dto.common.PaginationRequest;
 import com.example.backend.dto.transaction.TransactionResponse;
-import com.example.backend.dto.user.UserResponse;
 import com.example.backend.service.TransactionService;
 import com.example.backend.utils.PageUtils;
 import jakarta.validation.Valid;

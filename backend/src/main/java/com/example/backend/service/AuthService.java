@@ -1,9 +1,6 @@
 package com.example.backend.service;
 
-import com.example.backend.dto.auth.FullRefreshTokenResponse;
-import com.example.backend.dto.auth.LoginRequest;
-import com.example.backend.dto.auth.LoginResponseWithRefreshToken;
-import com.example.backend.dto.auth.TokenPair;
+import com.example.backend.dto.auth.*;
 import com.example.backend.entity.JWTToken;
 import com.example.backend.entity.User;
 import com.example.backend.exception.JwtAuthenticationException;
@@ -80,13 +77,22 @@ public class AuthService {
         }
     }
 
-    public FullRefreshTokenResponse refreshToken(String refreshToken, String userId) {
-        //Kiểm tra người dùng còn tồn tại
-        User user = userService.getUserById(UUID.fromString(userId)).orElseThrow(() -> new EntityNotFoundException("Không tìm thấy user " + userId));
+    public FullRefreshTokenResponse refreshToken(String refreshToken) {
+        TokenInfo tokenInfo = authUtils.validateAndExtractTokenInfo(refreshToken);
+        String jti = tokenInfo.getJti();
+        String userId = tokenInfo.getUserId();
 
-        String jti = authUtils.validateAndCheckRefreshToken(refreshToken);
+        JWTToken jwtToken = redisRepository.findById(jti)
+                .orElseThrow(() -> new EntityNotFoundException("Refresh Token không tồn tại hoặc đã bị thu hồi"));
 
-        JWTToken jwtToken = redisRepository.findById(jti).orElseThrow(()-> new EntityNotFoundException("Không tìm thấy Refresh Token"));
+        if (!jwtToken.getUserId().equals(userId)) {
+            // Có thể là dấu hiệu tấn công token reuse -> Cân nhắc xóa luôn token trong Redis để chặn
+            redisRepository.deleteById(jti);
+            throw new JwtAuthenticationException("Token không chính chủ");
+        }
+
+        User user = userService.getUserById(UUID.fromString(userId))
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy user " + userId));
 
         //Xác thực id người dùng trùng với id đã lưu
         if(!jwtToken.getUserId().equals(userId)){
@@ -101,7 +107,9 @@ public class AuthService {
 
         redisService.createAndSaveJwtToken(tokenPair, userId, jwtTokenMapper, redisRepository);
 
-        return new FullRefreshTokenResponse(tokenPair.getAccessToken(), tokenPair.getRefreshToken(), ChronoUnit.SECONDS.between(Instant.now(),tokenPair.getAccessTokenExpirationTime()));
+        long expiresIn = ChronoUnit.SECONDS.between(Instant.now(), tokenPair.getAccessTokenExpirationTime());
+
+        return new FullRefreshTokenResponse(tokenPair.getAccessToken(), tokenPair.getRefreshToken(), expiresIn);
     }
 
     public void logout(String refreshToken) {

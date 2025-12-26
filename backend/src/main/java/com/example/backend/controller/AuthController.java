@@ -32,9 +32,9 @@ public class AuthController {
         return ApiResponse.success(authMapper.toLoginResponse(fullResponse));
     }
 
-    @PostMapping("/refresh/{userId}")
-    public  ApiResponse<RefreshTokenResponse> refresh(@CookieValue("refresh_token") String refreshToken, @PathVariable String userId, HttpServletRequest request, HttpServletResponse response) {
-        FullRefreshTokenResponse result = authService.refreshToken(refreshToken, userId);
+    @PostMapping("/refresh")
+    public  ApiResponse<RefreshTokenResponse> refresh(@CookieValue("refresh_token") String refreshToken, HttpServletRequest request, HttpServletResponse response) {
+        FullRefreshTokenResponse result = authService.refreshToken(refreshToken);
         cookieUtils.setRefreshTokenCookie(response, result.getRefreshToken());
 
         return ApiResponse.success(new RefreshTokenResponse(result.getAccessToken(), result.getExpiresIn()));
