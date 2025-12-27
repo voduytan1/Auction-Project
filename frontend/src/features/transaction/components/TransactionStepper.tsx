@@ -10,7 +10,6 @@ import {
   CreditCard,
   MapPin,
   Package,
-  Star,
   XCircle,
   MessageSquare,
 } from "lucide-react";
@@ -66,11 +65,11 @@ const steps: Step[] = [
   },
   {
     id: 4,
-    label: "Đánh giá",
-    icon: <Star className="h-5 w-5" />,
-    description: "Cả hai bên đánh giá giao dịch",
-    buyerAction: "Đánh giá người bán",
-    sellerAction: "Đánh giá người mua",
+    label: "Hoàn tất",
+    icon: <CheckCircle2 className="h-5 w-5" />,
+    description: "Giao dịch đã hoàn thành",
+    buyerAction: "Đã hoàn tất",
+    sellerAction: "Đã hoàn tất",
   },
 ];
 
@@ -156,14 +155,14 @@ export function TransactionStepper({
                     {/* Icon */}
                     <div
                       className={`relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 ${
-                        isCompleted
+                        isCompleted || (isCurrent && step.id === 4)
                           ? "border-primary bg-primary text-white"
                           : isCurrent
                           ? "border-primary bg-white text-primary"
                           : "border-gray-300 bg-white text-gray-400"
                       }`}
                     >
-                      {isCompleted ? (
+                      {isCompleted || (isCurrent && step.id === 4) ? (
                         <CheckCircle2 className="h-5 w-5" />
                       ) : isCurrent ? (
                         <Clock className="h-5 w-5" />
@@ -186,9 +185,17 @@ export function TransactionStepper({
                         >
                           {step.label}
                         </h3>
-                        {isCurrent && (
+                        {isCurrent && step.id < 4 && (
                           <Badge variant="outline" className="text-xs">
                             Đang thực hiện
+                          </Badge>
+                        )}
+                        {step.id === 4 && isCompleted && (
+                          <Badge
+                            variant="default"
+                            className="text-xs bg-green-500"
+                          >
+                            Đã hoàn tất
                           </Badge>
                         )}
                       </div>
@@ -196,7 +203,7 @@ export function TransactionStepper({
                         {step.description}
                       </p>
 
-                      {isCurrent && (
+                      {isCurrent && step.id < 4 && (
                         <div className="mt-3 text-sm">
                           <span className="font-medium text-gray-700">
                             {currentUserRole === "buyer"

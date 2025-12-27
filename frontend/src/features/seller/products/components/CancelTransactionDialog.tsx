@@ -89,7 +89,7 @@ export function CancelTransactionDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-125">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <XCircle className="h-5 w-5 text-destructive" />
@@ -123,7 +123,7 @@ export function CancelTransactionDialog({
             </Label>
             <Textarea
               id="reason"
-              className="min-h-[120px]"
+              className="min-h-30"
               {...register("reason", {
                 required: "Vui lòng nhập lý do hủy giao dịch",
                 minLength: {

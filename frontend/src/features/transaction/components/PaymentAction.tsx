@@ -11,14 +11,14 @@ interface PaymentActionProps {
 }
 
 export function PaymentAction({ onPaymentComplete }: PaymentActionProps) {
-  const { orderId } = useParams<{ orderId: string }>();
+  const { transactionId } = useParams<{ transactionId: string }>();
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Avoid unused warning (will be used after payment callback)
   void onPaymentComplete;
 
   const handlePayment = async () => {
-    if (!orderId) return;
+    if (!transactionId) return;
 
     try {
       setIsProcessing(true);
@@ -26,9 +26,13 @@ export function PaymentAction({ onPaymentComplete }: PaymentActionProps) {
 
       // Gọi API tạo Stripe Checkout Session
       const response = await paymentAPI.createStripeCheckoutSession(
-        Number(orderId)
+        Number(transactionId)
       );
       const url = response.data?.url;
+
+      if (!url) {
+        throw new Error("Không nhận được URL thanh toán");
+      }
 
       toast.dismiss();
       toast.success("Chuyển hướng đến trang thanh toán...");

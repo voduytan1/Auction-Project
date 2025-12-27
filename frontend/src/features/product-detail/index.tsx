@@ -1,6 +1,7 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { productAPI, type ProductResponse } from "@/services/product.api";
+import { BidNotification } from "@/components/BidNotification";
 import {
   Dialog,
   DialogContent,
@@ -32,7 +33,8 @@ const ProductDetail = () => {
   const [error, setError] = useState<string | null>(null);
   const [showWinnerDialog, setShowWinnerDialog] = useState(false);
   const [showSellerDialog, setShowSellerDialog] = useState(false);
-  const [isProcessingPayment, _setIsProcessingPayment] = useState(false);
+  const [isProcessingPayment] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -76,11 +78,15 @@ const ProductDetail = () => {
     }
   }, [product, user, isAuthenticated]);
 
-  // TODO: Replace with real implementation when backend returns transactionId
-  const handlePayNow = async () => {
-    toast.info(
-      "Tính năng đang được phát triển. Vui lòng thanh toán qua trang Giao dịch mua."
-    );
+  const handlePayNow = () => {
+    if (!product?.transactionId) {
+      toast.error("Không tìm thấy thông tin giao dịch");
+      return;
+    }
+
+    // Navigate to transaction detail page
+    navigate(`/transactions/${product.transactionId}/detail`);
+    setShowWinnerDialog(false);
   };
 
   if (loading) {
@@ -100,6 +106,15 @@ const ProductDetail = () => {
 
   return (
     <div className="px-20">
+      {/* Bid Real-time Notification - Only for seller */}
+      {id &&
+        isAuthenticated &&
+        user &&
+        product &&
+        String(product.sellerId) === String(user.userid) && (
+          <BidNotification productId={Number(id)} />
+        )}
+
       {/* Winner Dialog */}
       <Dialog open={showWinnerDialog} onOpenChange={setShowWinnerDialog}>
         <DialogContent className="sm:max-w-sm">

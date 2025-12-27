@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { PageWrapper } from "@/components/PageWrapper";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,10 +10,35 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 import { PageLoader } from "@/components/PageLoader";
 import { transactionAPI } from "@/services/transaction.api";
 import { paymentAPI } from "@/services/payment.api";
+import { ratingAPI } from "@/services/rating.api";
+import { webSocketService } from "@/services/websocket";
 import type { Transaction, TransactionStatus } from "@/types/transaction";
+import type { TransactionStatusMessage } from "@/types/websocket";
 import type { ApiResponse } from "@/types/types";
 import { formatCurrency } from "@/lib/format";
 import {
@@ -27,8 +52,9 @@ import {
   Eye,
   MapPin,
   Star,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
-import { toast } from "sonner";
 
 // Cập nhật lại màu sắc theo style SOLID (Nền đặc - Chữ trắng) như hình mẫu
 const getStatusConfig = (status: TransactionStatus) => {
@@ -95,6 +121,34 @@ export default function BuyerTransactionsPage() {
   );
   const size = 10;
 
+  // Address dialog state
+  const [addressDialog, setAddressDialog] = useState<{
+    open: boolean;
+    transactionId: number | null;
+    address: string;
+  }>({ open: false, transactionId: null, address: "" });
+
+  // Confirm delivery dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    transactionId: number | null;
+  }>({ open: false, transactionId: null });
+
+  // Rating dialog state
+  const [ratingDialog, setRatingDialog] = useState<{
+    open: boolean;
+    transactionId: number | null;
+    sellerId: string | null;
+    rating: 1 | -1 | null;
+    comment: string;
+  }>({
+    open: false,
+    transactionId: null,
+    sellerId: null,
+    rating: null,
+    comment: "",
+  });
+
   const fetchTransactions = useCallback(async () => {
     try {
       setLoading(true);
@@ -113,6 +167,45 @@ export default function BuyerTransactionsPage() {
   }, [fetchTransactions]);
 
   const transactions = response?.data || [];
+
+  // Memoize transaction IDs to prevent unnecessary re-subscriptions
+  const transactionIds = useMemo(
+    () => transactions.map((t) => t.transactionId),
+    [transactions.length, transactions.map((t) => t.transactionId).join(",")]
+  );
+
+  // Subscribe to WebSocket updates for all transactions
+  useEffect(() => {
+    if (transactionIds.length === 0) return;
+
+    const subscriptionKeys: string[] = [];
+
+    transactionIds.forEach((transactionId) => {
+      const key = webSocketService.subscribeToTransactionStatus(
+        transactionId,
+        (message: TransactionStatusMessage) => {
+          // Update status directly in state without full refresh
+          setResponse((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              data: prev.data.map((t) =>
+                t.transactionId === message.transactionId
+                  ? { ...t, trangThai: message.trangThai }
+                  : t
+              ),
+            };
+          });
+        }
+      );
+      subscriptionKeys.push(key);
+    });
+
+    return () => {
+      subscriptionKeys.forEach((key) => webSocketService.unsubscribe(key));
+    };
+  }, [transactionIds]);
+
   const totalPages = response?.metadata ? response.metadata.totalPages : 0;
 
   const handlePayNow = async (transactionId: number) => {
@@ -130,6 +223,81 @@ export default function BuyerTransactionsPage() {
       console.error(error);
       toast.dismiss();
       toast.error("Lỗi: " + (error as Error).message);
+      setProcessingId(null);
+    }
+  };
+
+  const handleAddAddress = async () => {
+    if (!addressDialog.transactionId || !addressDialog.address.trim()) {
+      toast.error("Vui lòng nhập địa chỉ giao hàng");
+      return;
+    }
+
+    try {
+      setProcessingId(addressDialog.transactionId);
+      await transactionAPI.addAddress(
+        addressDialog.transactionId,
+        addressDialog.address
+      );
+      toast.success("Đã cập nhật địa chỉ giao hàng");
+      setAddressDialog({ open: false, transactionId: null, address: "" });
+      fetchTransactions(); // Refresh list
+    } catch (error) {
+      toast.error("Lỗi: " + (error as Error).message);
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleConfirmDelivery = async () => {
+    if (!confirmDialog.transactionId) return;
+
+    try {
+      setProcessingId(confirmDialog.transactionId);
+      await transactionAPI.completeTransaction(confirmDialog.transactionId);
+      toast.success("Đã xác nhận nhận hàng");
+      setConfirmDialog({ open: false, transactionId: null });
+      fetchTransactions(); // Refresh list
+    } catch (error) {
+      toast.error("Lỗi: " + (error as Error).message);
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleSubmitRating = async () => {
+    if (!ratingDialog.transactionId || !ratingDialog.sellerId) return;
+
+    if (ratingDialog.rating === null) {
+      toast.error("Vui lòng chọn đánh giá");
+      return;
+    }
+
+    if (!ratingDialog.comment.trim()) {
+      toast.error("Vui lòng nhập nhận xét");
+      return;
+    }``
+
+    try {
+      setProcessingId(ratingDialog.transactionId);
+      await ratingAPI.createRating({
+        transactionId: ratingDialog.transactionId,
+        rateeId: ratingDialog.sellerId,
+        diem: ratingDialog.rating,
+        nhanXet: ratingDialog.comment,
+      });
+      toast.success("Đã gửi đánh giá");
+      setRatingDialog({
+        open: false,
+        transactionId: null,
+        sellerId: null,
+        rating: null,
+        comment: "",
+      });
+      fetchTransactions(); // Refresh list
+    } catch (error) {
+      toast.error("Lỗi: " + (error as Error).message);
+    } finally {
       setProcessingId(null);
     }
   };
@@ -266,15 +434,30 @@ export default function BuyerTransactionsPage() {
                                   <TooltipTrigger asChild>
                                     <Button
                                       onClick={() =>
-                                        navigate(
-                                          `/transactions/${transaction.transactionId}/detail`
-                                        )
+                                        setAddressDialog({
+                                          open: true,
+                                          transactionId:
+                                            transaction.transactionId,
+                                          address:
+                                            transaction.diaChiGiaoHang || "",
+                                        })
                                       }
                                       size="sm"
                                       className="h-9 px-4 shadow-sm"
+                                      disabled={
+                                        processingId ===
+                                        transaction.transactionId
+                                      }
                                     >
-                                      <MapPin className="h-4 w-4 mr-1.5" />
-                                      Nhập địa chỉ
+                                      {processingId ===
+                                      transaction.transactionId ? (
+                                        <MapPin className="h-4 w-4 animate-pulse" />
+                                      ) : (
+                                        <>
+                                          <MapPin className="h-4 w-4 mr-1.5" />
+                                          Nhập địa chỉ
+                                        </>
+                                      )}
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
@@ -289,15 +472,28 @@ export default function BuyerTransactionsPage() {
                                   <TooltipTrigger asChild>
                                     <Button
                                       onClick={() =>
-                                        navigate(
-                                          `/transactions/${transaction.transactionId}/detail`
-                                        )
+                                        setConfirmDialog({
+                                          open: true,
+                                          transactionId:
+                                            transaction.transactionId,
+                                        })
                                       }
                                       size="sm"
                                       className="h-9 px-4 shadow-sm"
+                                      disabled={
+                                        processingId ===
+                                        transaction.transactionId
+                                      }
                                     >
-                                      <CheckCircle className="h-4 w-4 mr-1.5" />
-                                      Xác nhận
+                                      {processingId ===
+                                      transaction.transactionId ? (
+                                        <CheckCircle className="h-4 w-4 animate-pulse" />
+                                      ) : (
+                                        <>
+                                          <CheckCircle className="h-4 w-4 mr-1.5" />
+                                          Xác nhận
+                                        </>
+                                      )}
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
@@ -312,15 +508,31 @@ export default function BuyerTransactionsPage() {
                                   <TooltipTrigger asChild>
                                     <Button
                                       onClick={() =>
-                                        navigate(
-                                          `/transactions/${transaction.transactionId}/detail`
-                                        )
+                                        setRatingDialog({
+                                          open: true,
+                                          transactionId:
+                                            transaction.transactionId,
+                                          sellerId: transaction.sellerId,
+                                          rating: null,
+                                          comment: "",
+                                        })
                                       }
                                       size="sm"
                                       className="h-9 px-4 shadow-sm"
+                                      disabled={
+                                        processingId ===
+                                        transaction.transactionId
+                                      }
                                     >
-                                      <Star className="h-4 w-4 mr-1.5" />
-                                      Đánh giá
+                                      {processingId ===
+                                      transaction.transactionId ? (
+                                        <Star className="h-4 w-4 animate-pulse" />
+                                      ) : (
+                                        <>
+                                          <Star className="h-4 w-4 mr-1.5" />
+                                          Đánh giá
+                                        </>
+                                      )}
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
@@ -380,6 +592,190 @@ export default function BuyerTransactionsPage() {
                 </Button>
               </div>
             )}
+
+            {/* Address Dialog */}
+            <Dialog
+              open={addressDialog.open}
+              onOpenChange={(open) =>
+                setAddressDialog({ open, transactionId: null, address: "" })
+              }
+            >
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Nhập địa chỉ giao hàng</DialogTitle>
+                  <DialogDescription>
+                    Vui lòng cung cấp địa chỉ nhận hàng chi tiết
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Địa chỉ giao hàng</Label>
+                    <Input
+                      id="address"
+                      placeholder="Số nhà, tên đường, phường, quận, thành phố..."
+                      value={addressDialog.address}
+                      onChange={(e) =>
+                        setAddressDialog((prev) => ({
+                          ...prev,
+                          address: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      setAddressDialog({
+                        open: false,
+                        transactionId: null,
+                        address: "",
+                      })
+                    }
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    onClick={handleAddAddress}
+                    disabled={processingId === addressDialog.transactionId}
+                  >
+                    {processingId === addressDialog.transactionId
+                      ? "Đang xử lý..."
+                      : "Xác nhận"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Confirm Delivery Dialog */}
+            <AlertDialog
+              open={confirmDialog.open}
+              onOpenChange={(open) =>
+                setConfirmDialog({ open, transactionId: null })
+              }
+            >
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Xác nhận đã nhận hàng?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Bạn có chắc chắn đã nhận hàng? Hành động này không thể hoàn
+                    tác.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Hủy</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleConfirmDelivery}
+                    disabled={processingId === confirmDialog.transactionId}
+                  >
+                    {processingId === confirmDialog.transactionId
+                      ? "Đang xử lý..."
+                      : "Xác nhận"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Rating Dialog */}
+            <Dialog
+              open={ratingDialog.open}
+              onOpenChange={(open) =>
+                setRatingDialog({
+                  open,
+                  transactionId: null,
+                  sellerId: null,
+                  rating: null,
+                  comment: "",
+                })
+              }
+            >
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Đánh giá người bán</DialogTitle>
+                  <DialogDescription>
+                    Vui lòng chọn đánh giá và nhập nhận xét của bạn
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  {/* Rating selection */}
+                  <div className="space-y-2">
+                    <Label>Chọn đánh giá</Label>
+                    <div className="flex gap-4 justify-center">
+                      <Button
+                        type="button"
+                        variant={
+                          ratingDialog.rating === 1 ? "default" : "outline"
+                        }
+                        size="lg"
+                        className="flex-1"
+                        onClick={() =>
+                          setRatingDialog((prev) => ({ ...prev, rating: 1 }))
+                        }
+                      >
+                        <ThumbsUp className="h-6 w-6 mr-2" />
+                        Tốt
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={
+                          ratingDialog.rating === -1 ? "default" : "outline"
+                        }
+                        size="lg"
+                        className="flex-1"
+                        onClick={() =>
+                          setRatingDialog((prev) => ({ ...prev, rating: -1 }))
+                        }
+                      >
+                        <ThumbsDown className="h-6 w-6 mr-2" />
+                        Xấu
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Comment */}
+                  <div className="space-y-2">
+                    <Label htmlFor="rating-comment">Nhận xét</Label>
+                    <Textarea
+                      id="rating-comment"
+                      placeholder="Nhập nhận xét về người bán..."
+                      value={ratingDialog.comment}
+                      onChange={(e) =>
+                        setRatingDialog((prev) => ({
+                          ...prev,
+                          comment: e.target.value,
+                        }))
+                      }
+                      rows={4}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      setRatingDialog({
+                        open: false,
+                        transactionId: null,
+                        sellerId: null,
+                        rating: null,
+                        comment: "",
+                      })
+                    }
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    onClick={handleSubmitRating}
+                    disabled={processingId === ratingDialog.transactionId}
+                  >
+                    {processingId === ratingDialog.transactionId
+                      ? "Đang xử lý..."
+                      : "Gửi đánh giá"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </>
         )}
       </div>

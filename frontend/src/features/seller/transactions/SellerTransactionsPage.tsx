@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { PageWrapper } from "@/components/PageWrapper";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,10 +6,27 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   TooltipProvider,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { PageLoader } from "@/components/PageLoader";
 import { transactionAPI } from "@/services/transaction.api";
+import { ratingAPI } from "@/services/rating.api";
+import { webSocketService } from "@/services/websocket";
 import type { Transaction, TransactionStatus } from "@/types/transaction";
+import type { TransactionStatusMessage } from "@/types/websocket";
 import type { ApiResponse } from "@/types/types";
 import { formatCurrency } from "@/lib/format";
 import {
@@ -20,7 +37,11 @@ import {
   XCircle,
   Clock,
   Eye,
+  Star,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
+import { toast } from "sonner";
 
 // Cập nhật lại màu sắc theo style SOLID (Nền đặc - Chữ trắng) như hình mẫu
 const getStatusConfig = (status: TransactionStatus) => {
@@ -85,6 +106,29 @@ export default function SellerTransactionsPage() {
     null
   );
   const size = 10;
+  const [processingId, setProcessingId] = useState<number | null>(null);
+
+  // Tracking dialog state
+  const [trackingDialog, setTrackingDialog] = useState<{
+    open: boolean;
+    transactionId: number | null;
+    tracking: string;
+  }>({ open: false, transactionId: null, tracking: "" });
+
+  // Rating dialog state
+  const [ratingDialog, setRatingDialog] = useState<{
+    open: boolean;
+    transactionId: number | null;
+    buyerId: string | null;
+    rating: 1 | -1 | null;
+    comment: string;
+  }>({
+    open: false,
+    transactionId: null,
+    buyerId: null,
+    rating: null,
+    comment: "",
+  });
 
   // Fetch transactions with useCallback to avoid infinite loop
   const fetchTransactions = useCallback(async () => {
@@ -105,7 +149,107 @@ export default function SellerTransactionsPage() {
   }, [fetchTransactions]);
 
   const transactions = response?.data || [];
+
+  // Memoize transaction IDs to prevent unnecessary re-subscriptions
+  const transactionIds = useMemo(
+    () => transactions.map((t) => t.transactionId),
+    [transactions.length, transactions.map((t) => t.transactionId).join(",")]
+  );
+
+  // Subscribe to WebSocket updates for all transactions
+  useEffect(() => {
+    if (transactionIds.length === 0) return;
+
+    const subscriptionKeys: string[] = [];
+
+    transactionIds.forEach((transactionId) => {
+      const key = webSocketService.subscribeToTransactionStatus(
+        transactionId,
+        (message: TransactionStatusMessage) => {
+          // Update status directly in state without full refresh
+          setResponse((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              data: prev.data.map((t) =>
+                t.transactionId === message.transactionId
+                  ? { ...t, trangThai: message.trangThai }
+                  : t
+              ),
+            };
+          });
+        }
+      );
+      subscriptionKeys.push(key);
+    });
+
+    return () => {
+      subscriptionKeys.forEach((key) => webSocketService.unsubscribe(key));
+    };
+  }, [transactionIds]);
+
   const totalPages = response?.metadata ? response.metadata.totalPages : 0;
+
+  const handleAddTracking = async () => {
+    if (!trackingDialog.transactionId || !trackingDialog.tracking.trim()) {
+      toast.error("Vui lòng nhập mã vận đơn");
+      return;
+    }
+
+    try {
+      setProcessingId(trackingDialog.transactionId);
+      await transactionAPI.addShipmentProve(
+        trackingDialog.transactionId,
+        trackingDialog.tracking
+      );
+      toast.success("Đã cập nhật mã vận đơn");
+      setTrackingDialog({ open: false, transactionId: null, tracking: "" });
+      fetchTransactions(); // Refresh list
+    } catch (error) {
+      toast.error("Lỗi: " + (error as Error).message);
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleSubmitRating = async () => {
+    if (
+      !ratingDialog.transactionId ||
+      !ratingDialog.buyerId ||
+      ratingDialog.rating === null
+    ) {
+      toast.error("Vui lòng chọn đánh giá");
+      return;
+    }
+
+    if (!ratingDialog.comment.trim()) {
+      toast.error("Vui lòng nhập nhận xét");
+      return;
+    }
+
+    try {
+      setProcessingId(ratingDialog.transactionId);
+      await ratingAPI.createRating({
+        transactionId: ratingDialog.transactionId,
+        rateeId: ratingDialog.buyerId,
+        diem: ratingDialog.rating,
+        nhanXet: ratingDialog.comment,
+      });
+      toast.success("Đã gửi đánh giá");
+      setRatingDialog({
+        open: false,
+        transactionId: null,
+        buyerId: null,
+        rating: null,
+        comment: "",
+      });
+      fetchTransactions(); // Refresh list
+    } catch (error) {
+      toast.error("Lỗi: " + (error as Error).message);
+    } finally {
+      setProcessingId(null);
+    }
+  };
 
   if (error) {
     return (
@@ -199,22 +343,72 @@ export default function SellerTransactionsPage() {
 
                             {/* Action buttons based on status */}
                             <div className="flex items-center gap-2">
-                              {/* Nút cập nhật vận chuyển */}
-                              {(transaction.trangThai === "PAYMENT_COMPLETED" ||
-                                transaction.trangThai ===
-                                  "AWAITING_SHIPMENT") && (
+                              {/* Nút cập nhật vận chuyển - chỉ khi đã có địa chỉ */}
+                              {transaction.trangThai ===
+                                "AWAITING_SHIPMENT" && (
                                 <Button
                                   onClick={() =>
-                                    navigate(
-                                      `/transactions/${transaction.transactionId}/detail`
-                                    )
+                                    setTrackingDialog({
+                                      open: true,
+                                      transactionId: transaction.transactionId,
+                                      tracking: transaction.maVanDon || "",
+                                    })
                                   }
                                   size="sm"
                                   className="h-9 px-4 shadow-sm"
+                                  disabled={
+                                    processingId === transaction.transactionId
+                                  }
                                 >
-                                  <Truck className="h-4 w-4 mr-1.5" />
-                                  Cập nhật
+                                  {processingId ===
+                                  transaction.transactionId ? (
+                                    <Truck className="h-4 w-4 animate-pulse" />
+                                  ) : (
+                                    <>
+                                      <Truck className="h-4 w-4 mr-1.5" />
+                                      Cập nhật
+                                    </>
+                                  )}
                                 </Button>
+                              )}
+
+                              {/* Nút đánh giá - sau khi hoàn tất */}
+                              {transaction.trangThai === "COMPLETED" && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      onClick={() =>
+                                        setRatingDialog({
+                                          open: true,
+                                          transactionId:
+                                            transaction.transactionId,
+                                          buyerId: transaction.buyerId,
+                                          rating: null,
+                                          comment: "",
+                                        })
+                                      }
+                                      size="sm"
+                                      className="h-9 px-4 shadow-sm"
+                                      disabled={
+                                        processingId ===
+                                        transaction.transactionId
+                                      }
+                                    >
+                                      {processingId ===
+                                      transaction.transactionId ? (
+                                        <Star className="h-4 w-4 animate-pulse" />
+                                      ) : (
+                                        <>
+                                          <Star className="h-4 w-4 mr-1.5" />
+                                          Đánh giá
+                                        </>
+                                      )}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Đánh giá người mua</p>
+                                  </TooltipContent>
+                                </Tooltip>
                               )}
 
                               {/* Nút xem chi tiết - luôn hiển thị */}
@@ -261,6 +455,161 @@ export default function SellerTransactionsPage() {
                 </Button>
               </div>
             )}
+
+            {/* Tracking Dialog */}
+            <Dialog
+              open={trackingDialog.open}
+              onOpenChange={(open) =>
+                setTrackingDialog({ open, transactionId: null, tracking: "" })
+              }
+            >
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Cập nhật mã vận đơn</DialogTitle>
+                  <DialogDescription>
+                    Vui lòng nhập mã vận đơn để cập nhật trạng thái giao hàng
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="tracking">Mã vận đơn</Label>
+                    <Input
+                      id="tracking"
+                      placeholder="Nhập mã vận đơn..."
+                      value={trackingDialog.tracking}
+                      onChange={(e) =>
+                        setTrackingDialog((prev) => ({
+                          ...prev,
+                          tracking: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      setTrackingDialog({
+                        open: false,
+                        transactionId: null,
+                        tracking: "",
+                      })
+                    }
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    onClick={handleAddTracking}
+                    disabled={processingId === trackingDialog.transactionId}
+                  >
+                    {processingId === trackingDialog.transactionId
+                      ? "Đang xử lý..."
+                      : "Xác nhận"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Rating Dialog */}
+            <Dialog
+              open={ratingDialog.open}
+              onOpenChange={(open) =>
+                setRatingDialog({
+                  open,
+                  transactionId: null,
+                  buyerId: null,
+                  rating: null,
+                  comment: "",
+                })
+              }
+            >
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Đánh giá người mua</DialogTitle>
+                  <DialogDescription>
+                    Vui lòng chọn đánh giá và nhập nhận xét của bạn
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  {/* Rating selection */}
+                  <div className="space-y-2">
+                    <Label>Chọn đánh giá</Label>
+                    <div className="flex gap-4 justify-center">
+                      <Button
+                        type="button"
+                        variant={
+                          ratingDialog.rating === 1 ? "default" : "outline"
+                        }
+                        size="lg"
+                        className="flex-1"
+                        onClick={() =>
+                          setRatingDialog((prev) => ({ ...prev, rating: 1 }))
+                        }
+                      >
+                        <ThumbsUp className="h-6 w-6 mr-2" />
+                        Tốt
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={
+                          ratingDialog.rating === -1 ? "default" : "outline"
+                        }
+                        size="lg"
+                        className="flex-1"
+                        onClick={() =>
+                          setRatingDialog((prev) => ({ ...prev, rating: -1 }))
+                        }
+                      >
+                        <ThumbsDown className="h-6 w-6 mr-2" />
+                        Xấu
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Comment */}
+                  <div className="space-y-2">
+                    <Label htmlFor="rating-comment">Nhận xét</Label>
+                    <Textarea
+                      id="rating-comment"
+                      placeholder="Nhập nhận xét về người mua..."
+                      value={ratingDialog.comment}
+                      onChange={(e) =>
+                        setRatingDialog((prev) => ({
+                          ...prev,
+                          comment: e.target.value,
+                        }))
+                      }
+                      rows={4}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      setRatingDialog({
+                        open: false,
+                        transactionId: null,
+                        buyerId: null,
+                        rating: null,
+                        comment: "",
+                      })
+                    }
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    onClick={handleSubmitRating}
+                    disabled={processingId === ratingDialog.transactionId}
+                  >
+                    {processingId === ratingDialog.transactionId
+                      ? "Đang xử lý..."
+                      : "Gửi đánh giá"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </>
         )}
       </div>

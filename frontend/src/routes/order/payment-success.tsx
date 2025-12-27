@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { PageWrapper } from "@/components/PageWrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,10 @@ export default function PaymentSuccessPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("session_id");
+  const transactionId = searchParams.get("transaction_id");
+  const transactionLink = transactionId
+    ? `/transactions/${transactionId}/detail`
+    : null;
   const [countdown, setCountdown] = useState(5);
 
   useEffect(() => {
@@ -27,7 +31,12 @@ export default function PaymentSuccessPage() {
         setCountdown((prev) => {
           if (prev <= 1) {
             clearInterval(timer);
-            navigate("/bidder/purchases");
+            // Redirect đến transaction detail để nhập địa chỉ
+            if (transactionLink) {
+              navigate(transactionLink);
+            } else {
+              navigate("/bidder/purchases");
+            }
             return 0;
           }
           return prev - 1;
@@ -36,10 +45,16 @@ export default function PaymentSuccessPage() {
 
       return () => clearInterval(timer);
     }
-  }, [sessionId, navigate]);
+  }, [sessionId, navigate, transactionLink]);
 
   const handleContinueToAddress = () => {
-    navigate("/bidder/purchases");
+    // Đến trang detail giao dịch để nhập địa chỉ giao hàng
+    if (transactionId) {
+      navigate(`/transactions/${transactionId}/detail`);
+    } else {
+      toast.info("Không tìm thấy mã giao dịch, quay lại danh sách mua");
+      navigate("/bidder/purchases");
+    }
   };
 
   const handleGoHome = () => {
@@ -76,80 +91,26 @@ export default function PaymentSuccessPage() {
               Đơn hàng của bạn đã được thanh toán thành công.
             </p>
 
-            {/* Quy trình 4 bước */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8 text-left">
-              <h3 className="font-semibold text-blue-900 mb-4 text-center">
-                📋 Các bước tiếp theo
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500 text-white text-sm font-bold shrink-0">
-                    ✓
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm">
-                      Bước 1: Thanh toán (Hoàn tất)
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Bạn đã thanh toán thành công
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500 text-white text-sm font-bold shrink-0">
-                    2
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm text-blue-900">
-                      Bước 2: Nhập địa chỉ giao hàng
-                    </p>
-                    <p className="text-xs text-blue-700">
-                      Vui lòng cung cấp địa chỉ để nhận hàng
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-300 text-white text-sm font-bold shrink-0">
-                    3
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm text-gray-600">
-                      Bước 3: Người bán gửi hàng
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Người bán sẽ cập nhật mã vận đơn
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-300 text-white text-sm font-bold shrink-0">
-                    4
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm text-gray-600">
-                      Bước 4: Nhận hàng & đánh giá
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Xác nhận nhận hàng và đánh giá người bán
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button
-                onClick={handleContinueToAddress}
-                size="lg"
-                className="gap-2"
-              >
-                <MapPin className="h-4 w-4" />
-                Tiếp tục nhập địa chỉ
-                <ArrowRight className="h-4 w-4" />
-              </Button>
+              {transactionLink ? (
+                <Button asChild size="lg" className="gap-2">
+                  <Link to={transactionLink}>
+                    <MapPin className="h-4 w-4" />
+                    Tiếp tục nhập địa chỉ
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleContinueToAddress}
+                  size="lg"
+                  className="gap-2"
+                >
+                  <MapPin className="h-4 w-4" />
+                  Tiếp tục nhập địa chỉ
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              )}
               <Button onClick={handleGoHome} variant="outline" size="lg">
                 Về trang chủ
               </Button>
