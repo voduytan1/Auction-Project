@@ -2,111 +2,61 @@ import { useEffect, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "./use-redux";
 import {
   refreshAccessToken,
-  setCredentials,
-  logoutUser,
-  finishInitializing,
-  hydrateFromLocalStorage,
+  getUserMe,
+  setInitializing,
 } from "@/store/slices/authSlice";
-import { profileAPI } from "@/services/profile.api";
 
 /**
- * Hook để restore authentication state khi app khởi động
- * Flow:
- * - User info được persist vào localStorage
- * - Token chỉ trong memory (bảo mật XSS) - Browser sẽ tự gửi Refresh Token từ HttpOnly Cookie
- * - Khi F5: Check nếu có user nhưng không có token => Gọi refresh để lấy token mới từ cookie
- * - Luôn fetch user mới từ API để đảm bảo data chuẩn (role, status...)
+ * Hook để restore authentication state khi app khởi động (F5)
  *
- * @returns isRestoring (boolean) - True khi đang xử lý, False khi đã xong
+ * Logic mới:
+ * 1. Khi F5: Gọi refresh token (backend đọc từ cookie)
+ * 2. Nếu refresh thành công:
+ *    - Kiểm tra Redux có user chưa
+ *    - Nếu chưa có user -> Gọi /users/me để lấy thông tin user
+ * 3. Nếu refresh thất bại -> Clear auth state
+ *
+ * Không dùng localStorage nữa, toàn bộ lưu trong Redux
  */
 export function useAuthRestore() {
   const dispatch = useAppDispatch();
-  const { user, token, isInitializing } = useAppSelector((state) => state.auth);
-  const hasHydrated = useRef(false);
+  const { user, accessToken, isInitializing } = useAppSelector(
+    (state) => state.auth
+  );
+  const hasAttemptedRestore = useRef(false);
 
-  // Effect 1: Hydrate từ LocalStorage (Chạy 1 lần duy nhất khi mount)
   useEffect(() => {
-    if (!hasHydrated.current) {
-      const savedUser = localStorage.getItem("auth_user");
-      if (savedUser && !user) {
-        // Chỉ nạp nếu Redux chưa có user
-        try {
-          const parsedUser = JSON.parse(savedUser);
+    // Chỉ chạy 1 lần khi mount
+    if (hasAttemptedRestore.current) {
+      return;
+    }
+
+    const restoreSession = async () => {
+      try {
+        console.log("[Auth Restore] Starting session restore...");
+
+        // Bước 1: Thử refresh token từ cookie
+        const refreshResult = await dispatch(refreshAccessToken()).unwrap();
+        console.log("[Auth Restore] Token refreshed successfully");
+
+        // Bước 2: Kiểm tra xem đã có user chưa
+        if (!user) {
           console.log(
-            "[useAuthRestore] Hydrating from localStorage:",
-            parsedUser.username
+            "[Auth Restore] No user in Redux, fetching from /users/me..."
           );
-          dispatch(hydrateFromLocalStorage(parsedUser));
-        } catch (error) {
-          console.error("[useAuthRestore] Failed to parse saved user:", error);
-          localStorage.removeItem("auth_user");
+          await dispatch(getUserMe()).unwrap();
+          console.log("[Auth Restore] User info fetched successfully");
         }
+
+        console.log("[Auth Restore] Session restored successfully");
+      } catch (error) {
+        console.log("[Auth Restore] No valid session found:", error);
+        // Không có session hoặc refresh thất bại -> Đơn giản set isInitializing = false
+        dispatch(setInitializing(false));
       }
-      hasHydrated.current = true;
-    }
+    };
+
+    hasAttemptedRestore.current = true;
+    restoreSession();
   }, [dispatch, user]);
-
-  // Effect 2: Logic Refresh Token
-  useEffect(() => {
-    console.log("[useAuthRestore] Restore check", {
-      hasToken: !!token,
-      hasUser: !!user,
-      isInitializing,
-      hasHydrated: hasHydrated.current,
-    });
-
-    // Nếu đã login rồi (có token) -> Bỏ qua
-    if (token) {
-      if (isInitializing) {
-        console.log("[useAuthRestore] Has token, finishing initialization");
-        dispatch(finishInitializing());
-      }
-      return;
-    }
-
-    // Chưa hydrate xong -> Đợi
-    if (!hasHydrated.current) {
-      console.log("[useAuthRestore] Waiting for hydration");
-      return;
-    }
-
-    // Case quan trọng: Có User (từ LS) nhưng chưa có Token (F5 trang)
-    if (user && !token && isInitializing) {
-      const restoreSession = async () => {
-        try {
-          console.log("[useAuthRestore] Calling refresh token API...");
-          const refreshResult = await dispatch(
-            refreshAccessToken(user.userid)
-          ).unwrap();
-          console.log("[useAuthRestore] Token refreshed successfully");
-
-          // Fetch user info mới nhất từ API
-          console.log("[useAuthRestore] Fetching fresh user info...");
-          const userInfo = await profileAPI.getMe();
-          console.log("[useAuthRestore] User info fetched:", userInfo);
-
-          // Update Redux với credentials mới
-          dispatch(
-            setCredentials({
-              user: userInfo,
-              token: refreshResult.token,
-            })
-          );
-
-          console.log("[useAuthRestore] Session restored successfully");
-        } catch (error) {
-          console.error("[useAuthRestore] Failed to restore session:", error);
-          dispatch(logoutUser());
-        }
-      };
-
-      restoreSession();
-    } else if (!user && isInitializing) {
-      // Trường hợp khách vãng lai (không có user trong LS)
-      console.log("[useAuthRestore] No user found, finishing initialization");
-      dispatch(finishInitializing());
-    }
-  }, [dispatch, isInitializing, user, token]);
-
-  return isInitializing;
 }

@@ -1,6 +1,6 @@
 export interface BidHistory {
-  bidHistoryid: number;
-  tenBidder: string;
+  bidHistoryId: number;
+  bidderName: string;
   giaDat: number;
   thoiGianDat: string;
 }

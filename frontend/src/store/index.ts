@@ -27,35 +27,11 @@ export const startListening =
 
 // === CÁC EFFECTS ===
 
-// Effect A: PERSIST USER (Lưu user info khi auth action fulfilled)
-startListening({
-  predicate: (action) => {
-    return (
-      typeof action.type === "string" &&
-      action.type.startsWith("auth/") &&
-      action.type.endsWith("/fulfilled")
-    );
-  },
-  effect: async (_action, listenerApi) => {
-    const state = listenerApi.getState();
-
-    if (state.auth.user) {
-      try {
-        localStorage.setItem("auth_user", JSON.stringify(state.auth.user));
-        console.log("[RTK Listener] User persisted to localStorage");
-      } catch (error) {
-        console.error("[RTK Listener] Failed to persist user:", error);
-      }
-    }
-  },
-});
-
-// Effect B: CLEANUP (Xóa storage khi logout)
+// Effect: CLEANUP (Xóa storage khi logout nếu cần)
 startListening({
   actionCreator: logoutUser.fulfilled,
   effect: async () => {
-    console.log("[RTK Listener] Logout detected - Cleaning storage");
-    localStorage.removeItem("auth_user");
+    console.log("[RTK Listener] Logout detected");
 
     // Dispatch event để các tab khác (nếu có) biết mà logout theo
     try {

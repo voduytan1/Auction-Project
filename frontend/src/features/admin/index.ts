@@ -1,5 +1,14 @@
 // Dashboard
-export { StatsGrid, RecentActivity, TopAuctions } from "./dashboard";
+export {
+  StatsGrid,
+  RecentActivity,
+  TopAuctions,
+  AuctionChart,
+  RevenueChart,
+  UserGrowthChart,
+  UpgradeRequestChart,
+  CategoryDistributionChart,
+} from "./dashboard";
 export type { DashboardStats, Activity, TopAuction } from "./dashboard";
 
 // Users

@@ -1,4 +1,4 @@
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -22,11 +22,16 @@ import { FaXTwitter } from "react-icons/fa6";
 
 export function LoginForm() {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useAppDispatch();
   const { isLoading, error, isAuthenticated } = useAppSelector(
     (state) => state.auth
   );
   const [isLoginAttempted, setIsLoginAttempted] = useState(false);
+
+  // Lấy trang trước đó từ location.state (ProtectedRoute truyền vào)
+  const from =
+    (location.state as { from?: { pathname: string } })?.from?.pathname || "/";
 
   const {
     register,
@@ -39,9 +44,9 @@ export function LoginForm() {
   // Redirect chỉ sau khi login thành công (không redirect khi mount với token cũ)
   useEffect(() => {
     if (isAuthenticated && isLoginAttempted) {
-      navigate("/", { replace: true });
+      navigate(from, { replace: true });
     }
-  }, [isAuthenticated, isLoginAttempted, navigate]);
+  }, [isAuthenticated, isLoginAttempted, navigate, from]);
 
   // Clear error khi unmount
   useEffect(() => {
@@ -60,8 +65,8 @@ export function LoginForm() {
 
       // Check if login was successful
       if (result.type === "auth/login/fulfilled") {
-        console.log("Login successful, redirecting...");
-        navigate("/", { replace: true });
+        console.log("Login successful, redirecting to:", from);
+        navigate(from, { replace: true });
       }
     } catch (error) {
       console.error("Login error:", error);

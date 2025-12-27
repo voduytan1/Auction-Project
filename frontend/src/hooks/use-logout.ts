@@ -8,11 +8,10 @@ import { isProtectedRoute } from "@/lib/route-helpers";
  * Hook để handle logout
  * Tự động:
  * - Gọi API logout (xóa refresh token cookie ở backend)
- * - Clear Redux state (token, user, etc.)
- * - Clear localStorage (auth_user)
+ * - Clear Redux state (accessToken, user, etc.)
  * - Dispatch auth:logout event cho WebSocket
  * - Navigation:
- *   * Nếu ở protected route → Navigate về /auth/login (không reload)
+ *   * Nếu ở protected route → Navigate về / (home)
  *   * Nếu ở public route → Stay on page
  *
  * @returns logout function
@@ -28,7 +27,7 @@ export function useLogout() {
     }
 
     try {
-      // Dispatch logout thunk - sẽ gọi API + clear Redux + clear storage
+      // Dispatch logout thunk - sẽ gọi API + clear Redux
       await dispatch(logoutUser()).unwrap();
 
       // Navigate logic (không reload trang)
@@ -36,8 +35,8 @@ export function useLogout() {
       const isOnProtectedRoute = isProtectedRoute(currentPath);
 
       if (isOnProtectedRoute) {
-        // useNavigate không reload, CSR navigation
-        navigate("/auth/login", { replace: true });
+        // Redirect về home thay vì login page
+        navigate("/", { replace: true });
       }
       // Stay on page, UI sẽ update vì user = null trong Redux
     } catch {
@@ -47,7 +46,7 @@ export function useLogout() {
       // Vẫn navigate nếu ở protected route
       const currentPath = window.location.pathname;
       if (isProtectedRoute(currentPath)) {
-        navigate("/auth/login", { replace: true });
+        navigate("/", { replace: true });
       }
     }
   }, [dispatch, navigate, isAuthenticated]);

@@ -6,6 +6,7 @@ import type {
   RegisterRequest,
 } from "@/features/auth/types";
 import { authAPI } from "@/services/auth.api";
+import { userAPI } from "@/services/user.api";
 
 // Async thunks
 export const loginUser = createAsyncThunk(
@@ -28,7 +29,7 @@ export const loginUser = createAsyncThunk(
 
       return {
         user,
-        token: response.accessToken,
+        accessToken: response.accessToken,
       };
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
@@ -59,7 +60,7 @@ export const registerUser = createAsyncThunk(
 
       return {
         user,
-        token: response.accessToken,
+        accessToken: response.accessToken,
       };
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
@@ -68,21 +69,47 @@ export const registerUser = createAsyncThunk(
   }
 );
 
+// Refresh token - Backend không cần userId nữa, chỉ cần refresh_token cookie
 export const refreshAccessToken = createAsyncThunk(
   "auth/refresh",
-  async (userId: string, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      if (!userId) throw new Error("User ID is invalid");
-
-      const response = await authAPI.refreshToken(userId);
+      const response = await authAPI.refreshToken();
       return {
-        token: response.accessToken,
+        accessToken: response.accessToken,
         expiresIn: response.expiresIn,
       };
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       return rejectWithValue(
         err.response?.data?.message || "Refresh token thất bại"
+      );
+    }
+  }
+);
+
+// Get user profile - Gọi khi F5 và chưa có user trong Redux
+export const getUserMe = createAsyncThunk(
+  "auth/getUserMe",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await userAPI.getMe();
+      const user: User = {
+        userid: response.data.userid,
+        username: response.data.username,
+        email: response.data.email,
+        vaitro: response.data.vaitro,
+        anhDaiDien: response.data.anhDaiDien,
+        hoVaTen: response.data.hoVaTen,
+        tyLeDanhGiaTot: 85,
+        diemDanhGia: 85,
+        soLuotDanhGia: 20,
+      };
+      return user;
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      return rejectWithValue(
+        err.response?.data?.message || "Lấy thông tin người dùng thất bại"
       );
     }
   }
@@ -99,9 +126,8 @@ export const logoutUser = createAsyncThunk("auth/logout", async () => {
 
 // State interface
 interface AuthState {
-  userId: string | null;
   user: User | null;
-  token: string | null;
+  accessToken: string | null;
   isLoading: boolean;
   error: string | null;
   isAuthenticated: boolean;
@@ -109,13 +135,12 @@ interface AuthState {
 }
 
 const initialState: AuthState = {
-  userId: null,
   user: null,
-  token: null,
+  accessToken: null,
   isLoading: false,
   error: null,
   isAuthenticated: false,
-  isInitializing: false,
+  isInitializing: true, // Bắt đầu là true, đợi restore auth
 };
 
 const authSlice = createSlice({
@@ -126,40 +151,27 @@ const authSlice = createSlice({
       state.error = null;
     },
     setAccessToken: (state, action: PayloadAction<string>) => {
-      state.token = action.payload;
+      state.accessToken = action.payload;
       state.isAuthenticated = true;
     },
     setCredentials: (
       state,
-      action: PayloadAction<{ user: User; token: string | null }>
+      action: PayloadAction<{ user: User; accessToken: string }>
     ) => {
-      state.userId = action.payload.user.userid; // Lấy trực tiếp, không clean
       state.user = action.payload.user;
-      state.token = action.payload.token;
+      state.accessToken = action.payload.accessToken;
       state.isAuthenticated = true;
-      // Chỉ set isInitializing = false nếu có token (restore session thành công)
-      // Nếu token = null (hydrate từ localStorage), giữ nguyên isInitializing để restore tiếp
-      if (action.payload.token !== null) {
-        state.isInitializing = false; // Hoàn tất restore session
-      }
-    },
-    setUserIdFromUser: (state, action: PayloadAction<string>) => {
-      // Listener middleware sẽ gọi action này để extract userId từ user.userid
-      state.userId = action.payload;
-    },
-    startInitializing: (state) => {
-      state.isInitializing = true;
-    },
-    finishInitializing: (state) => {
       state.isInitializing = false;
     },
-    hydrateFromLocalStorage: (state, action: PayloadAction<User>) => {
-      // Hydrate user từ localStorage và set isInitializing = true
-      state.user = action.payload;
-      state.userId = action.payload.userid;
-      state.token = null;
-      state.isInitializing = true; // Cần restore token
-      state.isAuthenticated = false; // Chưa authenticated cho đến khi có token
+    clearAuth: (state) => {
+      state.user = null;
+      state.accessToken = null;
+      state.isAuthenticated = false;
+      state.isInitializing = false;
+      state.error = null;
+    },
+    setInitializing: (state, action: PayloadAction<boolean>) => {
+      state.isInitializing = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -171,14 +183,15 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.userId = action.payload.user.userid;
         state.user = action.payload.user;
-        state.token = action.payload.token;
+        state.accessToken = action.payload.accessToken;
         state.isAuthenticated = true;
+        state.isInitializing = false;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+        state.isInitializing = false;
       });
 
     // Register
@@ -189,21 +202,21 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.userId = action.payload.user.userid;
         state.user = action.payload.user;
-        state.token = action.payload.token;
+        state.accessToken = action.payload.accessToken;
         state.isAuthenticated = true;
+        state.isInitializing = false;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+        state.isInitializing = false;
       });
 
     // Logout
     builder.addCase(logoutUser.fulfilled, (state) => {
-      state.userId = null;
       state.user = null;
-      state.token = null;
+      state.accessToken = null;
       state.isAuthenticated = false;
       state.error = null;
       state.isInitializing = false;
@@ -216,19 +229,35 @@ const authSlice = createSlice({
       })
       .addCase(refreshAccessToken.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.token = action.payload.token;
+        state.accessToken = action.payload.accessToken;
         state.isAuthenticated = true;
+        state.isInitializing = false;
       })
       .addCase(refreshAccessToken.rejected, (state) => {
         state.isLoading = false;
-        state.userId = null;
         state.user = null;
-        state.token = null;
+        state.accessToken = null;
         state.isAuthenticated = false;
         state.isInitializing = false;
       });
 
-    // REHYDRATE được handle bởi listener middleware ở store/index.ts
+    // Get User Me
+    builder
+      .addCase(getUserMe.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getUserMe.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload;
+        state.isAuthenticated = true;
+      })
+      .addCase(getUserMe.rejected, (state) => {
+        state.isLoading = false;
+        state.user = null;
+        state.accessToken = null;
+        state.isAuthenticated = false;
+        state.isInitializing = false;
+      });
   },
 });
 
@@ -236,8 +265,7 @@ export const {
   clearError,
   setCredentials,
   setAccessToken,
-  startInitializing,
-  finishInitializing,
-  hydrateFromLocalStorage,
+  clearAuth,
+  setInitializing,
 } = authSlice.actions;
 export default authSlice.reducer;

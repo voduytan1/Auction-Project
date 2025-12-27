@@ -9,7 +9,7 @@ import type {
 const AUTH_ENDPOINTS = {
   LOGIN: "/auth/login",
   LOGOUT: "/auth/logout",
-  REFRESH: (userId: string) => `/auth/refresh/${userId}`,
+  REFRESH: "/auth/refresh",
 } as const;
 
 /**
@@ -48,10 +48,11 @@ export const authAPI = {
   /**
    * Refresh access token
    * Sử dụng refresh_token từ cookie (tự động gửi với withCredentials: true)
+   * Backend không cần userId nữa, tự định danh từ cookie
    */
-  refreshToken: async (userId: string) => {
+  refreshToken: async () => {
     const response = await api.post<RefreshTokenResponse>(
-      AUTH_ENDPOINTS.REFRESH(userId)
+      AUTH_ENDPOINTS.REFRESH
     );
     return response.data;
   },

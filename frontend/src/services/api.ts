@@ -25,10 +25,10 @@ const api = axios.create({
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const store = window.__REDUX_STORE__;
-    const token = store?.getState()?.auth?.token;
+    const accessToken = store?.getState()?.auth?.accessToken;
 
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (accessToken && config.headers) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
     }
 
     return config;
@@ -73,21 +73,9 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        // Get userId from Redux store
-        const store = window.__REDUX_STORE__;
-        const userId = store?.getState()?.auth?.user?.userid;
-
-        if (!userId) {
-          // Chỉ redirect nếu không đang ở trang login
-          if (window.location.pathname !== "/auth/login") {
-            window.location.href = "/auth/login";
-          }
-          return Promise.reject(error);
-        }
-
         // Refresh token - BE sẽ đọc refresh_token từ cookie
         const response = await axios.post(
-          `${API_BASE_URL}/auth/refresh/${userId}`,
+          `${API_BASE_URL}/auth/refresh`,
           {},
           {
             withCredentials: true, // Gửi cookie
@@ -97,7 +85,7 @@ api.interceptors.response.use(
         const { accessToken } = response.data.data;
 
         // Dispatch action to update token in Redux
-        // Note: Token is also stored in localStorage by authSlice
+        const store = window.__REDUX_STORE__;
         if (store) {
           store.dispatch({ type: "auth/setAccessToken", payload: accessToken });
         }
@@ -111,7 +99,7 @@ api.interceptors.response.use(
         // Dispatch logout action
         const store = window.__REDUX_STORE__;
         if (store) {
-          store.dispatch({ type: "auth/logout" });
+          store.dispatch({ type: "auth/clearAuth" });
         }
 
         if (window.location.pathname !== "/auth/login") {

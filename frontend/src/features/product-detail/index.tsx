@@ -1,7 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { productAPI, type ProductResponse } from "@/services/product.api";
-import { paymentAPI } from "@/services/payment.api";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +14,7 @@ import { toast } from "sonner";
 import { CreditCard, CheckCircle2, PartyPopper } from "lucide-react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { productDetailData, relatedProducts } from "@/data/mock-data";
+import { productDetailData } from "@/data/mock-data";
 import { ImageGallery } from "./components/ImageGallery";
 import { ProductDescription } from "./components/ProductDescription";
 import { BidHistoryTable } from "./components/BidHistoryTable";
@@ -77,27 +76,11 @@ const ProductDetail = () => {
     }
   }, [product, user, isAuthenticated]);
 
+  // TODO: Replace with real implementation when backend returns transactionId
   const handlePayNow = async () => {
-    if (!product?.productid) return;
-
-    try {
-      setIsProcessingPayment(true);
-      toast.loading("Đang tạo phiên thanh toán...");
-
-      const { url } = await paymentAPI.createStripeCheckoutSession(
-        product.productid
-      );
-
-      toast.dismiss();
-      toast.success("Chuyển hướng đến trang thanh toán...");
-
-      // Redirect to Stripe Checkout
-      window.location.href = url;
-    } catch (error) {
-      toast.dismiss();
-      toast.error("Lỗi khi tạo phiên thanh toán: " + (error as Error).message);
-      setIsProcessingPayment(false);
-    }
+    toast.info(
+      "Tính năng đang được phát triển. Vui lòng thanh toán qua trang Giao dịch mua."
+    );
   };
 
   if (loading) {
@@ -309,11 +292,11 @@ const ProductDetail = () => {
         </div>
 
         {/* Related Products */}
-        {/* TODO: API cần trả về 5 sản phẩm khác cùng chuyên mục */}
         <div className="mt-12">
           <RelatedProducts
-            products={relatedProducts}
-            currentCategory={product.tenDanhMuc || ""}
+            categoryId={product.categoryId}
+            currentProductId={product.productid}
+            categoryName={product.tenDanhMuc || ""}
           />
         </div>
       </div>
