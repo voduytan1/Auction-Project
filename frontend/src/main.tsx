@@ -7,6 +7,7 @@ import { router } from "./routes";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { PageLoader } from "./components/PageLoader";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
+import { NotificationProvider } from "./contexts/NotificationContext";
 import { AuthRestoreWrapper } from "./components/AuthRestoreWrapper";
 import "./index.css";
 
@@ -15,18 +16,20 @@ createRoot(document.getElementById("root")!).render(
     <Provider store={store}>
       <AuthRestoreWrapper>
         <WebSocketProvider>
-          <ThemeProvider defaultTheme="light" storageKey="auction-theme">
-            <Suspense
-              fallback={
-                <PageLoader
-                  message="Đang tải trang..."
-                  className="min-h-screen"
-                />
-              }
-            >
-              <RouterProvider router={router} />
-            </Suspense>
-          </ThemeProvider>
+          <NotificationProvider>
+            <ThemeProvider defaultTheme="light" storageKey="auction-theme">
+              <Suspense
+                fallback={
+                  <PageLoader
+                    message="Đang tải trang..."
+                    className="min-h-screen"
+                  />
+                }
+              >
+                <RouterProvider router={router} />
+              </Suspense>
+            </ThemeProvider>
+          </NotificationProvider>
         </WebSocketProvider>
       </AuthRestoreWrapper>
     </Provider>

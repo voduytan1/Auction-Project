@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,106 +10,16 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
-import { useAppSelector } from "@/hooks/use-redux";
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: "bid" | "transaction" | "product" | "system";
-  timestamp: Date;
-  read: boolean;
-  link?: string;
-  productId?: number;
-  transactionId?: number;
-}
-
-const MAX_NOTIFICATIONS = 50;
-const STORAGE_KEY = "auction_notifications";
+import { useNotifications } from "@/hooks/use-notification";
+import type { AppNotification } from "@/contexts/NotificationContext";
 
 export function NotificationBell() {
   const navigate = useNavigate();
-  const { user } = useAppSelector((state) => state.auth);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const { notifications, markAsRead, markAllAsRead, clearAll, unreadCount } =
+    useNotifications();
   const [open, setOpen] = useState(false);
 
-  // Load notifications from localStorage
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setNotifications(
-          parsed.map((n: any) => ({
-            ...n,
-            timestamp: new Date(n.timestamp),
-          }))
-        );
-      } catch (error) {
-        console.error("Error loading notifications:", error);
-      }
-    }
-  }, []);
-
-  // Save notifications to localStorage
-  useEffect(() => {
-    if (notifications.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
-    }
-  }, [notifications]);
-
-//   // Add new notification
-//   const addNotification = (
-//     notification: Omit<Notification, "id" | "timestamp" | "read">
-//   ) => {
-//     const newNotification: Notification = {
-//       ...notification,
-//       id: `${Date.now()}-${Math.random()}`,
-//       timestamp: new Date(),
-//       read: false,
-//     };
-
-//     setNotifications((prev) => {
-//       const updated = [newNotification, ...prev];
-//       // Keep only last MAX_NOTIFICATIONS
-//       return updated.slice(0, MAX_NOTIFICATIONS);
-//     });
-//   };
-
-  // Listen to WebSocket events
-  useEffect(() => {
-    if (!user) return;
-
-    // Note: Since we don't have user-specific WebSocket subscriptions yet,
-    // we'll add this as a placeholder for future implementation
-    // When backend adds /topic/user/{userId}/notifications, we can subscribe here
-
-    // For now, we can listen to general events if needed
-    // This is where you would add webSocketService.subscribeToUserNotifications(userId, callback)
-
-    return () => {
-      // Cleanup subscriptions
-    };
-  }, [user]);
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
-  const markAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
-  };
-
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  };
-
-  const clearAll = () => {
-    setNotifications([]);
-    localStorage.removeItem(STORAGE_KEY);
-  };
-
-  const handleNotificationClick = (notification: Notification) => {
+  const handleNotificationClick = (notification: AppNotification) => {
     markAsRead(notification.id);
     setOpen(false);
 
@@ -122,7 +32,7 @@ export function NotificationBell() {
     }
   };
 
-  const getNotificationIcon = (type: Notification["type"]) => {
+  const getNotificationIcon = (type: AppNotification["type"]) => {
     switch (type) {
       case "bid":
         return <Bell className="h-5 w-5 text-blue-500" />;

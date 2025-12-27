@@ -8,6 +8,7 @@ import type {
   CategoryResponse,
   CategoryDisplay,
   ApiResponse,
+  CategoryWithProductResponse,
 } from "@/types/types";
 
 /**
@@ -139,6 +140,19 @@ export const categoryApi = {
     );
     return Array.isArray(response.data) ? response.data : response.data.data;
   },
+
+  /**
+   * GET /categories/{id}/products - Get category with paginated products
+   * Returns: ApiResponse with CategoryWithProductResponse data
+   * Interceptor extracts data and preserves metadata in __metadata__
+   */
+  getCategoryWithProducts: (
+    categoryId: number,
+    params?: { page?: number; size?: number; search?: string }
+  ) =>
+    api.get<CategoryWithProductResponse>(`/categories/${categoryId}/products`, {
+      params,
+    }),
 
   /**
    * POST /categories - Create new category (admin only)

@@ -2,6 +2,8 @@
  * WebSocket message types matching backend DTOs
  */
 
+import type { TransactionStatus } from "./transaction";
+
 export interface BidUpdateMessage {
   productId: number;
   giaHienTai: number;
@@ -26,6 +28,17 @@ export interface ProductStatusMessage {
   message: string;
   winnerId?: string;
   winnerName?: string;
+}
+
+export interface TransactionStatusMessage {
+  transactionId: number;
+  productId: number;
+  buyerId: string;
+  sellerId: string;
+  trangThai: TransactionStatus;
+  giaCuoiCung: number;
+  message: string;
+  updatedAt: string; // ISO date string
 }
 
 export type WebSocketEventType = "NEW_BID" | "AUTO_BID" | "BUY_NOW";

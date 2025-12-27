@@ -23,10 +23,11 @@ import {
 import type { ProductResponse } from "@/services/product.api";
 import { auctionAPI } from "@/services/auction.api";
 import { paymentAPI } from "@/services/payment.api";
+import { watchlistAPI } from "@/services/watchlist.api";
 import type { ApiErrorResponse } from "@/types/types";
 import type { AxiosError } from "axios";
 import { useNavigate } from "react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAppSelector } from "@/hooks/use-redux";
 import { toast } from "sonner";
 import {
@@ -121,7 +122,24 @@ export function ProductInfo({ product }: ProductInfoProps) {
   const [autoDialogOpen, setAutoDialogOpen] = useState(false);
   const [autoLoading, setAutoLoading] = useState(false);
   const [autoValue, setAutoValue] = useState<string>("");
-  const [_autoBidResponse, setAutoBidResponse] = useState<unknown>(null);
+  const [, setAutoBidResponse] = useState<unknown>(null);
+  const [isInWatchlist, setIsInWatchlist] = useState(false);
+  const [watchlistLoading, setWatchlistLoading] = useState(false);
+
+  // Check if product is in watchlist on load
+  useEffect(() => {
+    const checkWatchlist = async () => {
+      try {
+        const response = await watchlistAPI.getWatchlist();
+        const ids: number[] = Array.isArray(response.data) ? response.data : [];
+        setIsInWatchlist(ids.includes(product.productid));
+      } catch (error) {
+        console.error("Error checking watchlist:", error);
+      }
+    };
+
+    checkWatchlist();
+  }, [product.productid]);
 
   const getTimeRemaining = () => {
     const endDate = new Date(product.thoiGianKetThuc);
@@ -141,6 +159,26 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
     // Nếu >= 3 ngày -> hiển thị ngày giờ đầy đủ
     return format(endDate, "dd/MM/yyyy HH:mm", { locale: vi });
+  };
+
+  const handleWatchlistToggle = async () => {
+    try {
+      setWatchlistLoading(true);
+      if (isInWatchlist) {
+        await watchlistAPI.removeFromWatchlist(product.productid);
+        setIsInWatchlist(false);
+        toast.success("Đã xóa khỏi danh sách yêu thích");
+      } else {
+        await watchlistAPI.addToWatchlist(product.productid);
+        setIsInWatchlist(true);
+        toast.success("Đã thêm vào danh sách yêu thích");
+      }
+    } catch (error) {
+      console.error("Watchlist error:", error);
+      toast.error("Lỗi khi cập nhật danh sách yêu thích");
+    } finally {
+      setWatchlistLoading(false);
+    }
   };
 
   return (
@@ -466,14 +504,33 @@ export function ProductInfo({ product }: ProductInfoProps) {
               <TooltipTrigger asChild>
                 <Button
                   variant="outline"
-                  size="lg" // Dùng size lg để chiều cao bằng các nút bên cạnh
-                  className="aspect-square px-0" // aspect-square để thành hình vuông
+                  size="lg"
+                  className="aspect-square px-0"
+                  onClick={handleWatchlistToggle}
+                  disabled={watchlistLoading || !isAuthenticated}
+                  title={
+                    !isAuthenticated
+                      ? "Vui lòng đăng nhập"
+                      : isInWatchlist
+                      ? "Xóa khỏi yêu thích"
+                      : "Thêm vào yêu thích"
+                  }
                 >
-                  <Heart className="h-5 w-5" />
+                  <Heart
+                    className={`h-5 w-5 ${
+                      isInWatchlist ? "text-red-500 fill-red-500" : ""
+                    }`}
+                  />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Thêm vào yêu thích</p>
+                <p>
+                  {!isAuthenticated
+                    ? "Vui lòng đăng nhập"
+                    : isInWatchlist
+                    ? "Xóa khỏi yêu thích"
+                    : "Thêm vào yêu thích"}
+                </p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -589,7 +646,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
       <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>🎉 Mua thành công!</DialogTitle>
+            <DialogTitle>Mua thành công!</DialogTitle>
             <DialogDescription>
               Chúc mừng! Bạn đã mua sản phẩm thành công. Bạn có muốn thanh toán
               ngay bây giờ không?

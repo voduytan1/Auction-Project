@@ -99,7 +99,7 @@ export function RejectBidderDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-125">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Ban className="h-5 w-5 text-destructive" />
@@ -163,7 +163,7 @@ export function RejectBidderDialog({
             </Label>
             <Textarea
               id="reason"
-              className="min-h-[100px]"
+              className="min-h-25"
               {...register("reason", {
                 required: "Vui lòng nhập lý do từ chối",
                 minLength: {

@@ -1,16 +1,14 @@
-import { Button } from "@/components/ui/button";
-import { ArrowRight, TrendingUp } from "lucide-react";
-import { Link } from "react-router-dom";
-import type { Product } from "../types";
+import type { ProductResponse } from "@/services/product.api";
 import { ProductCard } from "./ProductCard";
+import { TrendingUp } from "lucide-react";
 
 interface HighestPriceSectionProps {
-  products: Product[];
+  products: ProductResponse[];
 }
 
 export function HighestPriceSection({ products }: HighestPriceSectionProps) {
   return (
-    <section className="container mx-auto">
+    <section className="w-full px-4 md:px-6 lg:px-8 py-8">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-amber-500/10 rounded-xl">
@@ -23,16 +21,13 @@ export function HighestPriceSection({ products }: HighestPriceSectionProps) {
             </p>
           </div>
         </div>
-        <Button variant="ghost" asChild className="hidden md:flex">
-          <Link to="/app/auctions">
-            Xem tất cả <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
-        </Button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
+      <div className="overflow-x-auto -mx-4 px-4">
+        <div className="grid grid-cols-5 gap-6 min-w-max md:min-w-full">
+          {products.map((product) => (
+            <ProductCard key={product.productid} product={product} />
+          ))}
+        </div>
       </div>
     </section>
   );

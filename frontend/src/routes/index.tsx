@@ -44,6 +44,12 @@ const AdminSettingsPage = lazy(() => import("./admin/settings"));
 // Seller Pages
 const SellerProductsPage = lazy(() => import("./seller/products"));
 const CreateProductPage = lazy(() => import("./seller/create-product"));
+const AppendDescriptionPage = lazy(
+  () =>
+    import(
+      "../features/seller/products/append-description/AppendDescriptionPage"
+    )
+);
 
 // Bidder Pages
 const WatchListPage = lazy(() => import("./bidder/watchlist"));
@@ -305,6 +311,10 @@ export const router = createBrowserRouter([
             <CreateProductPage />
           </PageWrapper>
         ),
+      },
+      {
+        path: "products/:id/append-description",
+        element: <AppendDescriptionPage />,
       },
       {
         path: "my-sales",
