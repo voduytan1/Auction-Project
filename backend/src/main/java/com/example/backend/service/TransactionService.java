@@ -29,11 +29,13 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final TransactionMapper transactionMapper;
     private final RatingService ratingService;
+    private final WebSocketEventPublisher webSocketEventPublisher;
 
-    public TransactionService(TransactionRepository transactionRepository, TransactionMapper transactionMapper, RatingService ratingService) {
+    public TransactionService(TransactionRepository transactionRepository, TransactionMapper transactionMapper, RatingService ratingService, WebSocketEventPublisher webSocketEventPublisher) {
         this.transactionRepository = transactionRepository;
         this.transactionMapper = transactionMapper;
         this.ratingService = ratingService;
+        this.webSocketEventPublisher = webSocketEventPublisher;
     }
 
     public Transaction getOne(Long id) {
@@ -76,7 +78,8 @@ public class TransactionService {
         }
         transaction.setTrangThai(TransactionStatus.PAYMENT_COMPLETED);
         transaction.setThoiGianThanhToan(LocalDateTime.now());
-        transactionRepository.save(transaction);
+        Transaction saved = transactionRepository.save(transaction);
+        webSocketEventPublisher.publishTransactionStatusChange(transactionMapper.toResponse(saved), "Người mua thanh toán thành công");
         return null;
     }
 
@@ -94,7 +97,10 @@ public class TransactionService {
 
         transaction.setDiaChiGiaoHang(address);
         transaction.setTrangThai(TransactionStatus.AWAITING_SHIPMENT);
-        return  transactionMapper.toResponse(transactionRepository.save(transaction));
+
+        TransactionResponse response = transactionMapper.toResponse(transactionRepository.save(transaction));
+        webSocketEventPublisher.publishTransactionStatusChange(response, "Người mua đã điền địa chỉ");
+        return response;
     }
 
     @Transactional
@@ -112,7 +118,10 @@ public class TransactionService {
         transaction.setMaVanDon(maVanDon);
         transaction.setThoiGianGiaoHang(LocalDateTime.now());
         transaction.setTrangThai(TransactionStatus.SHIPPED);
-        return transactionMapper.toResponse(transactionRepository.save(transaction));
+
+        TransactionResponse response = transactionMapper.toResponse(transactionRepository.save(transaction));
+        webSocketEventPublisher.publishTransactionStatusChange(response, "Người bán đã gửi mã vận đơn");
+        return response;
     }
 
     @Transactional
@@ -129,7 +138,9 @@ public class TransactionService {
 
         transaction.setTrangThai(TransactionStatus.COMPLETED);
         transaction.setThoiGianNhanHang(LocalDateTime.now());
-        return transactionMapper.toResponse(transactionRepository.save(transaction));
+        TransactionResponse response = transactionMapper.toResponse(transactionRepository.save(transaction));
+        webSocketEventPublisher.publishTransactionStatusChange(response, "Người mua đã xác nhận nhận hàng");
+        return response;
     }
 
     @Transactional
@@ -157,6 +168,7 @@ public class TransactionService {
 
         ratingService.createOne(createRatingRequest, userid);
 
+        webSocketEventPublisher.publishTransactionStatusChange(response, "Người bán đã gửi hủy giao dịch");
         return response;
     }
 }

@@ -1,5 +1,6 @@
 package com.example.backend.service;
 
+import com.example.backend.dto.transaction.TransactionResponse;
 import com.example.backend.dto.websocket.BidHistoryItemMessage;
 import com.example.backend.dto.websocket.BidUpdateMessage;
 import com.example.backend.dto.websocket.ProductStatusMessage;
@@ -102,22 +103,31 @@ public class WebSocketEventPublisher {
         }
     }
 
-    /**
-     * Publish product status change
-     * 
-     * @param product Product
-     * @param status Status mới
-     * @param message Message
-     */
+    public void publishTransactionStatusChange(TransactionResponse transactionResponse, String message) {
+        try {
+            // Broadcast tới topic của sản phẩm
+            messagingTemplate.convertAndSend(
+                    "/topic/transaction/" + transactionResponse.getTransactionId() + "/status",
+                    transactionResponse
+            );
+
+            log.info("Published status change for product {} - Status: {}",
+                    transactionResponse.getTransactionId(), transactionResponse.getTrangThai());
+        } catch (Exception e) {
+            log.error("Error publishing status change for product {}",
+                    transactionResponse.getTransactionId(), e);
+        }
+    }
+
     public void publishProductStatusChange(Product product, String status, String message) {
         try {
             ProductStatusMessage statusMessage = ProductStatusMessage.builder()
                     .productId(product.getProductid())
                     .status(status)
                     .message(message)
-                    .winnerId(product.getCurrentBidder() != null ? 
+                    .winnerId(product.getCurrentBidder() != null ?
                             product.getCurrentBidder().getUserid().toString() : null)
-                    .winnerName(product.getCurrentBidder() != null ? 
+                    .winnerName(product.getCurrentBidder() != null ?
                             maskBidderName(product.getCurrentBidder().getHoVaTen()) : null)
                     .build();
 
@@ -127,10 +137,10 @@ public class WebSocketEventPublisher {
                     statusMessage
             );
 
-            log.info("Published status change for product {} - Status: {}", 
+            log.info("Published status change for product {} - Status: {}",
                     product.getProductid(), status);
         } catch (Exception e) {
-            log.error("Error publishing status change for product {}", 
+            log.error("Error publishing status change for product {}",
                     product.getProductid(), e);
         }
     }
