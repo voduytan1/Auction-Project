@@ -80,8 +80,8 @@ public class RatingService {
 
     private Transaction validateTransaction(Long transactionId){
         Transaction transaction = transactionRepository.findById(transactionId).orElseThrow(()->new EntityNotFoundException("Không tìm thấy giao dịch với id "+ transactionId));
-        if(transaction.getTrangThai()!= TransactionStatus.COMPLETED){
-            throw new IllegalStateException("Đơn hàng phải ở trạng thái hoàn thành trước khi đánh giá");
+        if(!TransactionStatus.COMPLETED.equals(transaction.getTrangThai()) && !TransactionStatus.CANCELLED.equals(transaction.getTrangThai()) ){
+            throw new IllegalStateException("Đơn hàng phải ở trạng thái hoàn thành hoặc đã hủy trước khi đánh giá");
         }
         return transaction;
     }

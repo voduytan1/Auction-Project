@@ -53,7 +53,7 @@ public class SecurityConfig {
             ),
             "SELLER",Map.of(
                     HttpMethod.GET, new String[]{},
-                    HttpMethod.POST, new String[]{"/products"},
+                    HttpMethod.POST, new String[]{"/products", "/transactions/{id}/ma-van-don", "/transactions/{id}/huy"},
                     HttpMethod.PATCH, new String[]{"/products"},
                     HttpMethod.DELETE, new String[]{}
             ),
@@ -65,7 +65,7 @@ public class SecurityConfig {
             ),
             "AUTHENTICATED",Map.of(
                     HttpMethod.GET, new String[]{"/users/me", "/bids/**", "/bids/history/{productId}", "/transactions/buyer", "/transactions/seller","/transactions/{id}"},
-                    HttpMethod.POST, new String[]{"/users/request-seller", "/images/**","/image/**", "/bids/**", "/payment/create-checkout-session"},
+                    HttpMethod.POST, new String[]{"/users/request-seller", "/images/**","/image/**", "/bids/**", "/payment/create-checkout-session", "/transactions/{id}/dia-chi", "/transactions/{id}/hoan-thanh", },
                     HttpMethod.PUT, new String[]{"/users/{id}"},
                     HttpMethod.DELETE, new String[]{}
             )

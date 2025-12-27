@@ -3,10 +3,13 @@ package com.example.backend.controller;
 import com.example.backend.dto.common.ApiResponse;
 import com.example.backend.dto.common.PaginationInfo;
 import com.example.backend.dto.common.PaginationRequest;
+import com.example.backend.dto.transaction.TransactionAddressRequest;
 import com.example.backend.dto.transaction.TransactionResponse;
+import com.example.backend.dto.transaction.TransactionShipmentProveRequest;
 import com.example.backend.service.TransactionService;
 import com.example.backend.utils.PageUtils;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -65,5 +68,57 @@ public class TransactionController {
 
         TransactionResponse result = transactionService.findOne(id, UUID.fromString(sub));
         return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    @PostMapping("/{id}/dia-chi")
+    public  ResponseEntity<@NotNull ApiResponse<TransactionResponse>> addAddress(@PathVariable Long id, @RequestBody @Valid TransactionAddressRequest request, @AuthenticationPrincipal Jwt jwt){
+        String sub = jwt != null ? jwt.getSubject() : null;
+        if(sub == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String address = request.getDiaChiGiaoHang();
+
+        TransactionResponse response =transactionService.addAddress(id, address, UUID.fromString(sub));
+
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PostMapping("/{id}/ma-van-don")
+    public  ResponseEntity<@NotNull ApiResponse<TransactionResponse>> addShipmentProve(@PathVariable Long id, @RequestBody @Valid TransactionShipmentProveRequest request, @AuthenticationPrincipal Jwt jwt){
+        String sub = jwt != null ? jwt.getSubject() : null;
+        if(sub == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String maVanDon = request.getMaVanDon();
+
+        TransactionResponse response =transactionService.addShipmentProve(id, maVanDon, UUID.fromString(sub));
+
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PostMapping("/{id}/hoan-thanh")
+    public  ResponseEntity<@NotNull ApiResponse<TransactionResponse>> completeTransaction(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt){
+        String sub = jwt != null ? jwt.getSubject() : null;
+        if(sub == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        TransactionResponse response =transactionService.completeTransaction(id, UUID.fromString(sub));
+
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PostMapping("/{id}/huy")
+    public  ResponseEntity<@NotNull ApiResponse<TransactionResponse>> cancelTransaction(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt){
+        String sub = jwt != null ? jwt.getSubject() : null;
+        if(sub == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        TransactionResponse response =transactionService.cancelTransaction(id, UUID.fromString(sub));
+
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

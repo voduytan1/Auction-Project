@@ -1,11 +1,13 @@
 package com.example.backend.controller;
 
+import com.example.backend.dto.transaction.TransactionIdRequest;
 import com.example.backend.entity.Transaction;
 import com.example.backend.service.TransactionService;
 
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,7 +27,8 @@ public class PaymentController {
     }
 
     @PostMapping("/create-checkout-session")
-    public Map<String, String> createCheckoutSession(@RequestBody Long transactionId) throws Exception {
+    public Map<String, String> createCheckoutSession(@RequestBody @Valid TransactionIdRequest transactionIdRequest) throws Exception {
+        Long transactionId = transactionIdRequest.getTransactionId();
         Transaction transaction = transactionService.getOne(transactionId);
 
         if(transaction == null){
