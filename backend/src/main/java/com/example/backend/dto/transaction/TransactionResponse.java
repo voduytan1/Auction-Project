@@ -18,6 +18,7 @@ public class TransactionResponse {
 
     Long productId;
     String tenSanPham;
+    String anhDaiDienSanPham;
 
     String buyerId;
     String tenNguoiMua;
