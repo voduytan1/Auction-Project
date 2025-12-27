@@ -1,6 +1,7 @@
 package com.example.backend.service;
 
 import com.example.backend.dto.common.PaginationRequest;
+import com.example.backend.dto.rating.CreateRatingRequest;
 import com.example.backend.dto.transaction.TransactionResponse;
 import com.example.backend.entity.Transaction;
 import com.example.backend.entity.TransactionStatus;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,10 +28,12 @@ import java.util.UUID;
 public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final TransactionMapper transactionMapper;
+    private final RatingService ratingService;
 
-    public TransactionService(TransactionRepository transactionRepository, TransactionMapper transactionMapper) {
+    public TransactionService(TransactionRepository transactionRepository, TransactionMapper transactionMapper, RatingService ratingService) {
         this.transactionRepository = transactionRepository;
         this.transactionMapper = transactionMapper;
+        this.ratingService = ratingService;
     }
 
     public Transaction getOne(Long id) {
@@ -67,8 +71,92 @@ public class TransactionService {
     @Transactional
     public Void completePayment(Long transactionId){
         Transaction transaction = transactionRepository.findById(transactionId).orElseThrow(()-> new EntityNotFoundException("Không tìm thấy giao dịch với id " + transactionId));
+        if(!transaction.getTrangThai().equals(TransactionStatus.PENDING_PAYMENT)){
+            throw new IllegalStateException("Giao dịch phải ở trạng thái chờ thanh toán để thanh toán");
+        }
         transaction.setTrangThai(TransactionStatus.PAYMENT_COMPLETED);
+        transaction.setThoiGianThanhToan(LocalDateTime.now());
         transactionRepository.save(transaction);
         return null;
+    }
+
+    @Transactional
+    public TransactionResponse addAddress(Long transactionId, String address, UUID userid) {
+        Transaction transaction = transactionRepository.findById(transactionId).orElseThrow(() -> new EntityNotFoundException("Không tìm thấy giao dịch với id " + transactionId));
+        if (!userid.equals(transaction.getBuyer().getUserid())){
+            throw new ForbiddenException("Bạn không phải người thắng đấu giá của sản phẩm này");
+        }
+
+            if(!transaction.getTrangThai().equals(TransactionStatus.PAYMENT_COMPLETED)){
+            throw new IllegalStateException("Giao dịch phải ở trạng thái đã thanh toán để có thể thêm địa chỉ giao hàng");
+        }
+
+
+        transaction.setDiaChiGiaoHang(address);
+        transaction.setTrangThai(TransactionStatus.AWAITING_SHIPMENT);
+        return  transactionMapper.toResponse(transactionRepository.save(transaction));
+    }
+
+    @Transactional
+    public TransactionResponse addShipmentProve(Long transactionId, String maVanDon, UUID userid) {
+        Transaction transaction = transactionRepository.findById(transactionId).orElseThrow(()-> new EntityNotFoundException("Không tìm thấy giao dịch với id " + transactionId));
+
+        if (!userid.equals(transaction.getSeller().getUserid())){
+            throw new ForbiddenException("Bạn không phải người bán đấu giá của sản phẩm này");
+        }
+
+        if(!transaction.getTrangThai().equals(TransactionStatus.AWAITING_SHIPMENT)){
+            throw new IllegalStateException("Giao dịch phải ở trạng thái chờ gửi hàng mới có thể nhập mã vận đơn");
+        }
+
+        transaction.setMaVanDon(maVanDon);
+        transaction.setThoiGianGiaoHang(LocalDateTime.now());
+        transaction.setTrangThai(TransactionStatus.SHIPPED);
+        return transactionMapper.toResponse(transactionRepository.save(transaction));
+    }
+
+    @Transactional
+    public TransactionResponse completeTransaction(Long transactionId, UUID userid) {
+        Transaction transaction = transactionRepository.findById(transactionId).orElseThrow(()-> new EntityNotFoundException("Không tìm thấy giao dịch với id " + transactionId));
+
+        if (!userid.equals(transaction.getBuyer().getUserid())){
+            throw new ForbiddenException("Bạn không phải người thắng đấu giá của sản phẩm này");
+        }
+
+        if(!transaction.getTrangThai().equals(TransactionStatus.SHIPPED)){
+            throw new IllegalStateException("Giao dịch phải chưa ở trạng thái đã gửi hàng");
+        }
+
+        transaction.setTrangThai(TransactionStatus.COMPLETED);
+        transaction.setThoiGianNhanHang(LocalDateTime.now());
+        return transactionMapper.toResponse(transactionRepository.save(transaction));
+    }
+
+    @Transactional
+    public TransactionResponse cancelTransaction(Long transactionId, UUID userid) {
+        Transaction transaction = transactionRepository.findById(transactionId).orElseThrow(()-> new EntityNotFoundException("Không tìm thấy giao dịch với id " + transactionId));
+
+        if (!userid.equals(transaction.getSeller().getUserid())){
+            throw new ForbiddenException("Bạn không phải người bán đấu giá của sản phẩm này");
+        }
+
+        if(!transaction.getTrangThai().equals(TransactionStatus.PENDING_PAYMENT)){
+            throw new IllegalStateException("Không thể hủy giao dịch vì người thắng đấu giá đã thanh toán");
+        }
+
+        transaction.setTrangThai(TransactionStatus.CANCELLED);
+        TransactionResponse response = transactionMapper.toResponse(transactionRepository.save(transaction));
+
+        String nhanXet = "Người thắng không thanh toán";
+        CreateRatingRequest createRatingRequest = CreateRatingRequest.builder()
+                .transactionId(transactionId)
+                .rateeId(transaction.getBuyer().getUserid())
+                .diem(-1)
+                .nhanXet(nhanXet)
+                .build();
+
+        ratingService.createOne(createRatingRequest, userid);
+
+        return response;
     }
 }
