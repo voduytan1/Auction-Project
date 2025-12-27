@@ -24,8 +24,8 @@ public class PaginationRequest {
     @Max(value = 100, message = "Size không được vượt quá 100")
     Integer size;
 
-    @Builder.Default
-    String sortBy = "createdAt";
+
+    String sortBy;
 
     @Pattern(regexp = "^(asc|desc)$", message = "Sort order phải là 'asc' hoặc 'desc'")
     String sortOrder = "desc";

@@ -41,7 +41,7 @@ import java.util.Map;
 public class SecurityConfig {
     private static final Map<String, Map<HttpMethod, String[]>> ROLE_BASED_ENDPOINTS = Map.of(
             "PUBLIC", Map.of(
-                    HttpMethod.GET, new String[]{"/auth/**", "/actuator/**", "/categories","/categories/{id}", "/categories/{id}/products","/products", "/products/{id}", "/bids/history/{productId}/get-top"},
+                    HttpMethod.GET, new String[]{"/auth/**", "/actuator/**", "/categories","/categories/{id}", "/categories/{id}/products","/products", "/products/{id}", "/bids/history/{productId}/get-top", "/questions"},
                     HttpMethod.POST, new String[]{"/auth/login", "/users", "/auth/logout", "/auth/refresh", "/payment/webhook", "/rating"},
                     HttpMethod.PUT, new String[]{}
             ),
@@ -65,7 +65,7 @@ public class SecurityConfig {
             ),
             "AUTHENTICATED",Map.of(
                     HttpMethod.GET, new String[]{"/users/me", "/bids/**", "/bids/history/{productId}", "/transactions/buyer", "/transactions/seller","/transactions/{id}", "/theo-doi"},
-                    HttpMethod.POST, new String[]{"/users/request-seller", "/images/**","/image/**", "/bids/**", "/payment/create-checkout-session", "/transactions/{id}/dia-chi", "/transactions/{id}/hoan-thanh", "/theo-doi"},
+                    HttpMethod.POST, new String[]{"/users/request-seller", "/images/**","/image/**", "/bids/**", "/payment/create-checkout-session", "/transactions/{id}/dia-chi", "/transactions/{id}/hoan-thanh", "/theo-doi", "/questions"},
                     HttpMethod.PUT, new String[]{"/users/{id}"},
                     HttpMethod.DELETE, new String[]{"/theo-doi"}
             )
