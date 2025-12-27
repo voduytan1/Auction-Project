@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAppSelector } from "../../store/hooks";
+import { PageLoader } from "../PageLoader";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -7,8 +8,15 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
-  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, user, isInitializing } = useAppSelector(
+    (state) => state.auth
+  );
   const location = useLocation();
+
+  // Đợi auth restore hoàn tất trước khi check
+  if (isInitializing) {
+    return <PageLoader message="Đang xác thực..." className="min-h-screen" />;
+  }
 
   // Chỉ cần check Redux state isAuthenticated
   // Token nằm trong memory (Redux state), không còn trong localStorage
@@ -16,6 +24,13 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   if (!isAuthenticated) {
     // Lưu location hiện tại để sau khi login redirect lại
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
+  }
+
+  // Nếu yêu cầu role nhưng chưa có user info → Đợi
+  if (requiredRole && !user) {
+    return (
+      <PageLoader message="Đang tải thông tin..." className="min-h-screen" />
+    );
   }
 
   if (requiredRole && user?.vaitro !== requiredRole) {

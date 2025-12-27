@@ -1,4 +1,4 @@
-  import { lazy } from "react";
+import { lazy } from "react";
 import { createBrowserRouter, Navigate } from "react-router";
 
 // Layouts - Không lazy load layouts vì cần instant
@@ -307,7 +307,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "sales",
+        path: "my-sales",
         element: (
           <PageWrapper title="Giao dịch bán">
             <MySalesPage />

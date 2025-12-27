@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageLoader } from "@/components/PageLoader";
 import { Badge } from "@/components/ui/badge";
 import { Clock } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -76,9 +77,10 @@ export function RelatedProducts({
           <CardTitle>Sản phẩm cùng chuyên mục: {categoryName}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
-            Đang tải...
-          </div>
+          <PageLoader
+            message="Đang tải sản phẩm liên quan..."
+            className="py-8"
+          />
         </CardContent>
       </Card>
     );

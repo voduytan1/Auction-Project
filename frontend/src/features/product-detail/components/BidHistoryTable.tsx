@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageLoader } from "@/components/PageLoader";
 import { Button } from "@/components/ui/button";
 import { History, Lock, ChevronLeft, ChevronRight } from "lucide-react";
 import type { BidHistory } from "../types";
@@ -188,7 +189,7 @@ export function BidHistoryTable({
       </CardHeader>
       <CardContent>
         {loading ? (
-          <div className="py-8 text-center text-slate-500">Đang tải...</div>
+          <PageLoader message="Đang tải lịch sử đấu giá..." className="py-8" />
         ) : error ? (
           <div className="py-8 text-center text-red-500">{error}</div>
         ) : (

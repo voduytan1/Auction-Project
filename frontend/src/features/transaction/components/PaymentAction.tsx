@@ -25,9 +25,10 @@ export function PaymentAction({ onPaymentComplete }: PaymentActionProps) {
       toast.loading("Đang tạo phiên thanh toán...");
 
       // Gọi API tạo Stripe Checkout Session
-      const { url } = await paymentAPI.createStripeCheckoutSession(
+      const response = await paymentAPI.createStripeCheckoutSession(
         Number(orderId)
       );
+      const url = response.data?.url;
 
       toast.dismiss();
       toast.success("Chuyển hướng đến trang thanh toán...");

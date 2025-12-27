@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface UseFetchOptions<T> {
   onSuccess?: (data: T) => void;
@@ -35,8 +35,10 @@ export function useFetch<T>(
       setLoading(true);
       setError(null);
       const result = await fetchFunction();
-      setData(result);
-      onSuccess?.(result);
+      // Unwrap AxiosResponse if needed
+      const unwrappedData = (result as any)?.data || result;
+      setData(unwrappedData);
+      onSuccess?.(unwrappedData);
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
       setError(error);
@@ -47,9 +49,10 @@ export function useFetch<T>(
   };
 
   // Auto-fetch on mount
-  useState(() => {
+  useEffect(() => {
     fetchData();
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return { data, loading, error, refetch: fetchData };
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { useAppDispatch } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setCredentials } from "@/store/slices/authSlice";
 import { profileAPI } from "@/services/profile.api";
 import { ProfileHeader } from "./components/ProfileHeader";
@@ -15,9 +15,11 @@ import type {
   UserRating,
   RatingStats,
 } from "./types";
+import { PageLoader } from "@/components/PageLoader";
 
 export default function ProfilePage() {
   const dispatch = useAppDispatch();
+  const { accessToken } = useAppSelector((state) => state.auth);
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
@@ -111,7 +113,7 @@ export default function ProfilePage() {
   if (!profileData || isLoadingProfile) {
     return (
       <div className="container mx-auto py-8 px-4 max-w-5xl">
-        <div className="text-center">Đang tải...</div>
+        <PageLoader message="Đang tải thông tin..." className="py-32" />
       </div>
     );
   }
@@ -134,7 +136,7 @@ export default function ProfilePage() {
                 ...profileData,
                 anhDaiDien: newAvatar,
               },
-              token: localStorage.getItem("accessToken") || "",
+              accessToken: accessToken || "",
             })
           );
         }}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageLoader } from "@/components/PageLoader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -89,8 +90,8 @@ export function ConfigSettings() {
   if (loading) {
     return (
       <Card>
-        <CardContent className="py-12 text-center text-slate-500">
-          Đang tải cấu hình...
+        <CardContent>
+          <PageLoader message="Đang tải cấu hình..." className="py-12" />
         </CardContent>
       </Card>
     );

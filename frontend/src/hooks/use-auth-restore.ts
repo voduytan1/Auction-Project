@@ -20,9 +20,7 @@ import {
  */
 export function useAuthRestore() {
   const dispatch = useAppDispatch();
-  const { user, accessToken, isInitializing } = useAppSelector(
-    (state) => state.auth
-  );
+  const { user } = useAppSelector((state) => state.auth);
   const hasAttemptedRestore = useRef(false);
 
   useEffect(() => {
@@ -33,25 +31,16 @@ export function useAuthRestore() {
 
     const restoreSession = async () => {
       try {
-        console.log("[Auth Restore] Starting session restore...");
-
         // Bước 1: Thử refresh token từ cookie
-        const refreshResult = await dispatch(refreshAccessToken()).unwrap();
-        console.log("[Auth Restore] Token refreshed successfully");
+        await dispatch(refreshAccessToken()).unwrap();
 
         // Bước 2: Kiểm tra xem đã có user chưa
         if (!user) {
-          console.log(
-            "[Auth Restore] No user in Redux, fetching from /users/me..."
-          );
           await dispatch(getUserMe()).unwrap();
-          console.log("[Auth Restore] User info fetched successfully");
         }
-
-        console.log("[Auth Restore] Session restored successfully");
       } catch (error) {
-        console.log("[Auth Restore] No valid session found:", error);
-        // Không có session hoặc refresh thất bại -> Đơn giản set isInitializing = false
+        console.error("Failed to restore session:", error);
+        // Không có session hoặc refresh thất bại → Set isInitializing = false
         dispatch(setInitializing(false));
       }
     };
