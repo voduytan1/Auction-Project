@@ -80,8 +80,6 @@ function getStatusColor(status: TransactionStatus): string {
       return "bg-green-500";
     case "CANCELLED":
       return "bg-red-500";
-    case "DELIVERED":
-      return "bg-blue-500";
     case "SHIPPED":
       return "bg-indigo-500";
     case "PAYMENT_COMPLETED":
@@ -99,11 +97,9 @@ function getStatusText(status: TransactionStatus): string {
     case "PAYMENT_COMPLETED":
       return "Đã thanh toán";
     case "AWAITING_SHIPMENT":
-      return "Chờ gửi hàng";
+      return "Đang chuẩn bị hàng";
     case "SHIPPED":
-      return "Đã gửi hàng";
-    case "DELIVERED":
-      return "Đã nhận hàng";
+      return "Đang vận chuyển";
     case "COMPLETED":
       return "Hoàn tất";
     case "CANCELLED":

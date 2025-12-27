@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import type { Transaction } from "@/types/transaction";
-import { Package, User, Clock, MapPin } from "lucide-react";
+import { Package, User, MapPin } from "lucide-react";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 
@@ -24,8 +24,8 @@ export function TransactionSummary({
 }: TransactionSummaryProps) {
   const otherParty =
     currentUserRole === "buyer"
-      ? { name: transaction.sellerName, label: "Người bán" }
-      : { name: transaction.buyerName, label: "Người mua" };
+      ? { name: transaction.tenNguoiBan, label: "Người bán" }
+      : { name: transaction.tenNguoiMua, label: "Người mua" };
 
   return (
     <Card>
@@ -37,16 +37,13 @@ export function TransactionSummary({
         <div className="flex gap-4">
           <img
             src={transaction.productImage}
-            alt={transaction.productName}
+            alt={transaction.tenSanPham}
             className="h-20 w-20 rounded-lg object-cover"
           />
           <div className="flex-1">
             <h3 className="font-semibold line-clamp-2">
-              {transaction.productName}
+              {transaction.tenSanPham}
             </h3>
-            <p className="text-sm text-gray-600 mt-1">
-              Mã giao dịch: #{transaction.transactionId}
-            </p>
           </div>
         </div>
 
@@ -70,26 +67,17 @@ export function TransactionSummary({
             <span className="font-semibold">{otherParty.name}</span>
           </div>
 
-          {/* Created Date */}
-          <div className="flex items-center gap-2 text-sm">
-            <Clock className="h-4 w-4 text-gray-400" />
-            <span className="text-gray-600">Ngày tạo:</span>
-            <span className="font-medium">
-              {transaction.createdAt
-                ? format(new Date(transaction.createdAt), "dd/MM/yyyy HH:mm", {
-                    locale: vi,
-                  })
-                : "N/A"}
-            </span>
-          </div>
-
           {/* Shipping Address */}
           {transaction.diaChiGiaoHang && (
             <div className="flex items-start gap-2 text-sm">
               <MapPin className="h-4 w-4 text-gray-400 mt-0.5" />
               <div className="flex-1">
-                <span className="text-gray-600">Địa chỉ giao hàng:</span>
-                <p className="font-medium mt-1">{transaction.diaChiGiaoHang}</p>
+                <span className="text-gray-600">
+                  Địa chỉ giao hàng:{" "}
+                  <p className="font-medium mt-1">
+                    {transaction.diaChiGiaoHang}
+                  </p>
+                </span>
               </div>
             </div>
           )}
@@ -106,31 +94,51 @@ export function TransactionSummary({
           )}
         </div>
 
-        {/* Payment Info */}
-        {transaction.thoiGianThanhToan && (
+        {/* Timeline Info */}
+        {(transaction.thoiGianThanhToan ||
+          transaction.thoiGianGiaoHang ||
+          transaction.thoiGianNhanHang) && (
           <>
             <Separator />
             <div className="space-y-2">
-              <p className="text-sm font-semibold">Thông tin thanh toán</p>
-              <div className="text-sm space-y-1">
-                {transaction.paymentMethod && (
+              <p className="text-sm font-semibold">Lịch sử giao dịch</p>
+              <div className="text-sm space-y-2">
+                {transaction.thoiGianThanhToan && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Phương thức:</span>
+                    <span className="text-gray-600">Thanh toán:</span>
                     <span className="font-medium">
-                      {transaction.paymentMethod}
+                      {format(
+                        new Date(transaction.thoiGianThanhToan),
+                        "dd/MM/yyyy HH:mm",
+                        { locale: vi }
+                      )}
                     </span>
                   </div>
                 )}
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Thời gian:</span>
-                  <span className="font-medium">
-                    {format(
-                      new Date(transaction.thoiGianThanhToan),
-                      "dd/MM/yyyy HH:mm",
-                      { locale: vi }
-                    )}
-                  </span>
-                </div>
+                {transaction.thoiGianGiaoHang && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Gửi hàng:</span>
+                    <span className="font-medium">
+                      {format(
+                        new Date(transaction.thoiGianGiaoHang),
+                        "dd/MM/yyyy HH:mm",
+                        { locale: vi }
+                      )}
+                    </span>
+                  </div>
+                )}
+                {transaction.thoiGianNhanHang && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Nhận hàng:</span>
+                    <span className="font-medium">
+                      {format(
+                        new Date(transaction.thoiGianNhanHang),
+                        "dd/MM/yyyy HH:mm",
+                        { locale: vi }
+                      )}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </>

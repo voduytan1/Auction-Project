@@ -43,6 +43,7 @@ import {
   selectIsCacheValid,
 } from "@/store/slices/categorySlice";
 import { cn } from "@/lib/utils";
+import { NotificationBell } from "@/components/NotificationBell";
 
 // Helper function to select icon based on category slug
 const getCategoryIcon = (slug: string) => {
@@ -293,7 +294,8 @@ export default function Header() {
           </form>
 
           {/* User Menu */}
-          <div className="flex gap-2 shrink-0 ml-2">
+          <div className="flex items-center gap-2 shrink-0 ml-2">
+            {isAuthenticated && user && <NotificationBell />}
             {isAuthenticated && user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

@@ -46,15 +46,8 @@ export const paymentAPI = {
    * 1. Create payment request with provider (MoMo/ZaloPay/VNPay/etc)
    * 2. Return payment URL for redirection
    */
-  createPayment: async (
-    data: CreatePaymentRequest
-  ): Promise<CreatePaymentResponse> => {
-    const response = await api.post<CreatePaymentResponse>(
-      "/api/payment/create",
-      data
-    );
-    return response.data;
-  },
+  createPayment: (data: CreatePaymentRequest) =>
+    api.post<CreatePaymentResponse>("/api/payment/create", data),
 
   /**
    * Verify payment status after callback from provider
@@ -63,63 +56,37 @@ export const paymentAPI = {
    * 2. Update transaction status
    * 3. Return updated transaction
    */
-  verifyPayment: async (
-    params: PaymentCallbackParams
-  ): Promise<VerifyPaymentResponse> => {
-    const response = await api.post<VerifyPaymentResponse>(
-      "/api/payment/verify",
-      params
-    );
-    return response.data;
-  },
+  verifyPayment: (params: PaymentCallbackParams) =>
+    api.post<VerifyPaymentResponse>("/api/payment/verify", params),
 
   /**
    * Get payment status for a transaction
    */
-  getPaymentStatus: async (
-    transactionId: number
-  ): Promise<{
-    status: string;
-    transaction: Transaction;
-  }> => {
-    const response = await api.get<{
+  getPaymentStatus: (transactionId: number) =>
+    api.get<{
       status: string;
       transaction: Transaction;
-    }>(`/api/payment/status/${transactionId}`);
-    return response.data;
-  },
+    }>(`/api/payment/status/${transactionId}`),
 
   /**
    * Create Stripe Payment Intent
    * Specific for Stripe payment method
    */
-  createStripePaymentIntent: async (data: {
+  createStripePaymentIntent: (data: {
     transactionId: number;
     amount: number;
-  }): Promise<StripePaymentIntentResponse> => {
-    const response = await api.post<StripePaymentIntentResponse>(
+  }) =>
+    api.post<StripePaymentIntentResponse>(
       "/api/payment/stripe/create-intent",
       data
-    );
-    return response.data;
-  },
+    ),
 
   /**
    * Create Stripe Checkout Session
-   * Táº¡o phiÃªn thanh toÃ¡n Stripe Checkout (theo backend hiá»‡n táº¡i)
+   * Tạo phiên thanh toán Stripe Checkout (theo backend hiện tại)
    */
-  createStripeCheckoutSession: async (
-    transactionId: number
-  ): Promise<{ url: string }> => {
-    const response = await api.post<{ url: string }>(
-      "/payment/create-checkout-session",
+  createStripeCheckoutSession: (transactionId: number) =>
+    api.post<{ url: string }>("/payment/create-checkout-session", {
       transactionId,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    return response.data;
-  },
+    }),
 };

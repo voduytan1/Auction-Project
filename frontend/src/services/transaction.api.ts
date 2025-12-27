@@ -1,6 +1,6 @@
 ﻿import api from "./api";
 import type { Transaction } from "@/types/transaction";
-import type { ApiResponse, PaginatedResponse } from "@/types/types";
+import type { ApiResponse } from "@/types/types";
 
 export interface TransactionQueryParams {
   page?: number;
@@ -10,42 +10,52 @@ export interface TransactionQueryParams {
 
 /**
  * Transaction API Service
- * Quáº£n lÃ½ giao dá»‹ch mua/bÃ¡n
+ * Quản lý giao dịch mua/bán
  */
 export const transactionAPI = {
   /**
-   * Láº¥y danh sÃ¡ch giao dá»‹ch MUA cá»§a user hiá»‡n táº¡i
+   * Lấy danh sách giao dịch MUA của user hiện tại
    */
-  getBuyerTransactions: async (
-    params?: TransactionQueryParams
-  ): Promise<PaginatedResponse<Transaction>> => {
-    const response = await api.get<PaginatedResponse<Transaction>>(
-      "/transactions/buyer",
-      { params }
-    );
-    return response.data;
-  },
+  getBuyerTransactions: (params?: TransactionQueryParams) =>
+    api.get<ApiResponse<Transaction[]>>("/transactions/buyer", { params }),
 
   /**
-   * Láº¥y danh sÃ¡ch giao dá»‹ch BÃN cá»§a user hiá»‡n táº¡i
+   * Lấy danh sách giao dịch BÁN của user hiện tại
    */
-  getSellerTransactions: async (
-    params?: TransactionQueryParams
-  ): Promise<PaginatedResponse<Transaction>> => {
-    const response = await api.get<PaginatedResponse<Transaction>>(
-      "/transactions/seller",
-      { params }
-    );
-    return response.data;
-  },
+  getSellerTransactions: (params?: TransactionQueryParams) =>
+    api.get<ApiResponse<Transaction[]>>("/transactions/seller", { params }),
 
   /**
-   * Láº¥y chi tiáº¿t 1 giao dá»‹ch
+   * Lấy chi tiết 1 giao dịch
    */
-  getTransactionById: async (id: number): Promise<Transaction> => {
-    const response = await api.get<ApiResponse<Transaction>>(
-      `/transactions/${id}`
-    );
-    return response.data.data!;
-  },
+  getTransactionById: (id: number) =>
+    api.get<Transaction>(`/transactions/${id}`),
+
+  /**
+   * Thêm địa chỉ giao hàng (Buyer only)
+   * Chuyển trạng thái từ PAYMENT_COMPLETED → AWAITING_SHIPMENT
+   */
+  addAddress: (id: number, diaChiGiaoHang: string) =>
+    api.post<Transaction>(`/transactions/${id}/dia-chi`, { diaChiGiaoHang }),
+
+  /**
+   * Thêm mã vận đơn (Seller only)
+   * Chuyển trạng thái từ AWAITING_SHIPMENT → SHIPPED
+   */
+  addShipmentProve: (id: number, maVanDon: string) =>
+    api.post<Transaction>(`/transactions/${id}/ma-van-don`, { maVanDon }),
+
+  /**
+   * Xác nhận hoàn thành giao dịch (Buyer only)
+   * Chuyển trạng thái từ SHIPPED → COMPLETED
+   */
+  completeTransaction: (id: number) =>
+    api.post<Transaction>(`/transactions/${id}/hoan-thanh`),
+
+  /**
+   * Hủy giao dịch (Seller only, chỉ khi PENDING_PAYMENT)
+   * Chuyển trạng thái → CANCELLED + tự động -1 điểm cho buyer
+   */
+  cancelTransaction: (id: number) =>
+    api.post<Transaction>(`/transactions/${id}/huy`),
 };

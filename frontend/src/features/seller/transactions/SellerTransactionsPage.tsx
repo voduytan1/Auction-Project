@@ -1,13 +1,16 @@
-﻿import { useState } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { PageWrapper } from "@/components/PageWrapper";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useFetch } from "@/hooks/use-fetch";
+import {
+  TooltipProvider,
+} from "@/components/ui/tooltip";
+import { PageLoader } from "@/components/PageLoader";
 import { transactionAPI } from "@/services/transaction.api";
 import type { Transaction, TransactionStatus } from "@/types/transaction";
+import type { ApiResponse } from "@/types/types";
 import { formatCurrency } from "@/lib/format";
 import {
   Store,
@@ -16,51 +19,93 @@ import {
   CheckCircle,
   XCircle,
   Clock,
+  Eye,
 } from "lucide-react";
-import { format } from "date-fns";
-import { vi } from "date-fns/locale";
 
-// Map trạng thái sang màu sắc
+// Cập nhật lại màu sắc theo style SOLID (Nền đặc - Chữ trắng) như hình mẫu
 const getStatusConfig = (status: TransactionStatus) => {
   switch (status) {
     case "PENDING_PAYMENT":
-      return { label: "Chờ thanh toán", color: "bg-yellow-500", icon: Clock };
+      return {
+        label: "Chờ thanh toán",
+        className:
+          "bg-yellow-500 hover:bg-yellow-600 text-white border-transparent",
+        icon: Clock,
+      };
     case "PAYMENT_COMPLETED":
       return {
         label: "Đã thanh toán",
-        color: "bg-green-500",
+        className:
+          "bg-green-500 hover:bg-green-600 text-white border-transparent",
         icon: CheckCircle,
       };
     case "AWAITING_SHIPMENT":
-      return { label: "Chờ gửi hàng", color: "bg-blue-500", icon: Package };
-    case "SHIPPED":
-      return { label: "Đã gửi hàng", color: "bg-indigo-500", icon: Truck };
-    case "DELIVERED":
       return {
-        label: "Đã nhận hàng",
-        color: "bg-purple-500",
-        icon: CheckCircle,
+        label: "Chờ gửi hàng",
+        className:
+          "bg-blue-500 hover:bg-blue-600 text-white border-transparent",
+        icon: Package,
+      };
+    case "SHIPPED":
+      return {
+        label: "Đã gửi hàng",
+        className:
+          "bg-indigo-500 hover:bg-indigo-600 text-white border-transparent",
+        icon: Truck,
       };
     case "COMPLETED":
-      return { label: "Hoàn tất", color: "bg-emerald-500", icon: CheckCircle };
+      return {
+        label: "Hoàn tất",
+        className:
+          "bg-emerald-500 hover:bg-emerald-600 text-white border-transparent",
+        icon: CheckCircle,
+      };
     case "CANCELLED":
-      return { label: "Đã hủy", color: "bg-red-500", icon: XCircle };
+      return {
+        label: "Đã hủy",
+        className: "bg-red-500 hover:bg-red-600 text-white border-transparent",
+        icon: XCircle,
+      };
     default:
-      return { label: status, color: "bg-gray-500", icon: Package };
+      return {
+        label: status,
+        className:
+          "bg-gray-500 hover:bg-gray-600 text-white border-transparent",
+        icon: Package,
+      };
   }
 };
 
 export default function SellerTransactionsPage() {
   const navigate = useNavigate();
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [response, setResponse] = useState<ApiResponse<Transaction[]> | null>(
+    null
+  );
   const size = 10;
 
-  const { data, loading, error } = useFetch(() =>
-    transactionAPI.getSellerTransactions({ page, size })
-  );
+  // Fetch transactions with useCallback to avoid infinite loop
+  const fetchTransactions = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await transactionAPI.getSellerTransactions({ page, size });
+      setResponse(result as any);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+    } finally {
+      setLoading(false);
+    }
+  }, [page, size]);
 
-  const transactions = data?.data || [];
-  const totalPages = data ? Math.ceil(data.total / size) : 0;
+  useEffect(() => {
+    fetchTransactions();
+  }, [fetchTransactions]);
+
+  const transactions = response?.data || [];
+  const totalPages = response?.metadata ? response.metadata.totalPages : 0;
 
   if (error) {
     return (
@@ -85,160 +130,132 @@ export default function SellerTransactionsPage() {
         </div>
 
         {loading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <Card key={i}>
-                <CardContent className="p-6">
-                  <Skeleton className="h-24 w-full" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <PageLoader message="Đang tải giao dịch..." />
         ) : transactions.length === 0 ? (
           <Card>
-            <CardContent className="pt-6 text-center text-muted-foreground">
-              <Store className="h-16 w-16 mx-auto mb-4 opacity-50" />
-              <p className="text-lg">Bạn chưa có giao dịch bán nào</p>
+            <CardContent className="p-8 text-center">
+              Chưa có giao dịch
             </CardContent>
           </Card>
         ) : (
           <>
-            <div className="space-y-4">
-              {transactions.map((transaction: Transaction) => {
-                const statusConfig = getStatusConfig(transaction.trangThai);
-                const StatusIcon = statusConfig.icon;
+            <TooltipProvider>
+              <div className="space-y-3">
+                {transactions.map((transaction: Transaction) => {
+                  const statusConfig = getStatusConfig(transaction.trangThai);
 
-                return (
-                  <Card
-                    key={transaction.transactionId}
-                    className="hover:shadow-lg transition-shadow cursor-pointer"
-                    onClick={() =>
-                      navigate(
-                        `/transactions/${transaction.transactionId}/detail`
-                      )
-                    }
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="text-lg">
-                            {transaction.tenSanPham ||
-                              `Sản phẩm #${transaction.productId}`}
-                          </CardTitle>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Người mua:{" "}
-                            {transaction.tenNguoiMua || transaction.buyerId}
-                          </p>
-                        </div>
-                        <Badge
-                          className={`${statusConfig.color} text-white flex items-center gap-1`}
-                        >
-                          <StatusIcon className="h-3 w-3" />
-                          {statusConfig.label}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div>
-                          <p className="text-sm text-muted-foreground">
-                            Giá bán
-                          </p>
-                          <p className="font-semibold text-lg text-green-600">
-                            {formatCurrency(transaction.gia)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">
-                            Ngày tạo
-                          </p>
-                          <p className="font-medium">
-                            {transaction.createdAt &&
-                              format(
-                                new Date(transaction.createdAt),
-                                "dd/MM/yyyy",
-                                {
-                                  locale: vi,
-                                }
-                              )}
-                          </p>
-                        </div>
-                        {transaction.thoiGianThanhToan && (
-                          <div>
-                            <p className="text-sm text-muted-foreground">
-                              Đã thanh toán
-                            </p>
-                            <p className="font-medium">
-                              {format(
-                                new Date(transaction.thoiGianThanhToan),
-                                "dd/MM/yyyy",
-                                { locale: vi }
-                              )}
-                            </p>
-                          </div>
-                        )}
-                        {transaction.maVanDon && (
-                          <div>
-                            <p className="text-sm text-muted-foreground">
-                              Mã vận đơn
-                            </p>
-                            <p className="font-medium font-mono">
-                              {transaction.maVanDon}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-
-                      {transaction.diaChiGiaoHang && (
-                        <div className="mt-3 pt-3 border-t">
-                          <p className="text-sm text-muted-foreground">
-                            Địa chỉ giao hàng
-                          </p>
-                          <p className="font-medium">
-                            {transaction.diaChiGiaoHang}
-                          </p>
-                        </div>
-                      )}
-
-                      {(transaction.trangThai === "PAYMENT_COMPLETED" ||
-                        transaction.trangThai === "AWAITING_SHIPMENT") && (
-                        <div className="mt-4 pt-4 border-t">
-                          <Button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(
-                                `/transactions/${transaction.transactionId}/detail`
-                              );
-                            }}
-                            className="w-full sm:w-auto"
+                  return (
+                    <Card
+                      key={transaction.transactionId}
+                      className="group hover:shadow-md transition-all"
+                    >
+                      <CardContent className="space-y-3">
+                        {/* Hàng 1: Badge */}
+                        <div className="flex items-center">
+                          <Badge
+                            className={`px-2.5 py-0.5 text-xs font-semibold rounded-md shadow-sm ${statusConfig.className}`}
                           >
-                            Cập nhật vận chuyển
-                          </Button>
+                            {statusConfig.label}
+                          </Badge>
                         </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
 
+                        {/* Hàng 2: Layout ngang */}
+                        <div className="flex items-center gap-4">
+                          {/* Icon */}
+                          <div className="h-12 w-12 rounded-md bg-gray-100 flex items-center justify-center shrink-0">
+                            <Store className="h-6 w-6 text-gray-500" />
+                          </div>
+
+                          {/* Thông tin chính */}
+                          <div className="flex-1 min-w-0 grid gap-1">
+                            <h3 className="font-semibold text-base truncate">
+                              {transaction.tenSanPham ||
+                                `Đơn hàng #${transaction.productId}`}
+                            </h3>
+
+                            <p className="text-sm text-muted-foreground flex items-center gap-2">
+                              <span>
+                                Người mua:{" "}
+                                {transaction.tenNguoiMua || transaction.buyerId}
+                              </span>
+                              {transaction.maVanDon && (
+                                <>
+                                  <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                                  <span className="font-mono text-xs bg-gray-100 px-1 rounded">
+                                    #{transaction.maVanDon}
+                                  </span>
+                                </>
+                              )}
+                            </p>
+                          </div>
+
+                          {/* Giá tiền & Action */}
+                          <div className="flex items-center gap-3 shrink-0">
+                            <div className="text-right">
+                              <p className="font-bold text-lg text-primary">
+                                {formatCurrency(transaction.gia)}
+                              </p>
+                            </div>
+
+                            {/* Action buttons based on status */}
+                            <div className="flex items-center gap-2">
+                              {/* Nút cập nhật vận chuyển */}
+                              {(transaction.trangThai === "PAYMENT_COMPLETED" ||
+                                transaction.trangThai ===
+                                  "AWAITING_SHIPMENT") && (
+                                <Button
+                                  onClick={() =>
+                                    navigate(
+                                      `/transactions/${transaction.transactionId}/detail`
+                                    )
+                                  }
+                                  size="sm"
+                                  className="h-9 px-4 shadow-sm"
+                                >
+                                  <Truck className="h-4 w-4 mr-1.5" />
+                                  Cập nhật
+                                </Button>
+                              )}
+
+                              {/* Nút xem chi tiết - luôn hiển thị */}
+                              <Button
+                                onClick={() =>
+                                  navigate(
+                                    `/transactions/${transaction.transactionId}/detail`
+                                  )
+                                }
+                                size="sm"
+                                variant="outline"
+                                className="h-9 px-3 shadow-sm"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>{" "}
+            </TooltipProvider>
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex justify-center gap-2 mt-6">
                 <Button
                   variant="outline"
                   onClick={() => setPage(page - 1)}
-                  disabled={page === 0}
+                  disabled={page <= 1}
                 >
                   Trang trước
                 </Button>
                 <div className="flex items-center px-4">
-                  Trang {page + 1} / {totalPages}
+                  Trang {page} / {totalPages}
                 </div>
                 <Button
                   variant="outline"
                   onClick={() => setPage(page + 1)}
-                  disabled={page + 1 >= totalPages}
+                  disabled={page >= totalPages}
                 >
                   Trang sau
                 </Button>
