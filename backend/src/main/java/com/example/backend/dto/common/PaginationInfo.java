@@ -18,5 +18,4 @@ public class PaginationInfo {
     String sortBy;
     String sortOrder;
     String search;
-
 }
