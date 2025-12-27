@@ -40,5 +40,7 @@ public class ProductResponse {
     private String tenBidder;
     private Double diemDanhGiaBidder;
 
+    private Long transactionId;
+
     private List<String> images;
 }

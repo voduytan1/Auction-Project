@@ -29,13 +29,16 @@ public class ProductService {
     private final ProductImageRepository  productImageRepository;
     private final BidHistoryRepository bidHistoryRepository;
     private final ProductMapper productMapper;
-    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, UserRepository userRepository, ProductImageRepository productImageRepository, UpgradeRequestRepository upgradeRequestRepository, BidHistoryRepository bidHistoryRepository, ProductMapper productMapper) {
+    private final TransactionRepository transactionRepository;
+
+    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, UserRepository userRepository, ProductImageRepository productImageRepository, UpgradeRequestRepository upgradeRequestRepository, BidHistoryRepository bidHistoryRepository, ProductMapper productMapper, TransactionRepository transactionRepository, TransactionRepository transactionRepository1) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
         this.productImageRepository = productImageRepository;
         this.bidHistoryRepository = bidHistoryRepository;
         this.productMapper = productMapper;
+        this.transactionRepository = transactionRepository1;
     }
 
     @Transactional
@@ -96,6 +99,10 @@ public class ProductService {
     @Transactional
     public ProductResponse getProductById(Long id) {
          Product product = productRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("Không tìm thấy product với id "+ id));
-         return productMapper.toResponse(product);
+         Transaction transaction = transactionRepository.findByProduct_Productid(id).orElse(null);
+
+        ProductResponse response = productMapper.toResponse(product);
+        response.setTransactionId(transaction ==  null ? null : transaction.getTransactionid());
+        return response;
     }
 }
