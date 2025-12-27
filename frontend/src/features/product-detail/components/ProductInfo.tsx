@@ -121,7 +121,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
   const [autoDialogOpen, setAutoDialogOpen] = useState(false);
   const [autoLoading, setAutoLoading] = useState(false);
   const [autoValue, setAutoValue] = useState<string>("");
-  const [autoBidResponse, setAutoBidResponse] = useState<unknown>(null);
+  const [_autoBidResponse, setAutoBidResponse] = useState<unknown>(null);
 
   const getTimeRemaining = () => {
     const endDate = new Date(product.thoiGianKetThuc);
@@ -621,10 +621,11 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
                   try {
                     toast.loading("Đang tạo phiên thanh toán...");
-                    const { url } =
+                    const response =
                       await paymentAPI.createStripeCheckoutSession(
                         transactionId
                       );
+                    const url = response.data?.url;
                     toast.dismiss();
                     toast.success("Chuyển hướng đến trang thanh toán...");
                     window.location.href = url;

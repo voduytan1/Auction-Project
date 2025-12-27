@@ -7,7 +7,6 @@ export type TransactionStatus =
   | "PAYMENT_COMPLETED"
   | "AWAITING_SHIPMENT"
   | "SHIPPED"
-  | "DELIVERED"
   | "COMPLETED"
   | "CANCELLED";
 
@@ -80,16 +79,15 @@ export interface Rating {
 export function getStepFromStatus(status: TransactionStatus): number {
   switch (status) {
     case "PENDING_PAYMENT":
-      return 0;
+      return 0; // Thanh toán
     case "PAYMENT_COMPLETED":
+      return 1; // Nhập địa chỉ giao hàng
     case "AWAITING_SHIPMENT":
-      return 1;
+      return 2; // Đã nhập địa chỉ, chờ seller gửi hàng
     case "SHIPPED":
-      return 2;
-    case "DELIVERED":
-      return 3;
+      return 3; // Đã gửi hàng, chờ buyer xác nhận nhận hàng
     case "COMPLETED":
-      return 4;
+      return 4; // Hoàn tất, có thể đánh giá
     case "CANCELLED":
       return -1;
     default:

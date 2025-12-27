@@ -32,7 +32,7 @@ const ProductDetail = () => {
   const [error, setError] = useState<string | null>(null);
   const [showWinnerDialog, setShowWinnerDialog] = useState(false);
   const [showSellerDialog, setShowSellerDialog] = useState(false);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [isProcessingPayment, _setIsProcessingPayment] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
