@@ -10,11 +10,11 @@ export function DeliveryAction({ onConfirmDelivery }: DeliveryActionProps) {
     <div className="space-y-3">
       <Alert>
         <AlertDescription>
-          Chá»‰ xÃ¡c nháº­n khi Ä‘Ã£ nháº­n hÃ ng vÃ  kiá»ƒm tra ká»¹ sáº£n pháº©m
+          Chỉ xác nhận khi đã nhận hàng và kiểm tra kỹ sản phẩm
         </AlertDescription>
       </Alert>
       <Button onClick={onConfirmDelivery} className="w-full">
-        XÃ¡c nháº­n Ä‘Ã£ nháº­n hÃ ng
+        Xác nhận đã nhận hàng
       </Button>
     </div>
   );

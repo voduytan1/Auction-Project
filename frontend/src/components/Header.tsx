@@ -19,6 +19,7 @@ import {
   Laptop,
   Headphones,
   Menu,
+  Store,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -222,7 +223,7 @@ export default function Header() {
                           {activeCategory.name}
                         </h3>
                         <Link
-                          to={`/category/${activeCategory.slug}`}
+                          to={`/category/${activeCategory.id}`}
                           onClick={() => setShowMegaMenu(false)}
                           className="text-sm font-medium text-primary hover:underline flex items-center group"
                         >
@@ -374,6 +375,12 @@ export default function Header() {
                         <TrendingUp className="mr-2 h-4 w-4" />
                         Đăng sản phẩm
                       </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => navigate("/seller/my-sales")}
+                      >
+                        <Store className="mr-2 h-4 w-4" />
+                        Giao dịch của tôi
+                      </DropdownMenuItem>
                     </>
                   )}
 
@@ -396,10 +403,10 @@ export default function Header() {
                         Danh sách yêu thích
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => navigate("/bidder/purchas")}
+                        onClick={() => navigate("/bidder/purchases")}
                       >
                         <Package className="mr-2 h-4 w-4" />
-                        Đơn hàng của tôi
+                        Giao dịch của tôi
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => navigate("/bidder/upgrade-request")}

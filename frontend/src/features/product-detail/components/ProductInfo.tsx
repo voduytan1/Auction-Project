@@ -22,11 +22,13 @@ import {
 
 import type { ProductResponse } from "@/services/product.api";
 import { auctionAPI } from "@/services/auction.api";
+import { paymentAPI } from "@/services/payment.api";
 import type { ApiErrorResponse } from "@/types/types";
 import type { AxiosError } from "axios";
 import { useNavigate } from "react-router";
 import { useState } from "react";
 import { useAppSelector } from "@/hooks/use-redux";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -58,29 +60,24 @@ const formatCurrency = (amount: number) => {
   }).format(amount);
 };
 
-// Utility: Extract order ID from buy now response
-const extractOrderId = (data: unknown): string | number | null => {
+// Utility: Extract transactionId from buy now response
+const extractTransactionId = (data: unknown): number | null => {
   if (!data || typeof data !== "object") return null;
 
   const response = data as Record<string, unknown>;
 
-  // Try bidHistory.bidHistoryid first (actual backend response)
+  // Try transactionId first (new backend response)
+  if (response.transactionId) {
+    return response.transactionId as number;
+  }
+
+  // Try bidHistory.bidHistoryid (legacy)
   if (response.bidHistory && typeof response.bidHistory === "object") {
     const bidHistory = response.bidHistory as Record<string, unknown>;
-    if (bidHistory.bidHistoryid)
-      return bidHistory.bidHistoryid as string | number;
+    if (bidHistory.bidHistoryid) return bidHistory.bidHistoryid as number;
   }
 
-  // Fallback to other possible fields
-  const order = response.order as Record<string, unknown> | undefined;
-  let orderId = response.orderId ?? response.id ?? order?.id ?? null;
-
-  if (orderId && typeof orderId === "object") {
-    const orderObj = orderId as Record<string, unknown>;
-    orderId = orderObj.id ?? orderObj.orderId ?? null;
-  }
-
-  return orderId as string | number | null;
+  return null;
 };
 
 // Utility: Extract message from response
@@ -119,13 +116,12 @@ export function ProductInfo({ product }: ProductInfoProps) {
   const [buyDialogOpen, setBuyDialogOpen] = useState(false);
   const [buyLoading, setBuyLoading] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
-  const [createdOrderId, setCreatedOrderId] = useState<string | number | null>(
-    null
-  );
+  const [transactionId, setTransactionId] = useState<number | null>(null);
   const [buyNowResponse, setBuyNowResponse] = useState<unknown>(null);
   const [autoDialogOpen, setAutoDialogOpen] = useState(false);
   const [autoLoading, setAutoLoading] = useState(false);
   const [autoValue, setAutoValue] = useState<string>("");
+  const [autoBidResponse, setAutoBidResponse] = useState<unknown>(null);
 
   const getTimeRemaining = () => {
     const endDate = new Date(product.thoiGianKetThuc);
@@ -267,8 +263,24 @@ export function ProductInfo({ product }: ProductInfoProps) {
                     type="number"
                     value={autoValue}
                     onChange={(e) => setAutoValue(e.target.value)}
-                    placeholder={String(product.giaHienTai)}
+                    placeholder={String(product.giaHienTai + product.buocGia)}
                   />
+                  <div className="mt-2 text-xs text-slate-500">
+                    <div>
+                      Giá hiện tại: {formatCurrency(product.giaHienTai)}
+                    </div>
+                    <div>Bước giá: {formatCurrency(product.buocGia)}</div>
+                    <div className="text-primary font-medium">
+                      Giá tối thiểu:{" "}
+                      {formatCurrency(product.giaHienTai + product.buocGia)}
+                    </div>
+                    {product.giaMuaNgay && (
+                      <div className="text-orange-600 font-medium">
+                        ⚠️ Nếu giá ≥ {formatCurrency(product.giaMuaNgay)} → Mua
+                        ngay tự động
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <DialogFooter>
@@ -282,20 +294,74 @@ export function ProductInfo({ product }: ProductInfoProps) {
                         alert("Vui lòng nhập mức giá hợp lệ");
                         return;
                       }
-                      if (parsed < product.giaHienTai) {
-                        if (
-                          !confirm("Mức tối đa nhỏ hơn giá hiện tại. Tiếp tục?")
-                        )
-                          return;
+
+                      // Validate giá tối thiểu
+                      const minRequired = product.giaHienTai + product.buocGia;
+                      if (parsed < minRequired) {
+                        alert(
+                          `Giá tối đa phải ≥ ${formatCurrency(
+                            minRequired
+                          )} (giá hiện tại + bước giá)`
+                        );
+                        return;
                       }
+
+                      // Validate giá phải là bội số của bước giá
+                      const difference = parsed - product.giaHienTai;
+                      if (difference % product.buocGia !== 0) {
+                        const suggested =
+                          product.giaHienTai +
+                          Math.ceil(difference / product.buocGia) *
+                            product.buocGia;
+                        alert(
+                          `Giá phải có dạng: giá hiện tại + n × bước giá.\nGợi ý: ${formatCurrency(
+                            suggested
+                          )}`
+                        );
+                        return;
+                      }
+
+                      // Cảnh báo nếu >= giá mua ngay
+                      if (product.giaMuaNgay && parsed >= product.giaMuaNgay) {
+                        if (
+                          !confirm(
+                            `Giá tối đa của bạn (${formatCurrency(
+                              parsed
+                            )}) ≥ giá mua ngay (${formatCurrency(
+                              product.giaMuaNgay
+                            )}).\n\nSản phẩm sẽ được MUA NGAY TỰ ĐỘNG!\n\nBạn có chắc chắn muốn tiếp tục?`
+                          )
+                        ) {
+                          return;
+                        }
+                      }
+
                       try {
                         setAutoLoading(true);
-                        await auctionAPI.createAutoBid({
+                        const resp = await auctionAPI.createAutoBid({
                           productid: product.productid,
                           giaToiDa: parsed,
                         });
+
+                        setAutoBidResponse(resp.data);
                         setAutoDialogOpen(false);
-                        alert("Đặt giá tự động thành công");
+
+                        // Kiểm tra có transactionId không (mua ngay)
+                        const responseData = resp.data as {
+                          data?: { transactionId?: number | null };
+                        };
+                        const txId = responseData?.data?.transactionId;
+
+                        if (txId) {
+                          // Trường hợp mua ngay
+                          setTransactionId(txId);
+                          setPaymentModalOpen(true);
+                        } else {
+                          // Trường hợp đặt giá tự động bình thường
+                          toast.success("Đặt giá tự động thành công!");
+                          // Reload lại product để cập nhật giá hiện tại
+                          window.location.reload();
+                        }
                       } catch (error) {
                         console.error("Auto bid error", error);
                         const axiosError =
@@ -367,10 +433,10 @@ export function ProductInfo({ product }: ProductInfoProps) {
                           const resp = await auctionAPI.buyNow(
                             product.productid
                           );
-                          const orderId = extractOrderId(resp.data);
+                          const txId = extractTransactionId(resp.data);
 
                           setBuyNowResponse(resp.data);
-                          setCreatedOrderId(orderId);
+                          setTransactionId(txId);
                           setBuyDialogOpen(false);
                           setPaymentModalOpen(true);
                         } catch (error) {
@@ -523,10 +589,10 @@ export function ProductInfo({ product }: ProductInfoProps) {
       <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Thanh toán đơn hàng</DialogTitle>
+            <DialogTitle>🎉 Mua thành công!</DialogTitle>
             <DialogDescription>
-              Đơn hàng đã được tạo thành công. Bạn có muốn thanh toán ngay bây
-              giờ không?
+              Chúc mừng! Bạn đã mua sản phẩm thành công. Bạn có muốn thanh toán
+              ngay bây giờ không?
             </DialogDescription>
           </DialogHeader>
 
@@ -534,26 +600,43 @@ export function ProductInfo({ product }: ProductInfoProps) {
             <div className="mb-4">
               <div className="text-sm text-slate-600">Sản phẩm</div>
               <div className="font-semibold">{product.tenSanPham}</div>
-              <div className="text-sm text-slate-600 mt-2">Giá</div>
-              <div className="font-semibold">
+              <div className="text-sm text-slate-600 mt-2">Giá mua</div>
+              <div className="font-semibold text-accent">
                 {formatCurrency(product.giaMuaNgay as number)}
               </div>
               {buyNowResponse ? (
-                <div className="mt-2 text-sm text-slate-600">
-                  Server: {extractResponseMessage(buyNowResponse)}
+                <div className="mt-2 text-sm text-green-600">
+                  ✓ {extractResponseMessage(buyNowResponse)}
                 </div>
               ) : null}
             </div>
 
             <div className="flex gap-2">
               <Button
-                onClick={() => {
-                  if (createdOrderId) {
-                    navigate(`/orders/${createdOrderId}/complete`);
-                  } else {
-                    navigate(`/profile`);
+                onClick={async () => {
+                  if (!transactionId) {
+                    alert("Không tìm thấy thông tin giao dịch");
+                    return;
+                  }
+
+                  try {
+                    toast.loading("Đang tạo phiên thanh toán...");
+                    const { url } =
+                      await paymentAPI.createStripeCheckoutSession(
+                        transactionId
+                      );
+                    toast.dismiss();
+                    toast.success("Chuyển hướng đến trang thanh toán...");
+                    window.location.href = url;
+                  } catch (error) {
+                    toast.dismiss();
+                    toast.error(
+                      "Lỗi khi tạo phiên thanh toán: " +
+                        (error as Error).message
+                    );
                   }
                 }}
+                disabled={!transactionId}
               >
                 Thanh toán ngay
               </Button>
@@ -562,7 +645,10 @@ export function ProductInfo({ product }: ProductInfoProps) {
                 variant="outline"
                 onClick={() => {
                   setPaymentModalOpen(false);
-                  navigate(`/profile`);
+                  toast.info(
+                    "Bạn có thể thanh toán sau trong mục Giao dịch mua"
+                  );
+                  navigate(`/bidder/purchases`);
                 }}
               >
                 Thanh toán sau

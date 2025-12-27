@@ -22,21 +22,21 @@ export function PaymentAction({ onPaymentComplete }: PaymentActionProps) {
 
     try {
       setIsProcessing(true);
-      toast.loading("Äang táº¡o phiÃªn thanh toÃ¡n...");
+      toast.loading("Đang tạo phiên thanh toán...");
 
-      // Gá»i API táº¡o Stripe Checkout Session
+      // Gọi API tạo Stripe Checkout Session
       const { url } = await paymentAPI.createStripeCheckoutSession(
         Number(orderId)
       );
 
       toast.dismiss();
-      toast.success("Chuyá»ƒn hÆ°á»›ng Ä‘áº¿n trang thanh toÃ¡n...");
+      toast.success("Chuyển hướng đến trang thanh toán...");
 
-      // Redirect Ä‘áº¿n Stripe Checkout
+      // Redirect đến Stripe Checkout
       window.location.href = url;
     } catch (error) {
       toast.dismiss();
-      toast.error("Lá»—i khi táº¡o phiÃªn thanh toÃ¡n: " + (error as Error).message);
+      toast.error("Lỗi khi tạo phiên thanh toán: " + (error as Error).message);
       setIsProcessing(false);
     }
   };
@@ -45,7 +45,7 @@ export function PaymentAction({ onPaymentComplete }: PaymentActionProps) {
     <div className="space-y-3">
       <Alert>
         <AlertDescription>
-          Vui lÃ²ng thanh toÃ¡n trong vÃ²ng 24h Ä‘á»ƒ hoÃ n táº¥t Ä‘Æ¡n hÃ ng
+          Vui lòng thanh toán trong vòng 24h để hoàn tất đơn hàng
         </AlertDescription>
       </Alert>
       <Button
@@ -56,12 +56,12 @@ export function PaymentAction({ onPaymentComplete }: PaymentActionProps) {
         {isProcessing ? (
           <>
             <CreditCard className="mr-2 h-4 w-4 animate-pulse" />
-            Äang xá»­ lÃ½...
+            Đang xử lý...
           </>
         ) : (
           <>
             <CreditCard className="mr-2 h-4 w-4" />
-            Thanh toÃ¡n ngay vá»›i Stripe
+            Thanh toán ngay với Stripe
           </>
         )}
       </Button>

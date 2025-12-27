@@ -127,14 +127,17 @@ export function BidHistoryTable({
       setError(null);
 
       const role = user?.vaitro;
+      console.log("🔍 Fetching bid history for productId:", productId);
+      console.log("🔍 User role:", role, "isOwner:", isOwner);
 
       // BIDDER or non-owner SELLER: fetch top N only
       if (role === "BIDDER" || (role === "SELLER" && !isOwner)) {
         const resp = await auctionAPI.getBidHistoryTop(productId, size);
-        setBids(resp.data.data || []);
-        setTotal(
-          resp.data.metadata?.totalElements ?? resp.data.data?.length ?? 0
-        );
+        console.log("📦 API Response (Top):", resp);
+        console.log("📦 resp.data:", resp.data);
+        const bidsData = Array.isArray(resp.data) ? resp.data : [];
+        setBids(bidsData);
+        setTotal(bidsData.length);
         return;
       }
 
@@ -144,19 +147,23 @@ export function BidHistoryTable({
           page,
           size,
         });
-        setBids(resp.data.data || []);
-        setTotal(resp.data.metadata?.totalElements ?? 0);
+        console.log("📦 API Response (Paged):", resp);
+        console.log("📦 resp.data:", resp.data);
+        const bidsData = Array.isArray(resp.data) ? resp.data : [];
+        setBids(bidsData);
+        setTotal(bidsData.length);
         return;
       }
 
       // ADMIN or other roles: fetch top
       const resp = await auctionAPI.getBidHistoryTop(productId, size);
-      setBids(resp.data.data || []);
-      setTotal(
-        resp.data.metadata?.totalElements ?? resp.data.data?.length ?? 0
-      );
+      console.log("📦 API Response (Admin/Top):", resp);
+      console.log("📦 resp.data:", resp.data);
+      const bidsData = Array.isArray(resp.data) ? resp.data : [];
+      setBids(bidsData);
+      setTotal(bidsData.length);
     } catch (error) {
-      console.error("Fetch bid history failed", error);
+      console.error("❌ Fetch bid history failed", error);
       setError(extractErrorMessage(error));
     } finally {
       setLoading(false);
@@ -204,7 +211,7 @@ export function BidHistoryTable({
                 <tbody>
                   {bids.map((bid, index) => (
                     <tr
-                      key={bid.bidHistoryid}
+                      key={bid.bidHistoryId}
                       className={`border-b last:border-0 ${
                         index === 0 ? "bg-accent/5" : ""
                       }`}
@@ -217,7 +224,7 @@ export function BidHistoryTable({
                       </td>
                       <td className="py-3">
                         <span className="font-mono text-sm font-semibold">
-                          {bid.tenBidder}
+                          {bid.bidderName}
                         </span>
                         {index === 0 && (
                           <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-xs text-white">

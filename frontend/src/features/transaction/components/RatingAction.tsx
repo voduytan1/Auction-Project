@@ -43,21 +43,21 @@ export function RatingAction({
       <div className="space-y-3">
         <Alert>
           <AlertDescription>
-            ÄÃ¡nh giÃ¡ giao dá»‹ch Ä‘á»ƒ hoÃ n táº¥t Ä‘Æ¡n hÃ ng
+            Đánh giá giao dịch để hoàn tất đơn hàng 
           </AlertDescription>
         </Alert>
         <Button onClick={() => setDialogOpen(true)} className="w-full">
-          ÄÃ¡nh giÃ¡ ngÆ°á»i {otherPartyRole === "buyer" ? "mua" : "bÃ¡n"}
+          Đánh giá người {otherPartyRole === "buyer" ? "mua" : "bán"}
         </Button>
       </div>
 
       <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>ÄÃ¡nh giÃ¡ giao dá»‹ch</AlertDialogTitle>
+            <AlertDialogTitle>Đánh giá giao dịch</AlertDialogTitle>
             <AlertDialogDescription>
-              ÄÃ¡nh giÃ¡ cá»§a báº¡n sáº½ áº£nh hÆ°á»Ÿng Ä‘áº¿n uy tÃ­n cá»§a ngÆ°á»i{" "}
-              {otherPartyRole === "buyer" ? "mua" : "bÃ¡n"}
+              Đánh giá của bạn sẽ ảnh hưởng đến uy tín của người{" "}
+              {otherPartyRole === "buyer" ? "mua" : "bán"}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-4">
@@ -68,7 +68,7 @@ export function RatingAction({
                 onClick={() => setSelectedRating(1)}
               >
                 <ThumbsUp className="mr-2 h-5 w-5" />
-                Tá»‘t (+1)
+                Tốt (+1)
               </Button>
               <Button
                 variant={selectedRating === -1 ? "destructive" : "outline"}
@@ -76,23 +76,23 @@ export function RatingAction({
                 onClick={() => setSelectedRating(-1)}
               >
                 <ThumbsDown className="mr-2 h-5 w-5" />
-                KhÃ´ng tá»‘t (-1)
+                Không tốt (-1)
               </Button>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ratingComment">Nháº­n xÃ©t</Label>
+              <Label htmlFor="ratingComment">Nhận xét</Label>
               <Textarea
                 id="ratingComment"
-                placeholder="Chia sáº» tráº£i nghiá»‡m cá»§a báº¡n..."
+                placeholder="Chia sẻ trải nghiệm của bạn..."
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
               />
             </div>
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel>Äá»ƒ sau</AlertDialogCancel>
+            <AlertDialogCancel>Để sau</AlertDialogCancel>
             <AlertDialogAction onClick={handleSubmit}>
-              Gá»­i Ä‘Ã¡nh giÃ¡
+              Gửi đánh giá
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

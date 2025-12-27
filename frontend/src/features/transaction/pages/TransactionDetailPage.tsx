@@ -139,6 +139,7 @@ export default function TransactionDetailPage() {
     }
   };
 
+  //eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleSubmitRating = (rating: 1 | -1, _comment: string) => {
     // TODO: Call rating API
     toast.success(`Đã đánh giá ${rating === 1 ? "+1" : "-1"} điểm`);

@@ -17,7 +17,7 @@ export function TrackingAction({
 
   const handleSubmit = () => {
     if (!trackingNumber.trim()) {
-      toast.error("Vui lÃ²ng nháº­p mÃ£ váº­n Ä‘Æ¡n");
+      toast.error("Vui lòng nhập mã vận đơn");
       return;
     }
     onSubmitTracking(trackingNumber);
@@ -25,15 +25,15 @@ export function TrackingAction({
 
   return (
     <div className="space-y-3">
-      <Label htmlFor="tracking">MÃ£ váº­n Ä‘Æ¡n</Label>
+      <Label htmlFor="tracking">Mã vận đơn</Label>
       <Input
         id="tracking"
-        placeholder="Nháº­p mÃ£ váº­n Ä‘Æ¡n..."
+        placeholder="Nhập mã vận đơn..."
         value={trackingNumber}
         onChange={(e) => setTrackingNumber(e.target.value)}
       />
       <Button onClick={handleSubmit} className="w-full">
-        XÃ¡c nháº­n Ä‘Ã£ gá»­i hÃ ng
+        Xác nhận đã gửi hàng
       </Button>
     </div>
   );

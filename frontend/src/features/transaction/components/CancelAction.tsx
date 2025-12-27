@@ -40,7 +40,7 @@ export function CancelAction({ currentUserRole, onCancel }: CancelActionProps) {
           <span className="w-full border-t" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">hoáº·c</span>
+          <span className="bg-background px-2 text-muted-foreground">hoặc</span>
         </div>
       </div>
       <Button
@@ -49,32 +49,32 @@ export function CancelAction({ currentUserRole, onCancel }: CancelActionProps) {
         className="w-full"
       >
         <XCircle className="mr-2 h-4 w-4" />
-        Há»§y giao dá»‹ch
+        Hủy giao dịch
       </Button>
 
       <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Há»§y giao dá»‹ch</AlertDialogTitle>
+            <AlertDialogTitle>Hủy giao dịch</AlertDialogTitle>
             <AlertDialogDescription>
-              HÃ nh Ä‘á»™ng nÃ y khÃ´ng thá»ƒ hoÃ n tÃ¡c. NgÆ°á»i{" "}
-              {currentUserRole === "seller" ? "mua" : "bÃ¡n"} sáº½ nháº­n Ä‘Ã¡nh giÃ¡ -1
-              Ä‘iá»ƒm.
+              Hành động này không thể hoàn tác. Người{" "}
+              {currentUserRole === "seller" ? "mua" : "bán"} sẽ nhận đánh giá -1
+              điểm.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-2">
-            <Label htmlFor="cancelReason">LÃ½ do há»§y</Label>
+            <Label htmlFor="cancelReason">Lý do hủy</Label>
             <Textarea
               id="cancelReason"
-              placeholder="Nháº­p lÃ½ do há»§y giao dá»‹ch..."
+              placeholder="Nhập lý do hủy giao dịch..."
               value={reason}
               onChange={(e) => setReason(e.target.value)}
             />
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel>Quay láº¡i</AlertDialogCancel>
+            <AlertDialogCancel>Quay lại</AlertDialogCancel>
             <AlertDialogAction onClick={handleCancel}>
-              XÃ¡c nháº­n há»§y
+              Xác nhận hủy
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

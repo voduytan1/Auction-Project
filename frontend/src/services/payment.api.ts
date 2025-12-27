@@ -113,7 +113,12 @@ export const paymentAPI = {
   ): Promise<{ url: string }> => {
     const response = await api.post<{ url: string }>(
       "/payment/create-checkout-session",
-      transactionId
+      transactionId,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
     );
     return response.data;
   },

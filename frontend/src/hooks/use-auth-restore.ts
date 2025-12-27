@@ -1,90 +1,62 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "./use-redux";
 import {
   refreshAccessToken,
-  setCredentials,
-  logoutUser,
+  getUserMe,
+  setInitializing,
 } from "@/store/slices/authSlice";
-import { profileAPI } from "@/services/profile.api";
 
 /**
- * Hook để restore authentication state khi app khởi động
- * Flow:
- * - User info được persist vào localStorage
- * - Token chỉ trong memory (bảo mật XSS) - Browser sẽ tự gửi Refresh Token từ HttpOnly Cookie
- * - Khi F5: Check nếu có user nhưng không có token => Gọi refresh để lấy token mới từ cookie
- * - Luôn fetch user mới từ API để đảm bảo data chuẩn (role, status...)
+ * Hook để restore authentication state khi app khởi động (F5)
  *
- * @returns isRestoring (boolean) - True khi đang xử lý, False khi đã xong
+ * Logic mới:
+ * 1. Khi F5: Gọi refresh token (backend đọc từ cookie)
+ * 2. Nếu refresh thành công:
+ *    - Kiểm tra Redux có user chưa
+ *    - Nếu chưa có user -> Gọi /users/me để lấy thông tin user
+ * 3. Nếu refresh thất bại -> Clear auth state
+ *
+ * Không dùng localStorage nữa, toàn bộ lưu trong Redux
  */
 export function useAuthRestore() {
   const dispatch = useAppDispatch();
-  const { user, isInitializing } = useAppSelector((state) => state.auth);
+  const { user, accessToken, isInitializing } = useAppSelector(
+    (state) => state.auth
+  );
+  const hasAttemptedRestore = useRef(false);
 
   useEffect(() => {
-    // Nếu không cần khôi phục (đã có token hoặc không là user đã login trước đó)
-    if (!isInitializing) {
+    // Chỉ chạy 1 lần khi mount
+    if (hasAttemptedRestore.current) {
       return;
     }
 
-    // Cần khôi phục: Có user info từ localStorage nhưng token đã mất (F5)
     const restoreSession = async () => {
       try {
-        // Lấy userId từ Redux state hoặc localStorage (trong trường hợp race condition)
-        let userId = user?.userid;
-        if (!userId) {
-          const savedUser = localStorage.getItem("auth_user");
-          if (savedUser) {
-            try {
-              userId = JSON.parse(savedUser).userid;
-            } catch {
-              /* ignore parse error */
-            }
-          }
+        console.log("[Auth Restore] Starting session restore...");
+
+        // Bước 1: Thử refresh token từ cookie
+        const refreshResult = await dispatch(refreshAccessToken()).unwrap();
+        console.log("[Auth Restore] Token refreshed successfully");
+
+        // Bước 2: Kiểm tra xem đã có user chưa
+        if (!user) {
+          console.log(
+            "[Auth Restore] No user in Redux, fetching from /users/me..."
+          );
+          await dispatch(getUserMe()).unwrap();
+          console.log("[Auth Restore] User info fetched successfully");
         }
 
-        if (!userId) {
-          dispatch(logoutUser());
-          return;
-        }
-
-        console.log(
-          "[AuthRestore] Restoring session - Refresh token from cookie for userId:",
-          userId
-        );
-
-        // Step 1: Gọi API refresh-token
-        // Browser tự động gửi kèm HttpOnly Cookie (Refresh Token)
-        // Backend sẽ parse cookie để biết user nào rồi trả về access token mới
-        const refreshResult = await dispatch(
-          refreshAccessToken(userId)
-        ).unwrap();
-        console.log("[AuthRestore] Token refreshed successfully");
-
-        // Step 2: Luôn lấy thông tin User mới nhất từ API
-        // để đảm bảo data chuẩn (role có thể bị thay đổi bởi admin)
-        console.log("[AuthRestore] Fetching fresh user info from API...");
-        const userInfo = await profileAPI.getMe();
-        console.log("[AuthRestore] User info fetched:", userInfo);
-
-        // Step 3: Update Redux với credentials mới (user từ API mới nhất)
-        dispatch(
-          setCredentials({
-            user: userInfo,
-            token: refreshResult.token,
-          })
-        );
-
-        console.log("[AuthRestore] Session restored successfully");
+        console.log("[Auth Restore] Session restored successfully");
       } catch (error) {
-        console.error("[AuthRestore] Failed to restore session:", error);
-        // Refresh token hết hạn/lỗi => Logout để clear state
-        dispatch(logoutUser());
+        console.log("[Auth Restore] No valid session found:", error);
+        // Không có session hoặc refresh thất bại -> Đơn giản set isInitializing = false
+        dispatch(setInitializing(false));
       }
     };
 
+    hasAttemptedRestore.current = true;
     restoreSession();
-  }, [dispatch, isInitializing]);
-
-  return isInitializing;
+  }, [dispatch, user]);
 }

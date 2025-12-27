@@ -17,7 +17,7 @@ export function ShippingAction({
 
   const handleSubmit = () => {
     if (!address.trim()) {
-      toast.error("Vui lÃ²ng nháº­p Ä‘á»‹a chá»‰ giao hÃ ng");
+      toast.error("Vui lòng nhập địa chỉ giao hàng");
       return;
     }
     onSubmitAddress(address);
@@ -25,15 +25,15 @@ export function ShippingAction({
 
   return (
     <div className="space-y-3">
-      <Label htmlFor="address">Äá»‹a chá»‰ giao hÃ ng</Label>
+      <Label htmlFor="address">Địa chỉ giao hàng</Label>
       <Textarea
         id="address"
-        placeholder="Nháº­p Ä‘á»‹a chá»‰ Ä‘áº§y Ä‘á»§..."
+        placeholder="Nhập địa chỉ đầy đủ..."
         value={address}
         onChange={(e) => setAddress(e.target.value)}
       />
       <Button onClick={handleSubmit} className="w-full">
-        XÃ¡c nháº­n Ä‘á»‹a chá»‰
+        Xác nhận địa chỉ
       </Button>
     </div>
   );

@@ -139,26 +139,17 @@ export function CategoriesTable() {
 
       if (editingCategory) {
         // Update category
-        await fetch(`/api/categories/${editingCategory.categoryid}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            tenDanhMuc: data.tenDanhMuc,
-            moTa: data.moTa,
-            parentCategoryId: data.parentCategoryId || null,
-          }),
+        await categoryApi.update(editingCategory.categoryid, {
+          tenDanhMuc: data.tenDanhMuc,
+          moTa: data.moTa,
         });
         toast.success("Cập nhật danh mục thành công!");
       } else {
         // Create new category
-        await fetch("/api/categories", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            tenDanhMuc: data.tenDanhMuc,
-            moTa: data.moTa,
-            parentCategoryId: data.parentCategoryId || null,
-          }),
+        await categoryApi.create({
+          tenDanhMuc: data.tenDanhMuc,
+          moTa: data.moTa,
+          parentCategoryId: data.parentCategoryId || undefined,
         });
         toast.success("Tạo danh mục thành công!");
       }
@@ -179,9 +170,7 @@ export function CategoriesTable() {
     if (!deleteDialog.category) return;
 
     try {
-      await fetch(`/api/categories/${deleteDialog.category.categoryid}`, {
-        method: "DELETE",
-      });
+      await categoryApi.delete(deleteDialog.category.categoryid);
       toast.success("Xóa danh mục thành công!");
       await loadCategories();
       setDeleteDialog({ open: false, category: null });
