@@ -79,7 +79,7 @@ public interface ProductRepository extends JpaRepository<@NotNull Product, @NotN
     );
 
     // Top 10 sản phẩm giá cao nhất
-    List<Product> findTop10ByTrangThaiOrderByGiaHienTaiDesc(ProductStatus status);
+    List<Product> findTop3ByTrangThaiOrderByGiaHienTaiDesc(ProductStatus status);
 
     // Top 10 sản phẩm nhiều lượt đấu giá nhất
     List<Product> findTop10ByTrangThaiOrderBySoLuotRaGiaDesc(ProductStatus status);

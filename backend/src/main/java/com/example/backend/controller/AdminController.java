@@ -1,5 +1,6 @@
 package com.example.backend.controller;
 
+import com.cloudinary.Api;
 import com.example.backend.dto.admin.UpgradeRequest.UpgradeRequestResponse;
 import com.example.backend.dto.admin.config.CreateConfigRequest;
 import com.example.backend.dto.admin.dashboard.*;
@@ -192,6 +193,12 @@ public class AdminController {
                 .build();
 
         return ResponseEntity.ok(ApiResponse.success(stat));
+    }
+
+    @GetMapping("/dashboard/top-auctions")
+    public ResponseEntity<@NotNull ApiResponse<List<TopAuctionsResponse>>> getTopAuctions(){
+        List<TopAuctionsResponse> result = productService.getTop3ProductByPrice();
+        return ResponseEntity.ok(ApiResponse.success(result));
     }
 }
 
