@@ -4,6 +4,7 @@ import com.example.backend.dto.common.ApiResponse;
 import com.example.backend.dto.common.PaginationInfo;
 import com.example.backend.dto.common.PaginationRequest;
 import com.example.backend.dto.product.ProductIdRequest;
+import com.example.backend.dto.product.question.AnswerProductQuestionRequest;
 import com.example.backend.dto.product.question.CreateProductQuestionRequest;
 import com.example.backend.dto.product.question.ProductQuestionResponse;
 import com.example.backend.service.ProductQuestionService;
@@ -61,6 +62,17 @@ public class ProductQuestionController {
 
         ProductQuestionResponse response = productQuestionService.createOne(createProductQuestionRequest, UUID.fromString(sub));
 
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<@NotNull ApiResponse<ProductQuestionResponse>> answerProductQuestion(@RequestBody AnswerProductQuestionRequest answerProductQuestionRequest, @PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
+        String sub = jwt != null ? jwt.getSubject() : null;
+        if(sub == null) {
+            throw new BadCredentialsException("Lỗi access token không hợp lệ");
+        }
+
+        ProductQuestionResponse response = productQuestionService.updateOne(answerProductQuestionRequest, UUID.fromString(sub), id);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

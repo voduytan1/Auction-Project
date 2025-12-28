@@ -1,10 +1,10 @@
 package com.example.backend.mapper;
 
+import com.example.backend.dto.product.question.AnswerProductQuestionRequest;
 import com.example.backend.dto.product.question.CreateProductQuestionRequest;
 import com.example.backend.dto.product.question.ProductQuestionResponse;
 import com.example.backend.entity.ProductQuestion;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
 
@@ -15,6 +15,9 @@ public interface ProductQuestionMapper {
     @Mapping(target = "thoiGianHoi", ignore = true)
     @Mapping(target = "thoiGianTraLoi", ignore = true)
     ProductQuestion toEntity(CreateProductQuestionRequest request);
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateEntity(AnswerProductQuestionRequest dto,  @MappingTarget ProductQuestion entity);
 
     @Mapping(target = "productId", source = "productQuestion.product.productid")
     @Mapping(target = "askerId", source = "productQuestion.asker.userid")
