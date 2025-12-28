@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { apiHelpers } from "@/services/helpers";
+import { apiHelpers } from "@/lib/helpers";
 import type { AxiosResponse } from "axios";
 
 // ============= Types =============

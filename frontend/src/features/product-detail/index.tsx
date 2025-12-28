@@ -15,7 +15,6 @@ import { toast } from "sonner";
 import { CreditCard, CheckCircle2, PartyPopper } from "lucide-react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { productDetailData } from "@/data/mock-data";
 import { ImageGallery } from "./components/ImageGallery";
 import { ProductDescription } from "./components/ProductDescription";
 import { BidHistoryTable } from "./components/BidHistoryTable";
@@ -105,7 +104,7 @@ const ProductDetail = () => {
   }
 
   return (
-    <div className="px-20">
+    <div className="lg:px-20">
       {/* Bid Real-time Notification - Only for seller */}
       {id &&
         isAuthenticated &&
@@ -208,7 +207,7 @@ const ProductDetail = () => {
         </DialogContent>
       </Dialog>
 
-      <div className="bg-white container px-4 py-6 mx-auto">
+      <div className="bg-white container px-0 py-6 mx-auto">
         {/* Error Banner */}
         {error && (
           <div className="mb-4 rounded-lg bg-yellow-50 border border-yellow-200 p-4">
@@ -219,7 +218,7 @@ const ProductDetail = () => {
         )}
 
         {/* Breadcrumb */}
-        <div className="mb-4 flex items-center gap-4">
+        <div className="mb-4 flex items-center gap-4 overflow-x-auto whitespace-nowrap pb-2">
           <div className="flex items-center gap-2 text-sm text-slate-600">
             <Link to="/" className="hover:text-primary">
               Trang chủ
@@ -243,66 +242,68 @@ const ProductDetail = () => {
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Left Column - Images */}
-          <div className="lg:col-span-1">
-            <div className="space-y-6">
-              <ImageGallery
-                mainImage={product.images?.[0] || productDetailData.mainImage}
-                images={product.images?.slice(1) || productDetailData.images}
-                productName={product.tenSanPham}
-              />
+        {/* MAIN CONTENT LAYOUT FIX 
+            Mobile & Tablet: Flex Column (Order: Image -> Info -> Tabs)
+            Desktop (lg): Grid 12 cols (7-5 split) - Ưu tiên ảnh
+        */}
+        <div className="flex flex-col lg:grid lg:grid-cols-12 lg:gap-8">
+          {/* 1. PRODUCT IMAGES */}
+          {/* Mobile & Tablet: Order 1 
+              Desktop: 7/12 cột 
+          */}
+          <div className="order-1 lg:col-span-7">
+            <ImageGallery
+              mainImage={product.images?.[0]}
+              images={product.images?.slice(1)}
+              productName={product.tenSanPham}
+            />
+          </div>
 
-              {/* Tabs for Description, Bid History, Q&A */}
-              <Tabs defaultValue="description" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="description">Mô tả</TabsTrigger>
-                  <TabsTrigger value="history">
-                    Lịch sử ({productDetailData.bidHistory.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="qa">
-                    Hỏi đáp ({productDetailData.questions.length})
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="description" className="mt-4">
-                  <ProductDescription
-                    description={product.moTa}
-                    productName={product.tenSanPham}
-                  />
-                </TabsContent>
-
-                <TabsContent value="history" className="mt-4">
-                  {
-                    // derive sellerId from product to avoid refetching inside BidHistoryTable
-                  }
-                  <BidHistoryTable
-                    productId={product.productid}
-                    initialSize={5}
-                    sellerId={product.sellerId}
-                  />
-                </TabsContent>
-
-                <TabsContent value="qa" className="mt-4">
-                  {/* TODO: API chưa trả về Q&A */}
-                  <QASection
-                    questions={productDetailData.questions}
-                    onAskQuestion={(question) => {
-                      console.log("New question:", question);
-                      // TODO: Handle submit question
-                    }}
-                  />
-                </TabsContent>
-              </Tabs>
+          {/* 2. PRODUCT INFO & ACTIONS */}
+          {/* Mobile & Tablet: Order 2 
+              Desktop: 5/12 cột, Sticky
+              Row-span-2: Trượt dọc theo nội dung bên trái
+          */}
+          <div className="order-2 mt-6 lg:mt-0 lg:col-span-5 lg:row-span-2">
+            <div className="lg:sticky lg:top-20 space-y-4">
+              <ProductInfo product={product} />
             </div>
           </div>
 
-          {/* Right Column - Product Info & Actions */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-6 space-y-4">
-              <ProductInfo product={product} />
-            </div>
+          {/* 3. TABS (Description, History, QA) */}
+          {/* Mobile & Tablet: Order 3 
+              Desktop: 7/12 cột (Dưới ảnh)
+          */}
+          <div className="order-3 mt-8 lg:col-span-7">
+            <Tabs defaultValue="description" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="description">Mô tả</TabsTrigger>
+                <TabsTrigger value="history">Lịch sử</TabsTrigger>
+                <TabsTrigger value="qa">Hỏi đáp</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="description" className="mt-4">
+                <ProductDescription
+                  description={product.moTa}
+                  productName={product.tenSanPham}
+                />
+              </TabsContent>
+
+              <TabsContent value="history" className="mt-4">
+                <BidHistoryTable
+                  productId={product.productid}
+                  initialSize={5}
+                  sellerId={product.sellerId}
+                />
+              </TabsContent>
+
+              <TabsContent value="qa" className="mt-4">
+                <QASection
+                  productId={product.productid}
+                  sellerId={product.sellerId}
+                />
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
 

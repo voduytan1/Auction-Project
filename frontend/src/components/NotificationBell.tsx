@@ -114,7 +114,7 @@ export function NotificationBell() {
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <span className="text-xl flex-shrink-0 mt-0.5">
+                    <span className="text-xl shrink-0 mt-0.5">
                       {getNotificationIcon(notification.type)}
                     </span>
                     <div className="flex-1 min-w-0">
@@ -139,7 +139,7 @@ export function NotificationBell() {
                       </p>
                     </div>
                     {!notification.read && (
-                      <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2" />
+                      <div className="w-2 h-2 bg-blue-500 rounded-full shrink-0 mt-2" />
                     )}
                   </div>
                 </button>

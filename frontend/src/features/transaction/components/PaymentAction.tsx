@@ -8,9 +8,13 @@ import { CreditCard } from "lucide-react";
 
 interface PaymentActionProps {
   onPaymentComplete: () => void;
+  isCompact?: boolean;
 }
 
-export function PaymentAction({ onPaymentComplete }: PaymentActionProps) {
+export function PaymentAction({
+  onPaymentComplete,
+  isCompact = false,
+}: PaymentActionProps) {
   const { transactionId } = useParams<{ transactionId: string }>();
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -47,26 +51,45 @@ export function PaymentAction({ onPaymentComplete }: PaymentActionProps) {
   };
 
   return (
-    <div className="space-y-3">
-      <Alert>
-        <AlertDescription>
-          Vui lòng thanh toán trong vòng 24h để hoàn tất đơn hàng
-        </AlertDescription>
-      </Alert>
+    <div className={isCompact ? "" : "space-y-3"}>
+      {!isCompact && (
+        <Alert>
+          <AlertDescription className="text-xs sm:text-sm">
+            Vui lòng thanh toán trong vòng 24h để hoàn tất đơn hàng
+          </AlertDescription>
+        </Alert>
+      )}
       <Button
         onClick={handlePayment}
-        className="w-full"
+        className={isCompact ? "w-full text-sm" : "w-full text-sm sm:text-base"}
         disabled={isProcessing}
+        size={isCompact ? "default" : undefined}
       >
         {isProcessing ? (
           <>
             <CreditCard className="mr-2 h-4 w-4 animate-pulse" />
-            Đang xử lý...
+            {isCompact ? (
+              "Xử lý..."
+            ) : (
+              <>
+                <span className="hidden sm:inline">Đang xử lý...</span>
+                <span className="sm:hidden">Xử lý...</span>
+              </>
+            )}
           </>
         ) : (
           <>
             <CreditCard className="mr-2 h-4 w-4" />
-            Thanh toán ngay với Stripe
+            {isCompact ? (
+              "Thanh toán"
+            ) : (
+              <>
+                <span className="hidden sm:inline">
+                  Thanh toán ngay với Stripe
+                </span>
+                <span className="sm:hidden">Thanh toán</span>
+              </>
+            )}
           </>
         )}
       </Button>

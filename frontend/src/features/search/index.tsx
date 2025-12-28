@@ -7,8 +7,17 @@ import { PageLoader } from "@/components/PageLoader";
 import { ProductCard } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  fetchCategories,
+  selectCategories,
+  selectCategoriesLoading,
+  selectIsCacheValid,
+} from "@/store/slices/categorySlice";
+import type { CategoryDisplay } from "@/types/types";
 
 export default function SearchResults() {
+  const dispatch = useAppDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
   const [submittedQuery, setSubmittedQuery] = useState(
@@ -29,7 +38,19 @@ export default function SearchResults() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Get categories from Redux store
+  const allCategories = useAppSelector(selectCategories);
+  const categoriesLoading = useAppSelector(selectCategoriesLoading);
+  const isCacheValid = useAppSelector(selectIsCacheValid);
+
   const ITEMS_PER_PAGE = 8;
+
+  // Fetch categories from API
+  useEffect(() => {
+    if (!isCacheValid && !categoriesLoading) {
+      dispatch(fetchCategories());
+    }
+  }, [dispatch, isCacheValid, categoriesLoading]);
 
   // Update URL khi filters thay đổi
   useEffect(() => {
@@ -98,21 +119,10 @@ export default function SearchResults() {
       })
     : [];
 
-  // Get unique categories from products - TODO: fetch from category API
-  const categories = Array.from(
-    new Map(
-      products.map((p) => [
-        p.categoryId,
-        {
-          categoryid: p.categoryId,
-          tenDanhMuc: p.tenDanhMuc,
-          level: 1,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      ])
-    ).values()
-  );
+  // Get subcategories (level 2) from Redux store
+  const categories: CategoryDisplay[] = allCategories
+    ? allCategories.flatMap((parent) => parent.subcategories || [])
+    : [];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,10 +148,10 @@ export default function SearchResults() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6 md:py-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">
+      <div className="mb-4 sm:mb-6 md:mb-8">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2">
           {submittedQuery
             ? `Kết quả tìm kiếm cho "${submittedQuery}"`
             : "Tìm kiếm sản phẩm"}
@@ -150,8 +160,8 @@ export default function SearchResults() {
           Tìm thấy {totalProducts} sản phẩm
         </p>
         {error && (
-          <div className="mt-4 rounded-lg bg-red-50 border border-red-200 p-4">
-            <p className="text-sm text-red-800">{error}</p>
+          <div className="mt-2 sm:mt-4 rounded-lg bg-red-50 border border-red-200 p-3 sm:p-4">
+            <p className="text-xs sm:text-sm text-red-800">{error}</p>
           </div>
         )}
       </div>
@@ -175,7 +185,7 @@ export default function SearchResults() {
         <EmptyState />
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mb-12">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-6 mb-6 sm:mb-8 md:mb-12">
             {sortedProducts.map((product) => (
               <ProductCard key={product.productid} product={product} />
             ))}
@@ -184,15 +194,15 @@ export default function SearchResults() {
           {/* Pagination */}
           {totalPages > 1 && (
             <>
-              <div className="flex flex-wrap items-center justify-center gap-2">
+              <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2">
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={() => setCurrentPage(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className="h-9 w-9"
+                  className="h-8 w-8 sm:h-9 sm:w-9"
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
 
                 <div className="flex flex-wrap gap-1 justify-center">
@@ -211,7 +221,7 @@ export default function SearchResults() {
                             }
                             size="icon"
                             onClick={() => setCurrentPage(page)}
-                            className="h-9 w-9"
+                            className="h-8 w-8 sm:h-9 sm:w-9 text-xs sm:text-sm"
                           >
                             {page}
                           </Button>
@@ -223,7 +233,7 @@ export default function SearchResults() {
                         return (
                           <span
                             key={page}
-                            className="flex items-center px-2 text-sm"
+                            className="flex items-center px-1 sm:px-2 text-xs sm:text-sm"
                           >
                             ...
                           </span>
@@ -239,9 +249,9 @@ export default function SearchResults() {
                   size="icon"
                   onClick={() => setCurrentPage(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className="h-9 w-9"
+                  className="h-8 w-8 sm:h-9 sm:w-9"
                 >
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
               </div>
             </>

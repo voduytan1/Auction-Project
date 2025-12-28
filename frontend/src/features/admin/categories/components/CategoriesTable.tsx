@@ -48,7 +48,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { PageLoader } from "@/components/PageLoader";
-import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { categoryApi } from "@/services/category.api";
 import type { CategoryResponse, CategoryDisplay } from "@/types/types";
 
@@ -62,6 +69,9 @@ export function CategoriesTable() {
   const [categories, setCategories] = useState<CategoryDisplay[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [activeTab, setActiveTab] = useState<"level1" | "level2">("level1");
+  const [currentPageL1, setCurrentPageL1] = useState(1);
+  const [currentPageL2, setCurrentPageL2] = useState(1);
+  const [itemsPerPage] = useState(10);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] =
     useState<CategoryResponse | null>(null);
@@ -107,6 +117,24 @@ export function CategoriesTable() {
   // Get level 2 (child) categories - flatten from all subcategories
   const level2Categories = categories.flatMap(
     (parent) => parent.subcategories || []
+  );
+
+  // Pagination for Level 1
+  const totalPagesL1 = Math.ceil(level1Categories.length / itemsPerPage);
+  const startIndexL1 = (currentPageL1 - 1) * itemsPerPage;
+  const endIndexL1 = startIndexL1 + itemsPerPage;
+  const currentLevel1Categories = level1Categories.slice(
+    startIndexL1,
+    endIndexL1
+  );
+
+  // Pagination for Level 2
+  const totalPagesL2 = Math.ceil(level2Categories.length / itemsPerPage);
+  const startIndexL2 = (currentPageL2 - 1) * itemsPerPage;
+  const endIndexL2 = startIndexL2 + itemsPerPage;
+  const currentLevel2Categories = level2Categories.slice(
+    startIndexL2,
+    endIndexL2
   );
 
   const handleCreate = () => {
@@ -237,7 +265,7 @@ export function CategoriesTable() {
             <div>
               <CardTitle>Quản lý Danh mục</CardTitle>
               <CardDescription>
-                Quản lý danh mục cấp 1 (cha) và cấp 2 (con)
+                Quản lý tất cả danh mục sản phẩm trong hệ thống
               </CardDescription>
             </div>
             <Button onClick={handleCreate}>
@@ -272,7 +300,7 @@ export function CategoriesTable() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {level1Categories.length === 0 ? (
+                    {currentLevel1Categories.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={3} className="text-center py-8">
                           <div className="text-muted-foreground">
@@ -281,7 +309,7 @@ export function CategoriesTable() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      level1Categories.map((cat) => {
+                      currentLevel1Categories.map((cat) => {
                         // Convert CategoryDisplay to CategoryResponse format
                         const categoryResponse: CategoryResponse = {
                           categoryid: cat.id,
@@ -297,6 +325,79 @@ export function CategoriesTable() {
                   </TableBody>
                 </Table>
               </div>
+
+              {/* Pagination for Level 1 */}
+              {totalPagesL1 > 1 && (
+                <div className="flex items-center justify-between mt-6">
+                  <div className="text-sm text-muted-foreground">
+                    Hiển thị {startIndexL1 + 1}-
+                    {Math.min(endIndexL1, level1Categories.length)} trong tổng
+                    số {level1Categories.length} danh mục
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setCurrentPageL1(currentPageL1 - 1)}
+                      disabled={currentPageL1 === 1}
+                      className="h-8 w-8 sm:h-9 sm:w-9"
+                    >
+                      <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+                    </Button>
+
+                    <div className="flex flex-wrap gap-1">
+                      {Array.from(
+                        { length: totalPagesL1 },
+                        (_, i) => i + 1
+                      ).map((page) => {
+                        if (
+                          page === 1 ||
+                          page === totalPagesL1 ||
+                          (page >= currentPageL1 - 1 &&
+                            page <= currentPageL1 + 1)
+                        ) {
+                          return (
+                            <Button
+                              key={page}
+                              variant={
+                                currentPageL1 === page ? "default" : "outline"
+                              }
+                              size="icon"
+                              onClick={() => setCurrentPageL1(page)}
+                              className="h-8 w-8 sm:h-9 sm:w-9 text-xs sm:text-sm"
+                            >
+                              {page}
+                            </Button>
+                          );
+                        } else if (
+                          page === currentPageL1 - 2 ||
+                          page === currentPageL1 + 2
+                        ) {
+                          return (
+                            <span
+                              key={page}
+                              className="flex items-center px-1 sm:px-2 text-xs sm:text-sm"
+                            >
+                              ...
+                            </span>
+                          );
+                        }
+                        return null;
+                      })}
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setCurrentPageL1(currentPageL1 + 1)}
+                      disabled={currentPageL1 === totalPagesL1}
+                      className="h-8 w-8 sm:h-9 sm:w-9"
+                    >
+                      <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </TabsContent>
 
             {/* Level 2 - Child Categories */}
@@ -312,7 +413,7 @@ export function CategoriesTable() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {level2Categories.length === 0 ? (
+                    {currentLevel2Categories.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={4} className="text-center py-8">
                           <div className="text-muted-foreground">
@@ -321,7 +422,7 @@ export function CategoriesTable() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      level2Categories.map((cat) => {
+                      currentLevel2Categories.map((cat) => {
                         const categoryResponse: CategoryResponse = {
                           categoryid: cat.id,
                           tenDanhMuc: cat.name,
@@ -336,6 +437,79 @@ export function CategoriesTable() {
                   </TableBody>
                 </Table>
               </div>
+
+              {/* Pagination for Level 2 */}
+              {totalPagesL2 > 1 && (
+                <div className="flex items-center justify-between mt-6">
+                  <div className="text-sm text-muted-foreground">
+                    Hiển thị {startIndexL2 + 1}-
+                    {Math.min(endIndexL2, level2Categories.length)} trong tổng
+                    số {level2Categories.length} danh mục
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setCurrentPageL2(currentPageL2 - 1)}
+                      disabled={currentPageL2 === 1}
+                      className="h-8 w-8 sm:h-9 sm:w-9"
+                    >
+                      <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+                    </Button>
+
+                    <div className="flex flex-wrap gap-1">
+                      {Array.from(
+                        { length: totalPagesL2 },
+                        (_, i) => i + 1
+                      ).map((page) => {
+                        if (
+                          page === 1 ||
+                          page === totalPagesL2 ||
+                          (page >= currentPageL2 - 1 &&
+                            page <= currentPageL2 + 1)
+                        ) {
+                          return (
+                            <Button
+                              key={page}
+                              variant={
+                                currentPageL2 === page ? "default" : "outline"
+                              }
+                              size="icon"
+                              onClick={() => setCurrentPageL2(page)}
+                              className="h-8 w-8 sm:h-9 sm:w-9 text-xs sm:text-sm"
+                            >
+                              {page}
+                            </Button>
+                          );
+                        } else if (
+                          page === currentPageL2 - 2 ||
+                          page === currentPageL2 + 2
+                        ) {
+                          return (
+                            <span
+                              key={page}
+                              className="flex items-center px-1 sm:px-2 text-xs sm:text-sm"
+                            >
+                              ...
+                            </span>
+                          );
+                        }
+                        return null;
+                      })}
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setCurrentPageL2(currentPageL2 + 1)}
+                      disabled={currentPageL2 === totalPagesL2}
+                      className="h-8 w-8 sm:h-9 sm:w-9"
+                    >
+                      <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>

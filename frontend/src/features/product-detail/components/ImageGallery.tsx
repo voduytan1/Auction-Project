@@ -26,35 +26,35 @@ export function ImageGallery({
   return (
     <div className="space-y-4">
       {/* Main Image */}
-      <div className="relative aspect-4/3 overflow-hidden rounded-lg bg-slate-100">
+      <div className="relative aspect-4/3 overflow-hidden rounded-lg bg-slate-100 border border-slate-200">
         <img
           src={allImages[selectedImage]}
           alt={`${productName} - ${selectedImage + 1}`}
-          className="h-full w-full object-cover"
+          className="h-full w-full object-contain bg-white"
         />
 
         {/* Navigation Buttons */}
         <button
           onClick={goToPrevious}
-          className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 shadow-lg hover:bg-white"
+          className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 shadow-lg hover:bg-white active:scale-95 transition-all"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
         <button
           onClick={goToNext}
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 shadow-lg hover:bg-white"
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 shadow-lg hover:bg-white active:scale-95 transition-all"
         >
           <ChevronRight className="h-5 w-5" />
         </button>
 
         {/* Image Counter */}
-        <div className="absolute bottom-2 right-2 rounded-full bg-black/60 px-3 py-1 text-sm text-white">
+        <div className="absolute bottom-2 right-2 rounded-full bg-black/60 px-3 py-1 text-xs sm:text-sm text-white font-medium">
           {selectedImage + 1} / {allImages.length}
         </div>
       </div>
 
-      {/* Thumbnails */}
-      <div className="grid grid-cols-5 gap-2">
+      {/* Thumbnails - Responsive Grid */}
+      <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 sm:gap-3">
         {allImages.map((image, index) => (
           <button
             key={index}
@@ -68,7 +68,7 @@ export function ImageGallery({
             <img
               src={image}
               alt={`Thumbnail ${index + 1}`}
-              className="h-full w-full object-cover"
+              className="h-full w-full object-cover bg-white"
             />
           </button>
         ))}

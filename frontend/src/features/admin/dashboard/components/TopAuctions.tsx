@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockTopAuctions } from "@/data/mock-data";
+// import { mockTopAuctions } from "@/data/mock-data";
 
 export function TopAuctions() {
   return (
@@ -9,7 +9,10 @@ export function TopAuctions() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {mockTopAuctions.map((auction, index) => (
+          <p className="text-sm text-muted-foreground">
+            Tính năng đang được phát triển...
+          </p>
+          {/* {mockTopAuctions.map((auction, index) => (
             <div key={index} className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium">{auction.title}</p>
@@ -19,7 +22,7 @@ export function TopAuctions() {
               </div>
               <span className="text-sm font-semibold">{auction.price}</span>
             </div>
-          ))}
+          ))} */}
         </div>
       </CardContent>
     </Card>

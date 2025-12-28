@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Eye,
-  Edit,
   Ban,
   Star,
   MoreHorizontal,
@@ -103,10 +102,10 @@ export function ProductsTable({ status }: ProductsTableProps) {
     navigate(`/products/${productId}`);
   };
 
-  const handleEdit = (productId: number) => {
-    // Navigate to edit page
-    navigate(`/seller/products/edit/${productId}`);
-  };
+  // const handleEdit = (productId: number) => {
+  //   // Navigate to edit page
+  //   navigate(`/seller/products/edit/${productId}`);
+  // };
 
   const handleCancelProduct = (product: ProductResponse) => {
     setSelectedProduct(product);
@@ -189,129 +188,149 @@ export function ProductsTable({ status }: ProductsTableProps) {
 
   return (
     <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Tên sản phẩm</TableHead>
-            <TableHead className="text-right">Giá khởi điểm</TableHead>
-            <TableHead className="text-right">Giá hiện tại</TableHead>
-            <TableHead className="text-center">Số lượt đấu</TableHead>
-            <TableHead>Thời gian kết thúc</TableHead>
-            {status === "COMPLETED" && <TableHead>Người thắng</TableHead>}
-            <TableHead className="text-right">Hành động</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {products.map((product) => (
-            <TableRow key={product.productid}>
-              <TableCell className="font-medium">
-                {product.tenSanPham}
-              </TableCell>
-              <TableCell className="text-right">
-                {formatPrice(product.giaKhoiDiem)}
-              </TableCell>
-              <TableCell className="text-right">
-                {formatPrice(product.giaHienTai)}
-              </TableCell>
-              <TableCell className="text-center">
-                {product.soLuotRaGia || 0}
-              </TableCell>
-              <TableCell>{formatDate(product.thoiGianKetThuc)}</TableCell>
-              {status === "COMPLETED" && (
-                <TableCell>
-                  {product.tenBidder ? (
-                    <div>
-                      <p className="font-medium">{product.tenBidder}</p>
+      <div className="overflow-x-auto -mx-4 sm:mx-0">
+        <div className="inline-block min-w-full align-middle">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="min-w-37.5 sm:min-w-0">
+                  Tên sản phẩm
+                </TableHead>
+                <TableHead className="text-right hidden sm:table-cell">
+                  Giá khởi điểm
+                </TableHead>
+                <TableHead className="text-right">Giá hiện tại</TableHead>
+                <TableHead className="text-center hidden md:table-cell">
+                  Số lượt đấu
+                </TableHead>
+                <TableHead className="hidden lg:table-cell">
+                  Thời gian kết thúc
+                </TableHead>
+                {status === "COMPLETED" && (
+                  <TableHead className="hidden xl:table-cell">
+                    Người thắng
+                  </TableHead>
+                )}
+                <TableHead className="text-right">Hành động</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {products.map((product) => (
+                <TableRow key={product.productid}>
+                  <TableCell className="font-medium">
+                    <div className="max-w-[200px] sm:max-w-none truncate">
+                      {product.tenSanPham}
                     </div>
-                  ) : (
-                    <span className="text-muted-foreground">
-                      Chưa có người thắng
+                  </TableCell>
+                  <TableCell className="text-right hidden sm:table-cell">
+                    <span className="whitespace-nowrap">
+                      {formatPrice(product.giaKhoiDiem)}
                     </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <span className="whitespace-nowrap">
+                      {formatPrice(product.giaHienTai)}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-center hidden md:table-cell">
+                    {product.soLuotRaGia || 0}
+                  </TableCell>
+                  <TableCell className="hidden lg:table-cell">
+                    <span className="whitespace-nowrap">
+                      {formatDate(product.thoiGianKetThuc)}
+                    </span>
+                  </TableCell>
+                  {status === "COMPLETED" && (
+                    <TableCell className="hidden xl:table-cell">
+                      {product.tenBidder ? (
+                        <div>
+                          <p className="font-medium">{product.tenBidder}</p>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">
+                          Chưa có người thắng
+                        </span>
+                      )}
+                    </TableCell>
                   )}
-                </TableCell>
-              )}
-              <TableCell className="text-right">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => handleViewDetails(product.productid)}
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      Xem chi tiết
-                    </DropdownMenuItem>
-                    {status === "ACTIVE" && (
-                      <>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
                         <DropdownMenuItem
-                          onClick={() => handleEdit(product.productid)}
+                          onClick={() => handleViewDetails(product.productid)}
                         >
-                          <Edit className="h-4 w-4 mr-2" />
-                          Chỉnh sửa
+                          <Eye className="h-4 w-4 mr-2" />
+                          Xem chi tiết
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() =>
-                            handleAppendDescription(product.productid)
-                          }
-                        >
-                          <FileText className="h-4 w-4 mr-2" />
-                          Bổ sung mô tả
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleRejectBidder(product)}
-                          className="text-orange-600"
-                        >
-                          <UserX className="h-4 w-4 mr-2" />
-                          Từ chối người đấu giá
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleCancelProduct(product)}
-                          className="text-destructive"
-                        >
-                          <Ban className="h-4 w-4 mr-2" />
-                          Hủy sản phẩm
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                    {status === "COMPLETED" && product.tenBidder && (
-                      <>
-                        <DropdownMenuItem
-                          onClick={() => handleRateBuyer(product.productid)}
-                        >
-                          <Star className="h-4 w-4 mr-2" />
-                          Đánh giá người mua
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleCancelTransaction(product)}
-                          className="text-destructive"
-                        >
-                          <XCircle className="h-4 w-4 mr-2" />
-                          Hủy giao dịch
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+                        {status === "ACTIVE" && (
+                          <>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                handleAppendDescription(product.productid)
+                              }
+                            >
+                              <FileText className="h-4 w-4 mr-2" />
+                              Bổ sung mô tả
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleRejectBidder(product)}
+                              className="text-orange-600"
+                            >
+                              <UserX className="h-4 w-4 mr-2" />
+                              Từ chối người đấu giá
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleCancelProduct(product)}
+                              className="text-destructive"
+                            >
+                              <Ban className="h-4 w-4 mr-2" />
+                              Hủy sản phẩm
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                        {status === "COMPLETED" && product.tenBidder && (
+                          <>
+                            <DropdownMenuItem
+                              onClick={() => handleRateBuyer(product.productid)}
+                            >
+                              <Star className="h-4 w-4 mr-2" />
+                              Đánh giá người mua
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleCancelTransaction(product)}
+                              className="text-destructive"
+                            >
+                              <XCircle className="h-4 w-4 mr-2" />
+                              Hủy giao dịch
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
+        <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2 mt-4 sm:mt-6 px-2">
           <Button
             variant="outline"
             size="icon"
             onClick={() => setPage(page - 1)}
             disabled={page === 1}
-            className="h-9 w-9"
+            className="h-8 w-8 sm:h-9 sm:w-9"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
           </Button>
 
           <div className="flex flex-wrap gap-1 justify-center">
@@ -328,7 +347,7 @@ export function ProductsTable({ status }: ProductsTableProps) {
                       variant={page === pageNum ? "default" : "outline"}
                       size="icon"
                       onClick={() => setPage(pageNum)}
-                      className="h-9 w-9"
+                      className="h-8 w-8 sm:h-9 sm:w-9 text-xs sm:text-sm"
                     >
                       {pageNum}
                     </Button>
@@ -337,7 +356,7 @@ export function ProductsTable({ status }: ProductsTableProps) {
                   return (
                     <span
                       key={pageNum}
-                      className="flex items-center px-2 text-sm"
+                      className="flex items-center px-1 sm:px-2 text-xs sm:text-sm"
                     >
                       ...
                     </span>
@@ -353,9 +372,9 @@ export function ProductsTable({ status }: ProductsTableProps) {
             size="icon"
             onClick={() => setPage(page + 1)}
             disabled={page === totalPages}
-            className="h-9 w-9"
+            className="h-8 w-8 sm:h-9 sm:w-9"
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
           </Button>
         </div>
       )}

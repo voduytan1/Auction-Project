@@ -1,6 +1,8 @@
 import { Link, useNavigate } from "react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -15,7 +17,7 @@ import { PageLoader } from "@/components/PageLoader";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { registerUser, clearError } from "@/store/slices/authSlice";
 import { registerSchema, type RegisterFormData } from "../schemas/validation";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaGithub } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
@@ -23,6 +25,7 @@ import { FaXTwitter } from "react-icons/fa6";
 export function RegisterForm() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { executeRecaptcha } = useGoogleReCaptcha();
   const { isLoading, error, isAuthenticated } = useAppSelector(
     (state) => state.auth
   );
@@ -48,12 +51,32 @@ export function RegisterForm() {
     };
   }, [dispatch]);
 
-  const onSubmit = async (data: RegisterFormData) => {
-    const result = await dispatch(registerUser(data));
-    if (registerUser.fulfilled.match(result)) {
-      navigate("/auth/login");
-    }
-  };
+  // Handle reCAPTCHA verification and form submission
+  const onSubmit = useCallback(
+    async (data: RegisterFormData) => {
+      if (!executeRecaptcha) {
+        toast.error("reCAPTCHA chưa sẵn sàng. Vui lòng thử lại!");
+        return;
+      }
+
+      try {
+        // Get reCAPTCHA token
+        const captchaToken = await executeRecaptcha("register");
+
+        // Submit with captcha token
+        const result = await dispatch(registerUser({ ...data, captchaToken }));
+
+        if (registerUser.fulfilled.match(result)) {
+          toast.success("Đăng ký thành công! Vui lòng đăng nhập.");
+          navigate("/auth/login");
+        }
+      } catch (error) {
+        console.error("reCAPTCHA error:", error);
+        toast.error("Xác thực reCAPTCHA thất bại. Vui lòng thử lại!");
+      }
+    },
+    [executeRecaptcha, dispatch, navigate]
+  );
 
   return (
     <Card className="relative">
@@ -63,7 +86,7 @@ export function RegisterForm() {
         </div>
       )}
       <CardHeader className="text-center">
-        <CardTitle>Tạo Tài Khoản</CardTitle>
+        <CardTitle>Đăng ký</CardTitle>
         <CardDescription>Đăng ký để bắt đầu tham gia đấu giá</CardDescription>
       </CardHeader>
       <CardContent>
@@ -140,7 +163,7 @@ export function RegisterForm() {
             <p className="text-sm text-destructive text-center">{error}</p>
           )}
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Đang tạo tài khoản..." : "Tạo Tài Khoản"}
+            {isLoading ? "Đang đăng ký..." : "Đăng ký"}
           </Button>
 
           {/* Divider */}
