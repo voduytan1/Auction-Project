@@ -1,5 +1,6 @@
 package com.example.backend.service;
 
+import com.example.backend.dto.admin.dashboard.CategoryDistribution;
 import com.example.backend.dto.admin.dashboard.NewUserDataPoint;
 import com.example.backend.dto.admin.dashboard.ProductDataPoint;
 import com.example.backend.dto.product.CreateProductRequest;
@@ -23,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
@@ -121,5 +123,15 @@ public class ProductService {
             data.add(new ProductDataPoint(i, newProduct, completedProduct));
         }
         return data;
+    }
+
+    public List<CategoryDistribution> getProductByCategoriesChart() {
+        return productRepository.countProductsGroupedByRootCategory();
+    }
+
+    @Transactional
+    public Page<@NotNull ProductResponse> getProductByCategory(Long categoryId, String search, Pageable pageable) {
+        Page<@NotNull Product> productPage = productRepository.findByRootCategoryAndSearch(categoryId, search, pageable);
+        return productPage.map(productMapper::toResponse);
     }
 }

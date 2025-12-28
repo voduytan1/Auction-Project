@@ -2,10 +2,7 @@ package com.example.backend.controller;
 
 import com.example.backend.dto.admin.UpgradeRequest.UpgradeRequestResponse;
 import com.example.backend.dto.admin.config.CreateConfigRequest;
-import com.example.backend.dto.admin.dashboard.NewUserDataPoint;
-import com.example.backend.dto.admin.dashboard.ProductDataPoint;
-import com.example.backend.dto.admin.dashboard.RevenueDataPoint;
-import com.example.backend.dto.admin.dashboard.UpgradeRequestChartResponse;
+import com.example.backend.dto.admin.dashboard.*;
 import com.example.backend.dto.common.ApiResponse;
 import com.example.backend.dto.common.PaginationInfo;
 import com.example.backend.dto.common.PaginationRequest;
@@ -125,6 +122,12 @@ public class AdminController {
     @GetMapping("/dashboard/product/this-year")
     public ResponseEntity<@NotNull ApiResponse<List<ProductDataPoint>>> getMonthlyProductChart(){
         List<ProductDataPoint> response = productService.getNewProductChart();
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/dashboard/categories")
+    public ResponseEntity<@NotNull ApiResponse<List<CategoryDistribution>>> getCategoriesChart(){
+        List<CategoryDistribution> response = productService.getProductByCategoriesChart();
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

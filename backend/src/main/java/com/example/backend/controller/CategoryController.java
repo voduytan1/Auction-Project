@@ -83,6 +83,27 @@ public class CategoryController {
         ));
     }
 
+    @GetMapping("/{id}/products/parent-category")
+    public ResponseEntity<@NotNull ApiResponse<List<ProductResponse>>> getProductByParentCategoryById(@PathVariable Long id, @ModelAttribute @Valid PaginationRequest paginationRequest) {
+        CategoryResponse categoryResponse = categoryService.getById(id);
+        if(categoryResponse.getParentCategoryId() != null){
+            throw new IllegalArgumentException("Phải truyền tham số là id của danh mục cha");
+        }
+
+        Pageable pageable = paginationRequest.getPageable();
+        String search = paginationRequest.getSearch();
+
+        Page<@NotNull ProductResponse> page = productService.getProductByCategory(id, search, pageable);
+
+        PaginationInfo paginationInfo = PageUtils.fromPage(page, paginationRequest.getTrimmedSearch());
+
+        String message = "Lấy danh sách sản phẩm con thành công";
+
+        return ResponseEntity.ok(ApiResponse.successWithPagination(message,page.getContent(), paginationInfo));
+
+    }
+
+
     @GetMapping("/{id}/sub-category")
     public ResponseEntity<@NotNull ApiResponse<List<CategoryResponse>>> getSubCategoryByParent(@PathVariable Long id, @ModelAttribute @Valid PaginationRequest paginationRequest) {
         Pageable pageable = paginationRequest.getPageable();
