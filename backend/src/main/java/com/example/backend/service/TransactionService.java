@@ -207,4 +207,14 @@ public class TransactionService {
         }
         return data;
     }
+
+    public BigDecimal getMonthRevenue(int month){
+        LocalDateTime start = DateUtils.getStartOfSpecificMonth(month);
+        LocalDateTime end = DateUtils.getEndOfSpecificMonth(month);
+        return transactionRepository.sumRevenueByDateRange(start,end);
+    }
+
+    public BigDecimal getRevenue(){
+        return transactionRepository.sumRevenue();
+    }
 }

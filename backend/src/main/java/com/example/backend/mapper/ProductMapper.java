@@ -1,5 +1,6 @@
 package com.example.backend.mapper;
 
+import com.example.backend.dto.admin.dashboard.TopAuctionsResponse;
 import com.example.backend.dto.product.CreateProductRequest;
 import com.example.backend.dto.product.ProductResponse;
 import com.example.backend.entity.ConfigVariable;
@@ -37,6 +38,8 @@ public abstract class ProductMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "giaHienTai", ignore = true)
     public abstract Product toEntity(CreateProductRequest request);
+
+    public abstract TopAuctionsResponse toTopAuctionsResponse(Product product);
 
     @Mapping(target = "images",source = "product.images", qualifiedByName = "mapImages")
     @Mapping(target = "categoryId", source = "product.category.categoryid")

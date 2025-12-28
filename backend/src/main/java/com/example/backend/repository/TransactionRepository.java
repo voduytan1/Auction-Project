@@ -30,4 +30,8 @@ public interface TransactionRepository extends JpaRepository<@NotNull Transactio
     BigDecimal sumRevenueByDateRange(@Param("start") LocalDateTime start,
                                      @Param("end") LocalDateTime end);
 
+
+    @Query("SELECT COALESCE(SUM(t.giaCuoiCung), 0) FROM Transaction t " +
+            "WHERE t.trangThai = 'COMPLETED' ")
+    BigDecimal sumRevenue();
 }

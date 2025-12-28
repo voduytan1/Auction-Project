@@ -3,6 +3,7 @@ package com.example.backend.service;
 import com.example.backend.dto.admin.dashboard.CategoryDistribution;
 import com.example.backend.dto.admin.dashboard.NewUserDataPoint;
 import com.example.backend.dto.admin.dashboard.ProductDataPoint;
+import com.example.backend.dto.admin.dashboard.TopAuctionsResponse;
 import com.example.backend.dto.product.CreateProductRequest;
 import com.example.backend.dto.product.ProductResponse;
 import com.example.backend.dto.product.filtercriteria.ProductFilterRequest;
@@ -133,5 +134,20 @@ public class ProductService {
     public Page<@NotNull ProductResponse> getProductByCategory(Long categoryId, String search, Pageable pageable) {
         Page<@NotNull Product> productPage = productRepository.findByRootCategoryAndSearch(categoryId, search, pageable);
         return productPage.map(productMapper::toResponse);
+    }
+
+    public Long countActive(){
+        return productRepository.countByTrangThai(ProductStatus.ACTIVE);
+    }
+
+    public Long countActiveToday(){
+        return productRepository.countByTrangThaiAndCreatedAtBetween(ProductStatus.ACTIVE, DateUtils.getStartOfToday(), DateUtils.getEndOfToday());
+    }
+
+    public List<TopAuctionsResponse> getTop3ProductByPrice(){
+        List<Product> products = productRepository.findTop3ByTrangThaiOrderByGiaHienTaiDesc(ProductStatus.ACTIVE);
+        return products.stream()
+                .map(productMapper::toTopAuctionsResponse)
+                .toList();
     }
 }
