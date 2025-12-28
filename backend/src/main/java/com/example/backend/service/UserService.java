@@ -1,6 +1,8 @@
 package com.example.backend.service;
 
 
+import com.example.backend.dto.admin.dashboard.NewUserDataPoint;
+import com.example.backend.dto.admin.dashboard.ProductDataPoint;
 import com.example.backend.dto.common.PaginationRequest;
 import com.example.backend.dto.user.CreateUserRequest;
 import com.example.backend.dto.user.UpdateUserRequest;
@@ -11,6 +13,7 @@ import com.example.backend.mapper.UserMapper;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.service.base.BaseService;
 import com.example.backend.utils.AuthUtils;
+import com.example.backend.utils.DateUtils;
 import com.example.backend.utils.PageUtils;
 import com.example.backend.utils.UserValidationUtils;
 import jakarta.persistence.EntityNotFoundException;
@@ -166,6 +169,20 @@ public class UserService extends BaseService<User, UUID, CreateUserRequest, Upda
         user.setVaitro(Role.SELLER);
         user.setThoiHanBanHang(LocalDateTime.now().plusDays(7));
         userRepository.save(user);
+    }
+
+    public List<NewUserDataPoint> getNewUserChart() {
+        List<NewUserDataPoint> data = new ArrayList<>();
+
+        for(int i = 1; i <= 12; i++) {
+            LocalDateTime start = DateUtils.getStartOfSpecificMonth(i);
+            LocalDateTime end = DateUtils.getEndOfSpecificMonth(i);
+            Long bidder = userRepository.countByVaitroAndCreatedAtBetween(Role.BIDDER, start, end);
+            Long seller = userRepository.countByVaitroAndCreatedAtBetween(Role.SELLER, start, end);
+
+            data.add(new NewUserDataPoint(i, bidder, seller));
+        }
+        return data;
     }
 
     private void setPasswordIfProvided(User entity, String rawPassword) {

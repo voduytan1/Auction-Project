@@ -64,7 +64,7 @@ public class Product {
     @Column(name = "trang_thai", nullable = false)
     ProductStatus trangThai = ProductStatus.ACTIVE;
 
-    @Column(name = "thoi_gian_ket_thuc", nullable = false)
+    @Column(name = "thoi_gian_ket_thuc", nullable = true)
     LocalDateTime thoiGianKetThuc;
 
     @Column(name = "so_luot_ra_gia")
@@ -85,7 +85,7 @@ public class Product {
     @Column(name = "search_text", columnDefinition = "TEXT")
     String searchText;
 
-    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<ProductDescriptionHistory> productDescriptionHistories;
 
     @CreationTimestamp

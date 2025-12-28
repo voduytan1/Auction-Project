@@ -1,5 +1,7 @@
 package com.example.backend.service;
 
+import com.example.backend.dto.admin.dashboard.NewUserDataPoint;
+import com.example.backend.dto.admin.dashboard.ProductDataPoint;
 import com.example.backend.dto.product.CreateProductRequest;
 import com.example.backend.dto.product.ProductResponse;
 import com.example.backend.dto.product.filtercriteria.ProductFilterRequest;
@@ -7,6 +9,7 @@ import com.example.backend.entity.*;
 import com.example.backend.mapper.ProductMapper;
 import com.example.backend.repository.*;
 import com.example.backend.specification.ProductSpecification;
+import com.example.backend.utils.DateUtils;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.jetbrains.annotations.NotNull;
@@ -104,5 +107,19 @@ public class ProductService {
         ProductResponse response = productMapper.toResponse(product);
         response.setTransactionId(transaction ==  null ? null : transaction.getTransactionid());
         return response;
+    }
+
+    public List<ProductDataPoint> getNewProductChart() {
+        List<ProductDataPoint> data = new ArrayList<>();
+
+        for(int i = 1; i <= 12; i++) {
+            LocalDateTime start = DateUtils.getStartOfSpecificMonth(i);
+            LocalDateTime end = DateUtils.getEndOfSpecificMonth(i);
+            Long newProduct = productRepository.countByTrangThaiAndCreatedAtBetween(ProductStatus.ACTIVE,start, end);
+            Long completedProduct = productRepository.countByTrangThaiAndUpdatedAtBetween(ProductStatus.COMPLETED,start, end);
+
+            data.add(new ProductDataPoint(i, newProduct, completedProduct));
+        }
+        return data;
     }
 }
