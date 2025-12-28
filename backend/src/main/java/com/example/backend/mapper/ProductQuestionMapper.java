@@ -19,6 +19,7 @@ public interface ProductQuestionMapper {
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntity(AnswerProductQuestionRequest dto,  @MappingTarget ProductQuestion entity);
 
+    @Mapping(target = "questionId", source = "questionid")
     @Mapping(target = "productId", source = "productQuestion.product.productid")
     @Mapping(target = "askerId", source = "productQuestion.asker.userid")
     @Mapping(target = "tenNguoiHoi", source = "productQuestion.asker.hoVaTen")

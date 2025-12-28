@@ -2,6 +2,7 @@ package com.example.backend.controller;
 
 import com.example.backend.dto.admin.UpgradeRequest.UpgradeRequestResponse;
 import com.example.backend.dto.admin.config.CreateConfigRequest;
+import com.example.backend.dto.admin.dashboard.UpgradeRequestChartResponse;
 import com.example.backend.dto.common.ApiResponse;
 import com.example.backend.dto.common.PaginationInfo;
 import com.example.backend.dto.common.PaginationRequest;
@@ -9,6 +10,7 @@ import com.example.backend.entity.ConfigVariable;
 import com.example.backend.entity.Configuration;
 import com.example.backend.service.ConfigurationService;
 import com.example.backend.service.UpgradeRequestService;
+import com.example.backend.utils.DateUtils;
 import com.example.backend.utils.PageUtils;
 import jakarta.validation.Valid;
 import org.jetbrains.annotations.NotNull;
@@ -80,5 +82,26 @@ public class AdminController {
         Configuration config = configurationService.setConfigurationVariable(request);
         return ResponseEntity.ok(ApiResponse.success(config));
     }
+
+    //Dashboard
+    @GetMapping("/dashboard/upgrade-request/today")
+    public ResponseEntity<@NotNull ApiResponse<UpgradeRequestChartResponse>> getTodayUpgradeRequestChart(){
+        UpgradeRequestChartResponse response = upgradeRequestService.getUpgradeRequestChart(DateUtils.getStartOfToday(), DateUtils.getEndOfToday());
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/dashboard/upgrade-request/weekly")
+    public ResponseEntity<@NotNull ApiResponse<UpgradeRequestChartResponse>> getWeaklyUpgradeRequestChart(){
+        UpgradeRequestChartResponse response = upgradeRequestService.getUpgradeRequestChart(DateUtils.getStartOfWeek(), DateUtils.getEndOfWeek());
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/dashboard/upgrade-request/monthly")
+    public ResponseEntity<@NotNull ApiResponse<UpgradeRequestChartResponse>> getMonthlyUpgradeRequestChart(){
+        UpgradeRequestChartResponse response = upgradeRequestService.getUpgradeRequestChart(DateUtils.getStartOfMonth(), DateUtils.getEndOfMonth());
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+
 }
 
