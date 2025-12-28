@@ -5,6 +5,7 @@ import type {
   BidUpdateMessage,
   BidHistoryItemMessage,
   ProductStatusMessage,
+  TransactionStatusMessage,
 } from "@/types/websocket";
 
 const WS_URL = "http://localhost:8080/ws";
@@ -12,6 +13,9 @@ const WS_URL = "http://localhost:8080/ws";
 export type BidUpdateCallback = (message: BidUpdateMessage) => void;
 export type BidHistoryCallback = (messages: BidHistoryItemMessage[]) => void;
 export type ProductStatusCallback = (message: ProductStatusMessage) => void;
+export type TransactionStatusCallback = (
+  message: TransactionStatusMessage
+) => void;
 
 class WebSocketService {
   private client: Client | null = null;
@@ -182,6 +186,42 @@ class WebSocketService {
         callback(data);
       } catch (error) {
         console.error("[WebSocket] Error parsing product status:", error);
+      }
+    });
+
+    this.subscriptions.set(key, subscription);
+    return key;
+  }
+
+  /**
+   * Subscribe to transaction status changes
+   * @param transactionId - Transaction ID to subscribe to
+   * @param callback - Callback function when transaction status changes
+   * @returns Subscription key for unsubscribing
+   */
+  subscribeToTransactionStatus(
+    transactionId: number,
+    callback: TransactionStatusCallback
+  ): string {
+    const topic = `/topic/transaction/${transactionId}/status`;
+    const key = `transaction-${transactionId}`;
+
+    if (this.subscriptions.has(key)) {
+      console.warn(`[WebSocket] Already subscribed to ${topic}`);
+      return key;
+    }
+
+    if (!this.client?.connected) {
+      console.error("[WebSocket] Not connected. Cannot subscribe.");
+      return key;
+    }
+
+    const subscription = this.client.subscribe(topic, (message: IMessage) => {
+      try {
+        const data: TransactionStatusMessage = JSON.parse(message.body);
+        callback(data);
+      } catch (error) {
+        console.error("[WebSocket] Error parsing transaction status:", error);
       }
     });
 

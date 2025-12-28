@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Eye,
@@ -9,6 +9,8 @@ import {
   FileText,
   UserX,
   XCircle,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   Table,
@@ -18,14 +20,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -39,24 +38,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { AppendDescriptionDialog } from "./AppendDescriptionDialog";
+import { productAPI, type ProductResponse } from "@/services/product.api";
+import { PageLoader } from "@/components/PageLoader";
+import { useAppSelector } from "@/hooks/use-redux";
 import { RejectBidderDialog } from "./RejectBidderDialog";
 import { CancelTransactionDialog } from "./CancelTransactionDialog";
-
-interface Product {
-  id: string;
-  tenSanPham: string;
-  giaKhoiDiem: number;
-  giaHienTai: number;
-  soLuotDauGia: number;
-  thoiGianBatDau: string;
-  thoiGianKetThuc: string;
-  trangThai: string;
-  nguoiThang?: {
-    username: string;
-    hoVaTen: string;
-  };
-}
 
 interface ProductsTableProps {
   status: "ACTIVE" | "COMPLETED" | "CANCELLED";
@@ -64,114 +50,65 @@ interface ProductsTableProps {
 
 export function ProductsTable({ status }: ProductsTableProps) {
   const navigate = useNavigate();
+  const user = useAppSelector((state) => state.auth.user);
 
-  // Mock data for different statuses
-  const mockProducts: Record<string, Product[]> = {
-    ACTIVE: [
-      {
-        id: "1",
-        tenSanPham: "iPhone 15 Pro Max 256GB",
-        giaKhoiDiem: 25000000,
-        giaHienTai: 28500000,
-        soLuotDauGia: 12,
-        thoiGianBatDau: "2024-12-20T10:00:00",
-        thoiGianKetThuc: "2024-12-25T18:00:00",
-        trangThai: "ACTIVE",
-      },
-      {
-        id: "2",
-        tenSanPham: "MacBook Pro M3 14 inch",
-        giaKhoiDiem: 35000000,
-        giaHienTai: 37200000,
-        soLuotDauGia: 8,
-        thoiGianBatDau: "2024-12-21T09:00:00",
-        thoiGianKetThuc: "2024-12-26T20:00:00",
-        trangThai: "ACTIVE",
-      },
-      {
-        id: "3",
-        tenSanPham: "Sony WH-1000XM5 - Tai nghe chống ồn cao cấp",
-        giaKhoiDiem: 5000000,
-        giaHienTai: 5500000,
-        soLuotDauGia: 15,
-        thoiGianBatDau: "2024-12-19T14:00:00",
-        thoiGianKetThuc: "2024-12-24T22:00:00",
-        trangThai: "ACTIVE",
-      },
-    ],
-    COMPLETED: [
-      {
-        id: "4",
-        tenSanPham: "iPad Air M2 2024 - 128GB",
-        giaKhoiDiem: 12000000,
-        giaHienTai: 14500000,
-        soLuotDauGia: 20,
-        thoiGianBatDau: "2024-12-10T10:00:00",
-        thoiGianKetThuc: "2024-12-15T18:00:00",
-        trangThai: "COMPLETED",
-        nguoiThang: {
-          username: "bidder123",
-          hoVaTen: "Nguyễn Văn A",
-        },
-      },
-      {
-        id: "5",
-        tenSanPham: "Samsung Galaxy S24 Ultra",
-        giaKhoiDiem: 20000000,
-        giaHienTai: 23800000,
-        soLuotDauGia: 18,
-        thoiGianBatDau: "2024-12-08T09:00:00",
-        thoiGianKetThuc: "2024-12-13T20:00:00",
-        trangThai: "COMPLETED",
-        nguoiThang: {
-          username: "buyer456",
-          hoVaTen: "Trần Thị B",
-        },
-      },
-    ],
-    CANCELLED: [
-      {
-        id: "6",
-        tenSanPham: "AirPods Pro 2nd Gen",
-        giaKhoiDiem: 4500000,
-        giaHienTai: 4500000,
-        soLuotDauGia: 0,
-        thoiGianBatDau: "2024-12-05T10:00:00",
-        thoiGianKetThuc: "2024-12-10T18:00:00",
-        trangThai: "CANCELLED",
-      },
-    ],
-  };
+  const [products, setProducts] = useState<ProductResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const size = 10;
 
-  const [products] = useState<Product[]>(mockProducts[status] || []);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] =
+    useState<ProductResponse | null>(null);
 
   // Dialog states for new seller features
-  const [appendDescOpen, setAppendDescOpen] = useState(false);
   const [rejectBidderOpen, setRejectBidderOpen] = useState(false);
   const [cancelTransactionOpen, setCancelTransactionOpen] = useState(false);
 
-  // TODO: Fetch products from API based on status
-  // useEffect(() => {
-  //   const fetchProducts = async () => {
-  //     const data = await productApi.getSellerProducts(status);
-  //     setProducts(data);
-  //   };
-  //   fetchProducts();
-  // }, [status]);
+  // Fetch products from API based on status and seller
+  const fetchProducts = useCallback(async () => {
+    if (!user?.userid) return;
 
-  const handleViewDetails = (productId: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await productAPI.search({
+        status,
+        sellerId: user.userid,
+        page,
+        size,
+      });
+
+      // Response interceptor extracts data, metadata is in __raw__
+      const data = Array.isArray(response.data) ? response.data : [];
+      const metadata = (response as any).__raw__?.metadata;
+
+      setProducts(data);
+      setTotalPages(metadata?.totalPages || 0);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+    } finally {
+      setLoading(false);
+    }
+  }, [status, user?.userid, page, size]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  const handleViewDetails = (productId: number) => {
     // Navigate to product details page
     navigate(`/products/${productId}`);
   };
 
-  const handleEdit = (productId: string) => {
+  const handleEdit = (productId: number) => {
     // Navigate to edit page
     navigate(`/seller/products/edit/${productId}`);
   };
 
-  const handleCancelProduct = (product: Product) => {
+  const handleCancelProduct = (product: ProductResponse) => {
     setSelectedProduct(product);
     setCancelDialogOpen(true);
   };
@@ -181,34 +118,33 @@ export function ProductsTable({ status }: ProductsTableProps) {
 
     try {
       // TODO: Call API to cancel product
-      // await productApi.cancelProduct(selectedProduct.id);
+      // await productApi.cancelProduct(selectedProduct.productid);
       toast.success("Đã hủy sản phẩm thành công!");
       setCancelDialogOpen(false);
       setSelectedProduct(null);
-      // Refresh products list
+      fetchProducts(); // Refresh products list
     } catch {
       toast.error("Không thể hủy sản phẩm. Vui lòng thử lại!");
     }
   };
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleRateBuyer = (_productId: string) => {
+  const handleRateBuyer = (_productId: number) => {
     // Open rating dialog
     // TODO: Implement rating functionality with productId
     toast.info("Tính năng đánh giá đang được phát triển");
   };
 
-  const handleAppendDescription = (product: Product) => {
-    setSelectedProduct(product);
-    setAppendDescOpen(true);
+  const handleAppendDescription = (productId: number) => {
+    navigate(`/seller/products/${productId}/append-description`);
   };
 
-  const handleRejectBidder = (product: Product) => {
+  const handleRejectBidder = (product: ProductResponse) => {
     setSelectedProduct(product);
     setRejectBidderOpen(true);
   };
 
-  const handleCancelTransaction = (product: Product) => {
+  const handleCancelTransaction = (product: ProductResponse) => {
     setSelectedProduct(product);
     setCancelTransactionOpen(true);
   };
@@ -223,6 +159,18 @@ export function ProductsTable({ status }: ProductsTableProps) {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString("vi-VN");
   };
+
+  if (loading) {
+    return <PageLoader message="Đang tải sản phẩm..." />;
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12 text-destructive">
+        <p className="text-lg font-medium">Lỗi: {error.message}</p>
+      </div>
+    );
+  }
 
   if (products.length === 0) {
     return (
@@ -250,13 +198,12 @@ export function ProductsTable({ status }: ProductsTableProps) {
             <TableHead className="text-center">Số lượt đấu</TableHead>
             <TableHead>Thời gian kết thúc</TableHead>
             {status === "COMPLETED" && <TableHead>Người thắng</TableHead>}
-            <TableHead className="text-center">Trạng thái</TableHead>
             <TableHead className="text-right">Hành động</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {products.map((product) => (
-            <TableRow key={product.id}>
+            <TableRow key={product.productid}>
               <TableCell className="font-medium">
                 {product.tenSanPham}
               </TableCell>
@@ -267,19 +214,14 @@ export function ProductsTable({ status }: ProductsTableProps) {
                 {formatPrice(product.giaHienTai)}
               </TableCell>
               <TableCell className="text-center">
-                {product.soLuotDauGia}
+                {product.soLuotRaGia || 0}
               </TableCell>
               <TableCell>{formatDate(product.thoiGianKetThuc)}</TableCell>
               {status === "COMPLETED" && (
                 <TableCell>
-                  {product.nguoiThang ? (
+                  {product.tenBidder ? (
                     <div>
-                      <p className="font-medium">
-                        {product.nguoiThang.hoVaTen}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        @{product.nguoiThang.username}
-                      </p>
+                      <p className="font-medium">{product.tenBidder}</p>
                     </div>
                   ) : (
                     <span className="text-muted-foreground">
@@ -288,23 +230,6 @@ export function ProductsTable({ status }: ProductsTableProps) {
                   )}
                 </TableCell>
               )}
-              <TableCell className="text-center">
-                <Badge
-                  variant={
-                    product.trangThai === "ACTIVE"
-                      ? "default"
-                      : product.trangThai === "COMPLETED"
-                      ? "secondary"
-                      : "destructive"
-                  }
-                >
-                  {product.trangThai === "ACTIVE"
-                    ? "Đang đấu giá"
-                    : product.trangThai === "COMPLETED"
-                    ? "Đã kết thúc"
-                    : "Đã hủy"}
-                </Badge>
-              </TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -313,10 +238,8 @@ export function ProductsTable({ status }: ProductsTableProps) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Hành động</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
                     <DropdownMenuItem
-                      onClick={() => handleViewDetails(product.id)}
+                      onClick={() => handleViewDetails(product.productid)}
                     >
                       <Eye className="h-4 w-4 mr-2" />
                       Xem chi tiết
@@ -324,13 +247,15 @@ export function ProductsTable({ status }: ProductsTableProps) {
                     {status === "ACTIVE" && (
                       <>
                         <DropdownMenuItem
-                          onClick={() => handleEdit(product.id)}
+                          onClick={() => handleEdit(product.productid)}
                         >
                           <Edit className="h-4 w-4 mr-2" />
                           Chỉnh sửa
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => handleAppendDescription(product)}
+                          onClick={() =>
+                            handleAppendDescription(product.productid)
+                          }
                         >
                           <FileText className="h-4 w-4 mr-2" />
                           Bổ sung mô tả
@@ -351,10 +276,10 @@ export function ProductsTable({ status }: ProductsTableProps) {
                         </DropdownMenuItem>
                       </>
                     )}
-                    {status === "COMPLETED" && product.nguoiThang && (
+                    {status === "COMPLETED" && product.tenBidder && (
                       <>
                         <DropdownMenuItem
-                          onClick={() => handleRateBuyer(product.id)}
+                          onClick={() => handleRateBuyer(product.productid)}
                         >
                           <Star className="h-4 w-4 mr-2" />
                           Đánh giá người mua
@@ -375,6 +300,65 @@ export function ProductsTable({ status }: ProductsTableProps) {
           ))}
         </TableBody>
       </Table>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setPage(page - 1)}
+            disabled={page === 1}
+            className="h-9 w-9"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+
+          <div className="flex flex-wrap gap-1 justify-center">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+              (pageNum) => {
+                if (
+                  pageNum === 1 ||
+                  pageNum === totalPages ||
+                  (pageNum >= page - 1 && pageNum <= page + 1)
+                ) {
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={page === pageNum ? "default" : "outline"}
+                      size="icon"
+                      onClick={() => setPage(pageNum)}
+                      className="h-9 w-9"
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                } else if (pageNum === page - 2 || pageNum === page + 2) {
+                  return (
+                    <span
+                      key={pageNum}
+                      className="flex items-center px-2 text-sm"
+                    >
+                      ...
+                    </span>
+                  );
+                }
+                return null;
+              }
+            )}
+          </div>
+
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setPage(page + 1)}
+            disabled={page === totalPages}
+            className="h-9 w-9"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
 
       {/* Cancel Confirmation Dialog */}
       <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
@@ -398,27 +382,16 @@ export function ProductsTable({ status }: ProductsTableProps) {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Append Description Dialog */}
-      {selectedProduct && (
-        <AppendDescriptionDialog
-          open={appendDescOpen}
-          onOpenChange={setAppendDescOpen}
-          productId={selectedProduct.id}
-          productName={selectedProduct.tenSanPham}
-          currentDescription="Sản phẩm chính hãng, còn bảo hành 11 tháng. Máy nguyên seal, chưa kích hoạt. Đầy đủ phụ kiện theo hộp."
-        />
-      )}
-
       {/* Reject Bidder Dialog */}
-      {selectedProduct && (
+      {selectedProduct && selectedProduct.bidderId && (
         <RejectBidderDialog
           open={rejectBidderOpen}
           onOpenChange={setRejectBidderOpen}
-          productId={selectedProduct.id}
+          productId={selectedProduct.productid.toString()}
           productName={selectedProduct.tenSanPham}
           currentBidder={{
-            userId: "user123",
-            username: "bidder_suspicious",
+            userId: selectedProduct.bidderId,
+            username: selectedProduct.tenBidder || selectedProduct.bidderId,
             currentBid: selectedProduct.giaHienTai,
           }}
           secondHighestBidder={{
@@ -430,17 +403,19 @@ export function ProductsTable({ status }: ProductsTableProps) {
       )}
 
       {/* Cancel Transaction Dialog */}
-      {selectedProduct && selectedProduct.nguoiThang && (
-        <CancelTransactionDialog
-          open={cancelTransactionOpen}
-          onOpenChange={setCancelTransactionOpen}
-          productId={selectedProduct.id}
-          productName={selectedProduct.tenSanPham}
-          winnerId={selectedProduct.nguoiThang.username}
-          winnerName={selectedProduct.nguoiThang.hoVaTen}
-          finalBid={selectedProduct.giaHienTai}
-        />
-      )}
+      {selectedProduct &&
+        selectedProduct.bidderId &&
+        selectedProduct.tenBidder && (
+          <CancelTransactionDialog
+            open={cancelTransactionOpen}
+            onOpenChange={setCancelTransactionOpen}
+            productId={selectedProduct.productid.toString()}
+            productName={selectedProduct.tenSanPham}
+            winnerId={selectedProduct.bidderId}
+            winnerName={selectedProduct.tenBidder}
+            finalBid={selectedProduct.giaHienTai}
+          />
+        )}
     </>
   );
 }

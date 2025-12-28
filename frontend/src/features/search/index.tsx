@@ -55,14 +55,9 @@ export default function SearchResults() {
           size: ITEMS_PER_PAGE,
         });
 
-        console.log("[SearchPage] Full Response:", response);
-
         // Response interceptor đã extract data, metadata ở __raw__
         const productsData = Array.isArray(response.data) ? response.data : [];
         const metadata = (response as any).__raw__?.metadata;
-
-        console.log("[SearchPage] Products:", productsData);
-        console.log("[SearchPage] Metadata:", metadata);
 
         setProducts(productsData);
         setTotalProducts(metadata?.totalElements ?? 0);
@@ -137,7 +132,8 @@ export default function SearchResults() {
     submittedQuery || categoryFilter !== "all" || sortBy !== "endTime-desc"
   );
 
-  if (loading) {
+  // Show loading state only for initial load (no products yet)
+  if (loading && !products.length) {
     return <PageLoader />;
   }
 
@@ -248,7 +244,6 @@ export default function SearchResults() {
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
-
             </>
           )}
         </>

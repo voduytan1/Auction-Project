@@ -35,6 +35,7 @@ export interface ProductResponse {
   createdAt: string; // LocalDateTime
   thoiGianKetThuc: string; // LocalDateTime
   trangThai: "PENDING" | "ACTIVE" | "COMPLETED" | "CANCELLED";
+  soLuotRaGia?: number; // Number of bids placed
 
   // Category info
   categoryId: number;
@@ -54,6 +55,7 @@ export interface ProductResponse {
 
   images: string[];
   sellerId: string;
+  transactionId?: number; // Transaction ID if product is COMPLETED
 }
 
 /**
@@ -68,12 +70,14 @@ export const productAPI = {
     api.post<ProductResponse>("/products", data),
 
   /**
-   * POST /products/{id}/description - Append description to product
+   * PATCH /products - Append description to product
    * Seller only - appends new content to existing description
+   * Body: { productId: number, noiDungThem: string }
    */
-  appendDescription: (id: number | string, content: string) =>
-    api.post<DescriptionHistoryResponse>(`/products/${id}/description`, {
-      content,
+  appendDescription: (productId: number | string, noiDungThem: string) =>
+    api.patch<DescriptionHistoryResponse>("/products", {
+      productId: Number(productId),
+      noiDungThem,
     }),
 
   /**
@@ -91,7 +95,11 @@ export const productAPI = {
 
   /**
    * GET /products - Search products with filters
-   * Query params: search, size, page, categoryId, minPrice, maxPrice
+   * Query params: search, size, page, categoryId, minPrice, maxPrice, sortBy, sortOrder, status, sellerId
+   * sortBy: 'thoiGianKetThuc' | 'giaHienTai' | 'createdAt' | any other entity field
+   * sortOrder: 'asc' | 'desc'
+   * status: 'PENDING' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED'
+   * sellerId: UUID string to filter by seller
    * Backend handles Vietnamese full-text search automatically
    * Response: ApiResponse<ProductResponse[]> with metadata field
    */
@@ -102,21 +110,9 @@ export const productAPI = {
     categoryId?: number;
     minPrice?: number;
     maxPrice?: number;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
+    status?: "PENDING" | "ACTIVE" | "COMPLETED" | "CANCELLED";
+    sellerId?: string;
   }) => api.get<ApiResponse<ProductResponse[]>>("/products", { params }),
-
-  // TODO: Add when backend implements these endpoints
-  // getAll: (params?: { page?: number; size?: number; search?: string; categoryId?: number; status?: string }) =>
-  //   api.get<PaginatedResponse<ProductResponse>>("/products", { params }),
-
-  // update: (id: number, data: UpdateProductRequest) =>
-  //   api.put<ProductResponse>(`/products/${id}`, data),
-
-  // delete: (id: number) =>
-  //   api.delete<void>(`/products/${id}`),
-
-  // placeBid: (id: number, amount: number) =>
-  //   api.post<BidHistoryResponse>(`/products/${id}/bids`, { amount }),
-
-  // getBidHistory: (id: number) =>
-  //   api.get<BidHistoryResponse[]>(`/products/${id}/bids`),
 };

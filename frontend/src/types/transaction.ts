@@ -87,7 +87,7 @@ export function getStepFromStatus(status: TransactionStatus): number {
     case "SHIPPED":
       return 3; // Đã gửi hàng, chờ buyer xác nhận nhận hàng
     case "COMPLETED":
-      return 4; // Hoàn tất, có thể đánh giá
+      return 4; // Hoàn tất - Kết thúc
     case "CANCELLED":
       return -1;
     default:

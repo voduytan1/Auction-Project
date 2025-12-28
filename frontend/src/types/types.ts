@@ -3,6 +3,8 @@
  * Generated from backend entities and DTOs
  */
 
+import type { ProductResponse } from "@/services/product.api";
+
 // ============= Enums =============
 export type Role = "BIDDER" | "SELLER" | "ADMIN";
 
@@ -113,6 +115,17 @@ export interface CategoryResponse {
   parentCategoryName?: string; // Flattened from parent
   level: number;
   moTa?: string;
+}
+
+// Category with products (for category detail page)
+export interface CategoryWithProductResponse {
+  categoryid: number;
+  tenDanhMuc: string;
+  parentCategoryId?: number; // Flattened from parent
+  parentCategoryName?: string; // Flattened from parent
+  level: number;
+  moTa?: string;
+  products: ProductResponse[]; // From product.api.ts
 }
 
 // Helper interfaces for frontend display
@@ -289,13 +302,7 @@ export interface UpgradeRequest {
   updatedAt: string;
 }
 
-// ============= Pagination Types =============
-export interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
-}
+
 
 export interface PaginationParams {
   page?: number;

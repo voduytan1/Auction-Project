@@ -1,6 +1,7 @@
 ﻿import { useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { PageWrapper } from "@/components/PageWrapper";
+import { TransactionNotification } from "@/components/TransactionNotification";
 import { TransactionStepper } from "./components/TransactionStepper";
 import { TransactionSummary } from "./components/TransactionSummary";
 import { PaymentAction } from "./components/PaymentAction";
@@ -16,9 +17,10 @@ import { useAppSelector } from "@/hooks/use-redux";
 import { useFetch } from "@/hooks/use-fetch";
 import { transactionAPI } from "@/services/transaction.api";
 import { ratingAPI } from "@/services/rating.api";
-import { ArrowLeft, AlertCircle } from "lucide-react";
+import { ArrowLeft, AlertCircle, Star } from "lucide-react";
 import { toast } from "sonner";
 import type { Transaction } from "@/types/transaction";
+import type { TransactionStatusMessage } from "@/types/websocket";
 import { getStepFromStatus } from "@/types/transaction";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -86,6 +88,11 @@ export default function TransactionDetailPage() {
     user?.userid === (currentTransaction as Transaction)?.buyerId
       ? "buyer"
       : "seller";
+
+  // Check if current user is involved in this transaction
+  const isUserInvolved =
+    user?.userid === currentTransaction?.buyerId ||
+    user?.userid === currentTransaction?.sellerId;
 
   const currentStep = getStepFromStatus(
     (currentTransaction as Transaction)?.trangThai
@@ -173,8 +180,29 @@ export default function TransactionDetailPage() {
     }
   };
 
+  // Handle transaction status change from WebSocket
+  const handleTransactionStatusChange = (message: TransactionStatusMessage) => {
+    // Update local transaction with new status
+    if (currentTransaction) {
+      setLocalTransaction({
+        ...currentTransaction,
+        trangThai: message.trangThai as any,
+      });
+      // Refetch to get full updated data
+      refetch();
+    }
+  };
+
   return (
     <PageWrapper title={`Giao dịch #${transactionId}`}>
+      {/* Transaction Status Update Notification - Only for buyer/seller */}
+      {transactionId && isUserInvolved && (
+        <TransactionNotification
+          transactionId={Number(transactionId)}
+          onStatusChange={handleTransactionStatusChange}
+        />
+      )}
+
       <div className="container mx-auto px-4 py-8">
         <div className="mb-4 flex gap-2 items-center">
           <Button variant="ghost" onClick={() => navigate(-1)}>
@@ -256,13 +284,19 @@ export default function TransactionDetailPage() {
                     )}
 
                   {/* Step 4: Rating (COMPLETED) */}
-                  {currentStep === 4 && (
-                    <RatingAction
-                      otherPartyRole={
-                        currentUserRole === "buyer" ? "seller" : "buyer"
-                      }
-                      onSubmitRating={handleSubmitRating}
-                    />
+                  {currentTransaction.trangThai === "COMPLETED" && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Star className="h-5 w-5 text-yellow-500" />
+                        <h3 className="font-semibold">Đánh giá</h3>
+                      </div>
+                      <RatingAction
+                        otherPartyRole={
+                          currentUserRole === "buyer" ? "seller" : "buyer"
+                        }
+                        onSubmitRating={handleSubmitRating}
+                      />
+                    </div>
                   )}
 
                   {/* Cancel button (seller only, when PENDING_PAYMENT) */}

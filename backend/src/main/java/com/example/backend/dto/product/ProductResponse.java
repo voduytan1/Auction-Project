@@ -20,6 +20,7 @@ public class ProductResponse {
     private BigDecimal buocGia;
     private BigDecimal giaHienTai;
     private BigDecimal giaMuaNgay;
+    private Integer soLuotRaGia;
 
     private LocalDateTime createdAt;
     private LocalDateTime thoiGianKetThuc;
