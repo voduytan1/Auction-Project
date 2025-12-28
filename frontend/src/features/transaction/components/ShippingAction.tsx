@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+﻿import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -7,21 +7,45 @@ import { toast } from "sonner";
 interface ShippingActionProps {
   initialAddress?: string;
   onSubmitAddress: (address: string) => void;
+  isCompact?: boolean;
+}
+
+interface ShippingFormData {
+  address: string;
 }
 
 export function ShippingAction({
   initialAddress = "",
   onSubmitAddress,
+  isCompact = false,
 }: ShippingActionProps) {
-  const [address, setAddress] = useState(initialAddress);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ShippingFormData>({
+    defaultValues: { address: initialAddress },
+  });
 
-  const handleSubmit = () => {
-    if (!address.trim()) {
+  const onSubmit = (data: ShippingFormData) => {
+    if (!data.address.trim()) {
       toast.error("Vui lòng nhập địa chỉ giao hàng");
       return;
     }
-    onSubmitAddress(address);
+    onSubmitAddress(data.address);
   };
+
+  if (isCompact) {
+    return (
+      <Button
+        onClick={handleSubmit(onSubmit)}
+        className="w-full text-sm"
+        variant="default"
+      >
+        Cập nhật địa chỉ
+      </Button>
+    );
+  }
 
   return (
     <div className="space-y-3">
@@ -29,10 +53,14 @@ export function ShippingAction({
       <Textarea
         id="address"
         placeholder="Nhập địa chỉ đầy đủ..."
-        value={address}
-        onChange={(e) => setAddress(e.target.value)}
+        {...register("address", {
+          required: "Vui lòng nhập địa chỉ giao hàng",
+        })}
       />
-      <Button onClick={handleSubmit} className="w-full">
+      {errors.address && (
+        <p className="text-sm text-destructive">{errors.address.message}</p>
+      )}
+      <Button onClick={handleSubmit(onSubmit)} className="w-full">
         Xác nhận địa chỉ
       </Button>
     </div>

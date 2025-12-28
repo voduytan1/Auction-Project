@@ -8,7 +8,7 @@ import { vi } from "date-fns/locale";
 import { useAppSelector } from "@/hooks/use-redux";
 import { useNavigate } from "react-router";
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { auctionAPI } from "@/services/auction.api";
+import { bidAPI } from "@/services/bid.api";
 import type { ApiErrorResponse } from "@/types/types";
 import type { AxiosError } from "axios";
 
@@ -128,14 +128,10 @@ export function BidHistoryTable({
       setError(null);
 
       const role = user?.vaitro;
-      console.log("🔍 Fetching bid history for productId:", productId);
-      console.log("🔍 User role:", role, "isOwner:", isOwner);
 
       // BIDDER or non-owner SELLER: fetch top N only
       if (role === "BIDDER" || (role === "SELLER" && !isOwner)) {
-        const resp = await auctionAPI.getBidHistoryTop(productId, size);
-        console.log("📦 API Response (Top):", resp);
-        console.log("📦 resp.data:", resp.data);
+        const resp = await bidAPI.getBidHistoryTop(productId, size);
         const bidsData = Array.isArray(resp.data) ? resp.data : [];
         setBids(bidsData);
         setTotal(bidsData.length);
@@ -144,12 +140,10 @@ export function BidHistoryTable({
 
       // SELLER who owns this product: fetch full paged history
       if (role === "SELLER" && isOwner) {
-        const resp = await auctionAPI.getBidHistoryPaged(productId, {
+        const resp = await bidAPI.getBidHistory(productId, {
           page,
           size,
         });
-        console.log("📦 API Response (Paged):", resp);
-        console.log("📦 resp.data:", resp.data);
         const bidsData = Array.isArray(resp.data) ? resp.data : [];
         setBids(bidsData);
         setTotal(bidsData.length);
@@ -157,9 +151,7 @@ export function BidHistoryTable({
       }
 
       // ADMIN or other roles: fetch top
-      const resp = await auctionAPI.getBidHistoryTop(productId, size);
-      console.log("📦 API Response (Admin/Top):", resp);
-      console.log("📦 resp.data:", resp.data);
+      const resp = await bidAPI.getBidHistoryTop(productId, size);
       const bidsData = Array.isArray(resp.data) ? resp.data : [];
       setBids(bidsData);
       setTotal(bidsData.length);
@@ -195,7 +187,7 @@ export function BidHistoryTable({
         ) : (
           <>
             <div className="overflow-x-auto -mx-4 sm:mx-0">
-              <table className="w-full min-w-[350px]">
+              <table className="w-full min-w-87.5">
                 <thead>
                   <tr className="border-b">
                     <th className="pl-4 sm:pl-0 pb-3 text-left text-xs sm:text-sm font-semibold text-slate-600">
@@ -223,7 +215,7 @@ export function BidHistoryTable({
                           locale: vi,
                         })}
                       </td>
-                      <td className="py-3 max-w-[100px] truncate sm:max-w-none">
+                      <td className="py-3 max-w-25 truncate sm:max-w-none">
                         <span className="font-mono text-xs sm:text-sm font-semibold">
                           {bid.bidderName}
                         </span>

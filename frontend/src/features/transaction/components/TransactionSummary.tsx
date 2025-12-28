@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import type { Transaction } from "@/types/transaction";
@@ -29,19 +29,16 @@ export function TransactionSummary({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Thông tin đơn hàng</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3 sm:space-y-4 pt-0">
         {/* Product Info */}
-        <div className="flex gap-4">
+        <div className="flex gap-3 sm:gap-4">
           <img
-            src={transaction.productImage}
+            src={transaction.anhDaiDienSanPham}
             alt={transaction.tenSanPham}
-            className="h-20 w-20 rounded-lg object-cover"
+            className="h-16 w-16 sm:h-20 sm:w-20 rounded-lg object-cover shrink-0"
           />
-          <div className="flex-1">
-            <h3 className="font-semibold line-clamp-2">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold line-clamp-2 text-sm sm:text-base">
               {transaction.tenSanPham}
             </h3>
           </div>
@@ -51,8 +48,10 @@ export function TransactionSummary({
 
         {/* Price */}
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600">Giá cuối cùng</span>
-          <span className="text-lg font-bold text-primary">
+          <span className="text-xs sm:text-sm text-gray-600">
+            Giá cuối cùng
+          </span>
+          <span className="text-base sm:text-lg font-bold text-primary">
             {formatCurrency(transaction.gia || transaction.giaCuoiCung || 0)}
           </span>
         </div>
@@ -101,12 +100,14 @@ export function TransactionSummary({
           <>
             <Separator />
             <div className="space-y-2">
-              <p className="text-sm font-semibold">Lịch sử giao dịch</p>
-              <div className="text-sm space-y-2">
+              <p className="text-xs sm:text-sm font-semibold">
+                Lịch sử giao dịch
+              </p>
+              <div className="text-xs sm:text-sm space-y-2">
                 {transaction.thoiGianThanhToan && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Thanh toán:</span>
-                    <span className="font-medium">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-gray-600 shrink-0">Thanh toán:</span>
+                    <span className="font-medium text-right">
                       {format(
                         new Date(transaction.thoiGianThanhToan),
                         "dd/MM/yyyy HH:mm",
@@ -116,9 +117,9 @@ export function TransactionSummary({
                   </div>
                 )}
                 {transaction.thoiGianGiaoHang && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Gửi hàng:</span>
-                    <span className="font-medium">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-gray-600 shrink-0">Gửi hàng:</span>
+                    <span className="font-medium text-right">
                       {format(
                         new Date(transaction.thoiGianGiaoHang),
                         "dd/MM/yyyy HH:mm",
@@ -128,9 +129,9 @@ export function TransactionSummary({
                   </div>
                 )}
                 {transaction.thoiGianNhanHang && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Nhận hàng:</span>
-                    <span className="font-medium">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-gray-600 shrink-0">Nhận hàng:</span>
+                    <span className="font-medium text-right">
                       {format(
                         new Date(transaction.thoiGianNhanHang),
                         "dd/MM/yyyy HH:mm",

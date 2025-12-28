@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   AreaChart,
@@ -8,29 +9,54 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { dashboardApi } from "@/services";
+import type { RevenueDataPoint } from "@/services";
+import { toast } from "sonner";
 
 /**
  * Chart: Doanh thu theo thời gian
  */
 export function RevenueChart() {
-  // Mock data - Doanh thu 12 tháng gần đây (triệu VNĐ)
-  const data = [
-    { month: "T1", revenue: 45 },
-    { month: "T2", revenue: 52 },
-    { month: "T3", revenue: 48 },
-    { month: "T4", revenue: 61 },
-    { month: "T5", revenue: 55 },
-    { month: "T6", revenue: 67 },
-    { month: "T7", revenue: 72 },
-    { month: "T8", revenue: 68 },
-    { month: "T9", revenue: 75 },
-    { month: "T10", revenue: 82 },
-    { month: "T11", revenue: 90 },
-    { month: "T12", revenue: 98 },
-  ];
+  const [data, setData] = useState<RevenueDataPoint[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await dashboardApi.getRevenueThisYear();
+        setData(response);
+      } catch (error) {
+        console.error("Failed to fetch revenue data:", error);
+        toast.error("Không thể tải dữ liệu doanh thu");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Doanh thu</CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-[300px]">
+          <p className="text-muted-foreground">Đang tải...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const chartData = data.map((item) => ({
+    month: `T${item.month}`,
+    revenue: Number(item.revenue) / 1000000, // Convert to millions
+  }));
 
   const formatRevenue = (value: number) => {
-    return `${value}M`;
+    return `${value.toFixed(1)}M`;
   };
 
   return (
@@ -41,9 +67,9 @@ export function RevenueChart() {
           Doanh thu 12 tháng gần đây
         </p>
       </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <AreaChart data={data}>
+      <CardContent className="px-2 sm:px-6">
+        <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
+          <AreaChart data={chartData}>
             <defs>
               <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8} />

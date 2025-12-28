@@ -1,3 +1,4 @@
+import { useForm } from "react-hook-form";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -36,9 +37,16 @@ export function SearchFilters({
   onClearFilters,
   showClearButton,
 }: SearchFiltersProps) {
+  const { register, handleSubmit } = useForm<{ searchQuery: string }>({
+    defaultValues: { searchQuery },
+  });
+
   return (
     <Card className="p-3 sm:p-4 md:p-6 mb-4 sm:mb-6 md:mb-8">
-      <form onSubmit={onSearchSubmit} className="space-y-3 sm:space-y-4">
+      <form
+        onSubmit={handleSubmit(() => onSearchSubmit({} as React.FormEvent))}
+        className="space-y-3 sm:space-y-4"
+      >
         {/* Search input */}
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
           <div className="flex-1 relative">
@@ -46,8 +54,9 @@ export function SearchFilters({
             <Input
               placeholder="Tìm kiếm sản phẩm..."
               className="pl-10 h-9 sm:h-10 text-sm"
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
+              {...register("searchQuery", {
+                onChange: (e) => onSearchChange(e.target.value),
+              })}
             />
           </div>
           <Button

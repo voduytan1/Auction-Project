@@ -53,10 +53,12 @@ export function CancelAction({ currentUserRole, onCancel }: CancelActionProps) {
       </Button>
 
       <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[90vw] sm:max-w-lg">
           <AlertDialogHeader>
-            <AlertDialogTitle>Hủy giao dịch</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-base sm:text-lg">
+              Hủy giao dịch
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs sm:text-sm">
               Hành động này không thể hoàn tác. Người{" "}
               {currentUserRole === "seller" ? "mua" : "bán"} sẽ nhận đánh giá -1
               điểm.

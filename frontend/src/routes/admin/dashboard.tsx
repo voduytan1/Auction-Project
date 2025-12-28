@@ -1,7 +1,5 @@
 import {
   StatsGrid,
-  RecentActivity,
-  TopAuctions,
   AuctionChart,
   RevenueChart,
   UserGrowthChart,
@@ -11,29 +9,35 @@ import {
 
 const DashboardPage = () => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Stats Overview */}
-      <StatsGrid />
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <StatsGrid />
+      </div>
 
       {/* Charts Row 1: Auctions & Revenue */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <AuctionChart />
-        <RevenueChart />
+      <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+          <AuctionChart />
+        </div>
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-[400ms]">
+          <RevenueChart />
+        </div>
       </div>
 
       {/* Charts Row 2: Users & Upgrades */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <UserGrowthChart />
-        <UpgradeRequestChart />
+      <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-[600ms]">
+          <UserGrowthChart />
+        </div>
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-[800ms]">
+          <UpgradeRequestChart />
+        </div>
       </div>
 
       {/* Charts Row 3: Category Distribution (full width) */}
-      <CategoryDistributionChart />
-
-      {/* Activity & Top Auctions */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <RecentActivity />
-        <TopAuctions />
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-1000">
+        <CategoryDistributionChart />
       </div>
     </div>
   );

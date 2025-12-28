@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/tooltip";
 
 import type { ProductResponse } from "@/services/product.api";
-import { auctionAPI } from "@/services/auction.api";
+import { bidAPI } from "@/services/bid.api";
 import { paymentAPI } from "@/services/payment.api";
 import { watchlistAPI } from "@/services/watchlist.api";
 import type { ApiErrorResponse } from "@/types/types";
@@ -373,7 +373,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
                       try {
                         setAutoLoading(true);
-                        const resp = await auctionAPI.createAutoBid({
+                        const resp = await bidAPI.createAutoBid({
                           productid: product.productid,
                           giaToiDa: parsed,
                         });
@@ -465,9 +465,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
                       onClick={async () => {
                         try {
                           setBuyLoading(true);
-                          const resp = await auctionAPI.buyNow(
-                            product.productid
-                          );
+                          const resp = await bidAPI.buyNow(product.productid);
                           const txId = extractTransactionId(resp.data);
 
                           setBuyNowResponse(resp.data);
@@ -670,8 +668,8 @@ export function ProductInfo({ product }: ProductInfoProps) {
                 {formatCurrency(product.giaMuaNgay as number)}
               </div>
               {buyNowResponse ? (
-                <div className="mt-2 text-sm text-green-600 break-words">
-                  ✓ {extractResponseMessage(buyNowResponse)}
+                <div className="mt-2 text-sm text-green-600 wrap-break-words">
+                  {extractResponseMessage(buyNowResponse)}
                 </div>
               ) : null}
             </div>

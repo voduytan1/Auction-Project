@@ -14,7 +14,7 @@ export interface Transaction {
   transactionId: number;
   productId: number;
   tenSanPham?: string; // productName
-  productImage?: string;
+  anhDaiDienSanPham?: string;
   buyerId: string;
   tenNguoiMua?: string; // buyerName
   sellerId: string;

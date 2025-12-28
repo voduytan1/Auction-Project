@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect, useRef } from "react";
+import { useForm } from "react-hook-form";
 import {
   Link,
   useNavigate,
@@ -62,7 +63,11 @@ export default function Header() {
   // --- STATE ---
   const initialQuery =
     location.pathname === "/search" ? searchParams.get("q") || "" : "";
-  const [searchQuery, setSearchQuery] = useState(initialQuery);
+  const { register, handleSubmit, setValue } = useForm<{
+    searchQuery: string;
+  }>({
+    defaultValues: { searchQuery: initialQuery },
+  });
   const [showMegaMenu, setShowMegaMenu] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [activeCategory, setActiveCategory] = useState<
@@ -81,6 +86,13 @@ export default function Header() {
       dispatch(fetchCategories());
     }
   }, [dispatch, isCacheValid, categoriesLoading]);
+
+  // Update search query when URL changes
+  useEffect(() => {
+    const query =
+      location.pathname === "/search" ? searchParams.get("q") || "" : "";
+    setValue("searchQuery", query);
+  }, [location.pathname, searchParams, setValue]);
 
   // Auto-select first category when menu opens
   useEffect(() => {
@@ -103,10 +115,9 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+  const handleSearch = (data: { searchQuery: string }) => {
+    if (data.searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(data.searchQuery.trim())}`);
       setShowMegaMenu(false);
       setShowMobileSearch(false);
     }
@@ -279,14 +290,13 @@ export default function Header() {
 
           {/* Search Bar - Desktop */}
           <form
-            onSubmit={handleSearch}
+            onSubmit={handleSubmit(handleSearch)}
             className="hidden md:flex ml-auto w-full max-w-sm mr-2 lg:mr-4"
           >
             <div className="relative group w-full">
               <Input
                 placeholder="Bạn muốn mua gì hôm nay?"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                {...register("searchQuery")}
                 className="pr-10 h-9 md:h-10 w-full rounded-lg bg-gray-50 border-gray-200 focus:bg-white focus:border-primary/50 transition-all shadow-sm text-sm"
               />
               <Button
@@ -471,12 +481,11 @@ export default function Header() {
         {/* Mobile Search Bar */}
         {showMobileSearch && (
           <div className="md:hidden absolute top-14 left-0 right-0 bg-white border-b shadow-lg p-3 animate-in slide-in-from-top-2 z-40">
-            <form onSubmit={handleSearch}>
+            <form onSubmit={handleSubmit(handleSearch)}>
               <div className="relative">
                 <Input
                   placeholder="Tìm kiếm sản phẩm..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  {...register("searchQuery")}
                   className="pr-10 h-10 w-full rounded-lg bg-gray-50 border-gray-200 focus:bg-white focus:border-primary/50 transition-all"
                   autoFocus
                 />

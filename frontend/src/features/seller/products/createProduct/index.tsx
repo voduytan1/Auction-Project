@@ -149,15 +149,18 @@ export function CreateProductForm() {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Đăng sản phẩm mới</CardTitle>
-        <CardDescription>
+    <Card className="mx-auto max-w-4xl">
+      <CardHeader className="px-4 sm:px-6">
+        <CardTitle className="text-xl sm:text-2xl">Đăng sản phẩm mới</CardTitle>
+        <CardDescription className="text-sm">
           Tạo sản phẩm đấu giá mới với thông tin chi tiết
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <CardContent className="px-4 sm:px-6">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-4 sm:space-y-6"
+        >
           {/* Product Name */}
           <ProductBasicInfoFields register={register} errors={errors} />
 
@@ -172,23 +175,31 @@ export function CreateProductForm() {
 
           <ProductImagesField onImageSelect={handleImageSelect} />
 
-          <ProductPricingFields register={register} errors={errors} />
+          <ProductPricingFields
+            register={register}
+            control={control}
+            errors={errors}
+          />
 
           <ProductTimeFields register={register} errors={errors} />
 
           <ProductAutoRenewField control={control} />
           {/* Actions */}
-          <div className="flex gap-4 pt-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => navigate("/seller/products")}
               disabled={isSubmitting}
-              className="flex-1"
+              className="w-full sm:flex-1"
             >
               Hủy
             </Button>
-            <Button type="submit" disabled={isSubmitting} className="flex-1">
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full sm:flex-1"
+            >
               {isSubmitting && (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               )}

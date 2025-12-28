@@ -130,15 +130,16 @@ export const categoryApi = {
 
   /**
    * Get child categories by parent ID
-   * GET /categories?search={parentId}&level=2
+   * GET /categories/{id}/sub-category
    */
   getChildCategoriesByParentId: async (
     parentId: number
   ): Promise<CategoryResponse[]> => {
-    const response = await api.get<ApiResponse<CategoryResponse[]>>(
-      `/categories?search=${parentId}&level=2`
+    const response = await api.get<CategoryResponse[]>(
+      `/categories/${parentId}/sub-category`
     );
-    return Array.isArray(response.data) ? response.data : response.data.data;
+    // Response is already unwrapped by interceptor
+    return Array.isArray(response.data) ? response.data : [response.data];
   },
 
   /**

@@ -45,96 +45,99 @@ export function BidderProfileManagement() {
   // TODO: Fetch stats from API
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="container mx-auto py-4 sm:py-6 px-4 sm:px-6 space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Hồ sơ của tôi</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+          Hồ sơ của tôi
+        </h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
           Quản lý thông tin và hoạt động đấu giá của bạn
         </p>
       </div>
 
       {/* Stats Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 sm:pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">
                   Đánh giá
                 </p>
                 <div className="flex items-center gap-1 mt-1">
-                  <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                  <span className="text-2xl font-bold">
+                  <Star className="h-4 w-4 sm:h-5 sm:w-5 fill-yellow-400 text-yellow-400" />
+                  <span className="text-xl sm:text-2xl font-bold">
                     {stats.diemDanhGia}
                   </span>
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-xs sm:text-sm text-muted-foreground">
                     ({stats.soLuotDanhGia})
                   </span>
                 </div>
               </div>
-              <Star className="h-8 w-8 text-muted-foreground/20" />
+              <Star className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground/20" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 sm:pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">
                   Yêu thích
                 </p>
-                <p className="text-2xl font-bold mt-1">
+                <p className="text-xl sm:text-2xl font-bold mt-1">
                   {stats.soSanPhamYeuThich}
                 </p>
               </div>
-              <Heart className="h-8 w-8 text-muted-foreground/20" />
+              <Heart className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground/20" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 sm:pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">
                   Đang đấu
                 </p>
-                <p className="text-2xl font-bold mt-1">
+                <p className="text-xl sm:text-2xl font-bold mt-1">
                   {stats.soSanPhamDangDau}
                 </p>
               </div>
-              <Gavel className="h-8 w-8 text-muted-foreground/20" />
+              <Gavel className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground/20" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 sm:pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">
                   Đã thắng
                 </p>
-                <p className="text-2xl font-bold mt-1">
+                <p className="text-xl sm:text-2xl font-bold mt-1">
                   {stats.soSanPhamDaThang}
                 </p>
               </div>
-              <Trophy className="h-8 w-8 text-muted-foreground/20" />
+              <Trophy className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground/20" />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="pt-6">
+        <Card className="col-span-2 sm:col-span-1">
+          <CardContent className="pt-4 sm:pt-6">
             <Button
-              className="w-full h-full"
+              className="w-full h-full text-sm sm:text-base"
               variant="outline"
               onClick={() => navigate("/bidder/upgrade-request")}
             >
               <TrendingUp className="h-4 w-4 mr-2" />
-              Nâng cấp Seller
+              <span className="hidden sm:inline">Nâng cấp Seller</span>
+              <span className="sm:hidden">Nâng cấp</span>
             </Button>
           </CardContent>
         </Card>
@@ -146,20 +149,37 @@ export function BidderProfileManagement() {
         onValueChange={setActiveTab}
         className="space-y-4"
       >
-        <TabsList>
-          <TabsTrigger value="overview">Tổng quan</TabsTrigger>
-          <TabsTrigger value="profile">
-            <UserIcon className="h-4 w-4 mr-2" />
-            Thông tin
+        <TabsList className="w-full justify-start overflow-x-auto flex-nowrap">
+          <TabsTrigger value="overview" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Tổng quan</span>
+            <span className="sm:hidden">Quan</span>
           </TabsTrigger>
-          <TabsTrigger value="password">
-            <Lock className="h-4 w-4 mr-2" />
-            Mật khẩu
+          <TabsTrigger value="profile" className="text-xs sm:text-sm">
+            <UserIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Thông tin</span>
+            <span className="sm:hidden">Info</span>
           </TabsTrigger>
-          <TabsTrigger value="ratings">Đánh giá</TabsTrigger>
-          <TabsTrigger value="watchlist">Yêu thích</TabsTrigger>
-          <TabsTrigger value="bidding">Đang đấu</TabsTrigger>
-          <TabsTrigger value="won">Đã thắng</TabsTrigger>
+          <TabsTrigger value="password" className="text-xs sm:text-sm">
+            <Lock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Mật khẩu</span>
+            <span className="sm:hidden">MK</span>
+          </TabsTrigger>
+          <TabsTrigger value="ratings" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Đánh giá</span>
+            <span className="sm:hidden">Rate</span>
+          </TabsTrigger>
+          <TabsTrigger value="watchlist" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Yêu thích</span>
+            <span className="sm:hidden">Like</span>
+          </TabsTrigger>
+          <TabsTrigger value="bidding" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Đang đấu</span>
+            <span className="sm:hidden">Bid</span>
+          </TabsTrigger>
+          <TabsTrigger value="won" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Đã thắng</span>
+            <span className="sm:hidden">Won</span>
+          </TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -197,10 +217,11 @@ export function BidderProfileManagement() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4 pt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-4">
                 <Button
                   variant="outline"
                   onClick={() => setActiveTab("watchlist")}
+                  className="text-sm"
                 >
                   <Heart className="h-4 w-4 mr-2" />
                   Xem danh sách yêu thích
@@ -208,6 +229,7 @@ export function BidderProfileManagement() {
                 <Button
                   variant="outline"
                   onClick={() => setActiveTab("bidding")}
+                  className="text-sm"
                 >
                   <Gavel className="h-4 w-4 mr-2" />
                   Xem sản phẩm đang đấu

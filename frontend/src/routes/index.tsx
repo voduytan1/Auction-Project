@@ -35,7 +35,7 @@ const NotFoundPage = lazy(() => import("./not-found"));
 // Admin Pages
 const DashboardPage = lazy(() => import("./admin/dashboard"));
 const UsersPage = lazy(() => import("./admin/users"));
-const AuctionsPage = lazy(() => import("./admin/auctions"));
+// const AuctionsPage = lazy(() => import("./admin/auctions")); // Admin does NOT manage auctions
 const CategoriesPage = lazy(() => import("./admin/categories"));
 const ProductsPage = lazy(() => import("./admin/products"));
 const UpgradeRequestsPage = lazy(() => import("./admin/upgrade-requests"));
@@ -55,6 +55,9 @@ const AppendDescriptionPage = lazy(
 const WatchListPage = lazy(() => import("./bidder/watchlist"));
 const BidderProfilePage = lazy(() => import("./bidder/profile"));
 const UpgradeRequestPage = lazy(() => import("./bidder/upgrade-request"));
+const BidderRatingsPage = lazy(() => import("./bidder/ratings"));
+const ActiveBidsPage = lazy(() => import("./bidder/active-bids"));
+const WonAuctionsPage = lazy(() => import("./bidder/won-auctions"));
 
 const TransactionDetailPage = lazy(() => import("./transaction/detail"));
 const PaymentSuccessPage = lazy(() => import("./order/payment-success"));
@@ -240,14 +243,15 @@ export const router = createBrowserRouter([
           </PageWrapper>
         ),
       },
-      {
-        path: "auctions",
-        element: (
-          <PageWrapper title="Quản lý Auctions - Admin">
-            <AuctionsPage />
-          </PageWrapper>
-        ),
-      },
+      // Note: Admin does NOT manage auctions (per requirements)
+      // {
+      //   path: "auctions",
+      //   element: (
+      //     <PageWrapper title="Quản lý Auctions - Admin">
+      //       <AuctionsPage />
+      //     </PageWrapper>
+      //   ),
+      // },
       {
         path: "categories",
         element: (
@@ -353,6 +357,30 @@ export const router = createBrowserRouter([
         element: (
           <PageWrapper title="Hồ sơ của tôi">
             <BidderProfilePage />
+          </PageWrapper>
+        ),
+      },
+      {
+        path: "ratings",
+        element: (
+          <PageWrapper title="Lịch sử đánh giá">
+            <BidderRatingsPage />
+          </PageWrapper>
+        ),
+      },
+      {
+        path: "active-bids",
+        element: (
+          <PageWrapper title="Đang đấu giá">
+            <ActiveBidsPage />
+          </PageWrapper>
+        ),
+      },
+      {
+        path: "won-auctions",
+        element: (
+          <PageWrapper title="Đấu giá thắng">
+            <WonAuctionsPage />
           </PageWrapper>
         ),
       },

@@ -13,7 +13,7 @@ export interface User {
   createdAt?: string;
   updatedAt?: string;
   // Computed fields for UI
-  soLuotDanhGia?: number; // Number of ratings received (computed)
+  soLuongDanhGia?: number; // Number of ratings received (computed)
   tyLeDanhGiaTot?: number; // Percentage of positive ratings 0-100 (computed)
 }
 
@@ -27,6 +27,10 @@ export interface RegisterRequest {
   email: string;
   password: string;
   hoVaTen?: string;
+  diaChi?: string;
+  soDienThoai?: string;
+  ngaySinh?: string; // LocalDate format: YYYY-MM-DD
+  captchaToken?: string; // reCAPTCHA v3 token
 }
 
 export interface LoginResponse {
@@ -47,6 +51,18 @@ export interface LoginResponse {
 export interface RefreshTokenResponse {
   accessToken: string;
   expiresIn: number;
+  userid: string;
+  username: string;
+  email: string;
+  vaitro: "BIDDER" | "SELLER" | "ADMIN";
+  thoiHanBanHang?: string;
+  hoVaTen?: string;
+  diaChi?: string;
+  soDienThoai?: string;
+  ngaySinh?: string;
+  diemDanhGia?: number;
+  soLuongDanhGia?: number;
+  anhDaiDien?: string;
 }
 
 export interface AuthResponse {

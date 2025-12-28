@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -24,6 +25,8 @@ import {
   Eye,
   XCircle,
   Loader2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -43,30 +46,43 @@ import {
 } from "@/components/ui/alert-dialog";
 import { productAPI, type ProductResponse } from "@/services/product.api";
 import { toast } from "sonner";
-import type { Product } from "../types";
+// import type { Product } from "../types";
 
 export function ProductsTable() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [products, setProducts] = useState<ProductResponse[]>([]);
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalProducts, setTotalProducts] = useState(0);
   const [removing, setRemoving] = useState(false);
   const [removeDialog, setRemoveDialog] = useState<{
     open: boolean;
     product: ProductResponse | null;
   }>({ open: false, product: null });
 
-  // Fetch products on component mount and when search changes
+  // Fetch products on component mount and when search or page changes
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
         const response = await productAPI.search({
           search: searchQuery || undefined,
-          size: 100,
+          page: currentPage,
+          size: itemsPerPage,
           sortBy: "createdAt",
           sortOrder: "desc",
         });
-        setProducts(response.data.data || []);
+
+        // Extract data and metadata
+        const productsData = Array.isArray(response.data) ? response.data : [];
+        const metadata = (response as any).__raw__?.metadata;
+
+        setProducts(productsData);
+        setTotalProducts(metadata?.totalElements ?? 0);
+        setTotalPages(metadata?.totalPages ?? 1);
       } catch (error) {
         console.error("Error fetching products:", error);
         toast.error("Không thể tải danh sách sản phẩm");
@@ -77,7 +93,7 @@ export function ProductsTable() {
 
     const timer = setTimeout(fetchProducts, 300);
     return () => clearTimeout(timer);
-  }, [searchQuery]);
+  }, [searchQuery, currentPage, itemsPerPage]);
 
   const handleRemove = (product: ProductResponse) => {
     setRemoveDialog({ open: true, product });
@@ -129,6 +145,11 @@ export function ProductsTable() {
     }).format(amount);
   };
 
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
   return (
     <>
       <Card>
@@ -170,7 +191,7 @@ export function ProductsTable() {
                   <TableHead>Seller</TableHead>
                   <TableHead>Giá khởi điểm</TableHead>
                   <TableHead>Giá hiện tại</TableHead>
-                  <TableHead>Số bids</TableHead>
+                  <TableHead>Số lượt ra giá</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -229,7 +250,11 @@ export function ProductsTable() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                navigate(`/products/${product.productid}`)
+                              }
+                            >
                               <Eye className="h-4 w-4 mr-2" />
                               Xem chi tiết
                             </DropdownMenuItem>
@@ -251,6 +276,77 @@ export function ProductsTable() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-6">
+              <div className="text-sm text-muted-foreground">
+                Hiển thị {(currentPage - 1) * itemsPerPage + 1}-
+                {Math.min(currentPage * itemsPerPage, totalProducts)} trong tổng
+                số {totalProducts} sản phẩm
+              </div>
+              <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="h-8 w-8 sm:h-9 sm:w-9"
+                >
+                  <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+                </Button>
+
+                <div className="flex flex-wrap gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => {
+                      if (
+                        page === 1 ||
+                        page === totalPages ||
+                        (page >= currentPage - 1 && page <= currentPage + 1)
+                      ) {
+                        return (
+                          <Button
+                            key={page}
+                            variant={
+                              currentPage === page ? "default" : "outline"
+                            }
+                            size="icon"
+                            onClick={() => setCurrentPage(page)}
+                            className="h-8 w-8 sm:h-9 sm:w-9 text-xs sm:text-sm"
+                          >
+                            {page}
+                          </Button>
+                        );
+                      } else if (
+                        page === currentPage - 2 ||
+                        page === currentPage + 2
+                      ) {
+                        return (
+                          <span
+                            key={page}
+                            className="flex items-center px-1 sm:px-2 text-xs sm:text-sm"
+                          >
+                            ...
+                          </span>
+                        );
+                      }
+                      return null;
+                    }
+                  )}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="h-8 w-8 sm:h-9 sm:w-9"
+                >
+                  <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

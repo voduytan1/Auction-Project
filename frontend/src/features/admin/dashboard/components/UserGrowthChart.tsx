@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   BarChart,
@@ -9,26 +10,52 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { dashboardApi } from "@/services";
+import type { NewUserDataPoint } from "@/services";
+import { toast } from "sonner";
 
 /**
  * Chart: Người dùng mới đăng ký
  */
 export function UserGrowthChart() {
-  // Mock data - Người dùng mới 12 tháng gần đây
-  const data = [
-    { month: "T1", bidders: 45, sellers: 12 },
-    { month: "T2", bidders: 52, sellers: 15 },
-    { month: "T3", bidders: 48, sellers: 18 },
-    { month: "T4", bidders: 61, sellers: 20 },
-    { month: "T5", bidders: 55, sellers: 22 },
-    { month: "T6", bidders: 67, sellers: 25 },
-    { month: "T7", bidders: 72, sellers: 28 },
-    { month: "T8", bidders: 68, sellers: 30 },
-    { month: "T9", bidders: 75, sellers: 32 },
-    { month: "T10", bidders: 82, sellers: 35 },
-    { month: "T11", bidders: 90, sellers: 38 },
-    { month: "T12", bidders: 98, sellers: 42 },
-  ];
+  const [data, setData] = useState<NewUserDataPoint[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await dashboardApi.getNewUserThisYear();
+        setData(response);
+      } catch (error) {
+        console.error("Failed to fetch new user data:", error);
+        toast.error("Không thể tải dữ liệu người dùng mới");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Người dùng mới</CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-[300px]">
+          <p className="text-muted-foreground">Đang tải...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const chartData = data.map((item) => ({
+    month: `T${item.month}`,
+    bidders: item.bidder,
+    sellers: item.seller,
+  }));
 
   return (
     <Card>
@@ -38,9 +65,9 @@ export function UserGrowthChart() {
           Bidders và Sellers đăng ký mới theo tháng
         </p>
       </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data}>
+      <CardContent className="px-2 sm:px-6">
+        <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
+          <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" fontSize={12} />
             <YAxis fontSize={12} />

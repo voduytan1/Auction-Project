@@ -27,8 +27,10 @@ export function RelatedProducts({
           size: 6, // Lấy 6 để filter ra current product
         });
         // Filter out current product and limit to 5
-        const filtered = response.data
-          .filter((p) => p.productid !== currentProductId)
+        // Response is already unwrapped by interceptor to ProductResponse[]
+        const data = Array.isArray(response) ? response : [];
+        const filtered = data
+          .filter((p: ProductResponse) => p.productid !== currentProductId)
           .slice(0, 5);
         setProducts(filtered);
       } catch (error) {

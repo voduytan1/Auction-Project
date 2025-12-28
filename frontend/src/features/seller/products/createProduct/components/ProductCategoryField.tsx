@@ -55,6 +55,7 @@ export function ProductCategoryField({
         const children = await categoryApi.getChildCategoriesByParentId(
           selectedParentId
         );
+        // Transform response to CategoryDisplay format
         const transformedChildren = children.map((cat: CategoryResponse) =>
           transformCategory(cat)
         );
