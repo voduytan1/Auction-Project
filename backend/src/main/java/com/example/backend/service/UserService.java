@@ -185,6 +185,16 @@ public class UserService extends BaseService<User, UUID, CreateUserRequest, Upda
         return data;
     }
 
+    public Long countAll(){
+        return userRepository.count();
+    }
+
+    public Long countByMonth(int month){
+        LocalDateTime start = DateUtils.getStartOfSpecificMonth(month);
+        LocalDateTime end = DateUtils.getEndOfSpecificMonth(month);
+        return userRepository.countByCreatedAtBetween(start, end);
+
+    }
     private void setPasswordIfProvided(User entity, String rawPassword) {
         if (rawPassword != null && !rawPassword.trim().isEmpty()) {
             entity.setPassword(authUtils.encodePassword(rawPassword));

@@ -8,7 +8,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+
 @Repository
 public interface BidHistoryRepository extends JpaRepository<@NotNull BidHistory, @NotNull Long> {
     Page<BidHistory> findByProductProductidOrderByCreatedAtDesc(Long productid, Pageable pageable);
+
+    Long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 }

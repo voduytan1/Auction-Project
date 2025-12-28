@@ -8,6 +8,7 @@ import com.example.backend.dto.common.PaginationInfo;
 import com.example.backend.dto.common.PaginationRequest;
 import com.example.backend.entity.ConfigVariable;
 import com.example.backend.entity.Configuration;
+import com.example.backend.repository.BidHistoryRepository;
 import com.example.backend.service.*;
 import com.example.backend.utils.DateUtils;
 import com.example.backend.utils.PageUtils;
@@ -18,6 +19,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -29,13 +33,15 @@ public class AdminController {
     private final TransactionService transactionService;
     private final UserService userService;
     private final ProductService productService;
+    private final BidHistoryRepository bidHistoryRepository;
 
-    public AdminController(UpgradeRequestService upgradeRequestService, ConfigurationService configurationService, TransactionService transactionService, UserService userService, ProductService productService) {
+    public AdminController(UpgradeRequestService upgradeRequestService, ConfigurationService configurationService, TransactionService transactionService, UserService userService, ProductService productService, BidHistoryRepository bidHistoryRepository) {
         this.upgradeRequestService = upgradeRequestService;
         this.configurationService = configurationService;
         this.transactionService = transactionService;
         this.userService = userService;
         this.productService = productService;
+        this.bidHistoryRepository = bidHistoryRepository;
     }
     // Request
     @GetMapping("/request")
@@ -129,6 +135,63 @@ public class AdminController {
     public ResponseEntity<@NotNull ApiResponse<List<CategoryDistribution>>> getCategoriesChart(){
         List<CategoryDistribution> response = productService.getProductByCategoriesChart();
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/dashboard/stat")
+    public ResponseEntity<@NotNull ApiResponse<WebStat>> Stats(){
+        int thisMonth = LocalDateTime.now().getMonth().getValue();
+
+        Long usersCount = userService.countAll();
+        Long previousMonth = userService.countByMonth(thisMonth-1);
+        Long currentMonth = userService.countByMonth(thisMonth);
+        Integer userGrowth = 0;
+        if(previousMonth != 0){
+            long diff = currentMonth - previousMonth;
+            userGrowth = Math.toIntExact((diff * 100) / (previousMonth));
+        }else {
+            // Xử lý khi tháng trước = 0
+            if (currentMonth > 0) userGrowth = 100;
+        }
+
+
+        Long auctionsCount = productService.countActive();
+        Long newAuctionsCount = productService.countActiveToday();
+
+
+        Long bidsCount = bidHistoryRepository.count();
+        Long todayBidsCount = bidHistoryRepository.countByCreatedAtBetween(DateUtils.getStartOfToday(), DateUtils.getEndOfToday());
+
+        BigDecimal revenue = transactionService.getRevenue();
+        BigDecimal thisMonthRevenue = transactionService.getMonthRevenue(thisMonth);
+        BigDecimal previousRevenue = transactionService.getMonthRevenue(thisMonth-1);
+        Integer revenueGrowth = 0;
+        if (previousRevenue.compareTo(BigDecimal.ZERO) != 0) {
+
+            BigDecimal difference = thisMonthRevenue.subtract(previousRevenue);
+
+            BigDecimal ratio = difference.divide(previousRevenue, 4, RoundingMode.HALF_UP);
+
+            BigDecimal percent = ratio.multiply(BigDecimal.valueOf(100));
+
+            revenueGrowth = percent.intValue();
+        } else {
+            if (thisMonthRevenue.compareTo(BigDecimal.ZERO) > 0) {
+                revenueGrowth = 100;
+            }
+        }
+
+        WebStat stat = WebStat.builder()
+                .usersCount(usersCount)
+                .userGrowth(userGrowth)
+                .auctionsCount(auctionsCount)
+                .newAuctionsCount(newAuctionsCount)
+                .bidsCount(bidsCount)
+                .newBidsCount(todayBidsCount)
+                .revenue(revenue)
+                .revenueGrowth(revenueGrowth)
+                .build();
+
+        return ResponseEntity.ok(ApiResponse.success(stat));
     }
 }
 

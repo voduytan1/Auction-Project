@@ -134,4 +134,12 @@ public class ProductService {
         Page<@NotNull Product> productPage = productRepository.findByRootCategoryAndSearch(categoryId, search, pageable);
         return productPage.map(productMapper::toResponse);
     }
+
+    public Long countActive(){
+        return productRepository.countByTrangThai(ProductStatus.ACTIVE);
+    }
+
+    public Long countActiveToday(){
+        return productRepository.countByTrangThaiAndCreatedAtBetween(ProductStatus.ACTIVE, DateUtils.getStartOfToday(), DateUtils.getEndOfToday());
+    }
 }
