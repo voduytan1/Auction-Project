@@ -4,12 +4,15 @@ import com.example.backend.dto.auth.*;
 import com.example.backend.dto.common.ApiResponse;
 import com.example.backend.mapper.AuthMapper;
 import com.example.backend.service.AuthService;
+import com.example.backend.service.EmailService;
 import com.example.backend.utils.CookieUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,6 +24,9 @@ public class AuthController {
     private final AuthMapper authMapper;
 
     private final CookieUtils cookieUtils;
+
+    @Autowired
+    private EmailService emailService;
 
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest loginRequest, HttpServletRequest request, HttpServletResponse response) {
@@ -52,5 +58,16 @@ public class AuthController {
         }
 
         return ApiResponse.success("Log out successfully");
+    }
+
+    @PostMapping("/send-otp")
+    public ResponseEntity<String> sendOtp(@RequestParam String email) {
+        // Giả sử logic sinh OTP ngẫu nhiên
+        String randomOtp = String.valueOf((int)(Math.random() * 900000) + 100000);
+
+        // Gửi mail
+        emailService.sendOtpEmail(email, randomOtp);
+
+        return ResponseEntity.ok("OTP đã được gửi tới email: " + email);
     }
 }

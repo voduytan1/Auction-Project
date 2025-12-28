@@ -47,16 +47,18 @@ public class UserService extends BaseService<User, UUID, CreateUserRequest, Upda
     private final CacheManager cacheManager;
     private final JsonMapper jsonMapper;
     private final UserValidationUtils userValidationUtils;
+    private final RedisService redisService;
 
 
     public UserService(UserRepository userRepository, UserMapper userMapper,
-                       AuthUtils authUtils, CacheManager cacheManager, JsonMapper jsonMapper, UserValidationUtils userValidationUtils) {
+                       AuthUtils authUtils, CacheManager cacheManager, JsonMapper jsonMapper, UserValidationUtils userValidationUtils, RedisService redisService) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.authUtils = authUtils;
         this.jsonMapper = jsonMapper;
         this.cacheManager = cacheManager;
         this.userValidationUtils = userValidationUtils;
+        this.redisService = redisService;
     }
 
     // Implementation of abstract methods
@@ -119,6 +121,14 @@ public class UserService extends BaseService<User, UUID, CreateUserRequest, Upda
     @Transactional
     @CacheEvict(cacheNames = "user_list", allEntries = true)
     public UserResponse createOne(CreateUserRequest dto) {
+        String savedOtp = redisService.getOtp(dto.getEmail());
+
+        if (savedOtp == null || !savedOtp.equals(dto.getOTP())) {
+            throw new RuntimeException("OTP sai hoặc đã hết hạn!");
+        }
+
+        redisService.deleteOtp(dto.getEmail());
+
         return super.createOne(dto);
     }
 
