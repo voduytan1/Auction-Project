@@ -21,7 +21,6 @@ interface UpgradeRequestFormData {
   lyDo: string;
   kiNhangBanHang?: string;
   linkMangXaHoi?: string;
-  soDienThoai: string;
 }
 
 export function UpgradeToSellerRequest() {
@@ -65,19 +64,22 @@ export function UpgradeToSellerRequest() {
   };
 
   return (
-    <div className="container mx-auto py-8 max-w-3xl">
+    <div className="container mx-auto py-4 sm:py-8 px-4 sm:px-6 max-w-3xl">
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-2xl">
-            <TrendingUp className="h-6 w-6" />
+        <CardHeader className="px-4 sm:px-6">
+          <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl">
+            <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6" />
             Yêu cầu nâng cấp tài khoản Seller
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-sm">
             Điền thông tin để trở thành người bán trên nền tảng
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <CardContent className="px-4 sm:px-6">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-4 sm:space-y-6"
+          >
             {/* Information Alert */}
             <Alert>
               <FileText className="h-4 w-4" />
@@ -173,31 +175,6 @@ export function UpgradeToSellerRequest() {
               </p>
             </div>
 
-            {/* Phone Number */}
-            <div className="space-y-2">
-              <Label htmlFor="soDienThoai">
-                Số điện thoại liên hệ{" "}
-                <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="soDienThoai"
-                type="tel"
-                {...register("soDienThoai", {
-                  required: "Vui lòng nhập số điện thoại",
-                  pattern: {
-                    value: /^[0-9]{10,11}$/,
-                    message: "Số điện thoại không hợp lệ (10-11 số)",
-                  },
-                })}
-                placeholder="0123456789"
-              />
-              {errors.soDienThoai && (
-                <p className="text-sm text-destructive">
-                  {errors.soDienThoai.message}
-                </p>
-              )}
-            </div>
-
             {/* Additional Info Alert */}
             <Alert>
               <Upload className="h-4 w-4" />
@@ -217,17 +194,21 @@ export function UpgradeToSellerRequest() {
             </Alert>
 
             {/* Actions */}
-            <div className="flex gap-4 pt-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => navigate("/bidder/profile")}
                 disabled={isSubmitting}
-                className="flex-1"
+                className="w-full sm:flex-1"
               >
                 Hủy
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="flex-1">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full sm:flex-1"
+              >
                 {isSubmitting ? (
                   "Đang gửi..."
                 ) : (

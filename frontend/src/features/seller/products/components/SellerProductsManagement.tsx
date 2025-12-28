@@ -17,23 +17,25 @@ export function SellerProductsManagement() {
   const [activeTab, setActiveTab] = useState("active");
 
   return (
-    <div className="container mx-auto py-6 px-12 space-y-6">
+    <div className="container mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-12 space-y-4 sm:space-y-6">
       {/* Header with Create Button */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
             Quản lý sản phẩm
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Quản lý các sản phẩm đấu giá của bạn
           </p>
         </div>
         <Button
           onClick={() => navigate("/seller/products/create")}
-          className="gap-2"
+          className="gap-2 w-full sm:w-auto"
+          size="default"
         >
           <Plus className="h-4 w-4" />
-          Đăng sản phẩm
+          <span className="hidden sm:inline">Đăng sản phẩm</span>
+          <span className="sm:hidden">Đăng sản phẩm mới</span>
         </Button>
       </div>
 
@@ -43,10 +45,19 @@ export function SellerProductsManagement() {
         onValueChange={setActiveTab}
         className="space-y-4"
       >
-        <TabsList>
-          <TabsTrigger value="active">Đang bán</TabsTrigger>
-          <TabsTrigger value="completed">Đã có người thắng</TabsTrigger>
-          <TabsTrigger value="cancelled">Đã hủy</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 h-auto">
+          <TabsTrigger value="active" className="text-xs sm:text-sm py-2">
+            <span className="hidden sm:inline">Đang bán</span>
+            <span className="sm:hidden">Bán</span>
+          </TabsTrigger>
+          <TabsTrigger value="completed" className="text-xs sm:text-sm py-2">
+            <span className="hidden sm:inline">Đã có người thắng</span>
+            <span className="sm:hidden">Thắng</span>
+          </TabsTrigger>
+          <TabsTrigger value="cancelled" className="text-xs sm:text-sm py-2">
+            <span className="hidden sm:inline">Đã hủy</span>
+            <span className="sm:hidden">Hủy</span>
+          </TabsTrigger>
         </TabsList>
 
         {/* Active Products */}

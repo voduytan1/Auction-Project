@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockDashboardActivities } from "@/data/mock-data";
+// import { mockDashboardActivities } from "@/data/mock-data";
 
 export function RecentActivity() {
   return (
@@ -9,7 +9,10 @@ export function RecentActivity() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {mockDashboardActivities.map((activity) => (
+          <p className="text-sm text-muted-foreground">
+            Tính năng đang được phát triển...
+          </p>
+          {/* {mockDashboardActivities.map((activity) => (
             <div key={activity.id} className="flex items-center">
               <div
                 className={`w-2 h-2 bg-${activity.color}-500 rounded-full mr-3`}
@@ -21,7 +24,7 @@ export function RecentActivity() {
                 </p>
               </div>
             </div>
-          ))}
+          ))} */}
         </div>
       </CardContent>
     </Card>

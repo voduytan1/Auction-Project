@@ -7,8 +7,7 @@ import type {
   ProductStatusMessage,
   TransactionStatusMessage,
 } from "@/types/websocket";
-
-const WS_URL = "http://localhost:8080/ws";
+import { env } from "@/config/env";
 
 export type BidUpdateCallback = (message: BidUpdateMessage) => void;
 export type BidHistoryCallback = (messages: BidHistoryItemMessage[]) => void;
@@ -35,7 +34,7 @@ class WebSocketService {
       }
 
       this.client = new Client({
-        webSocketFactory: () => new SockJS(WS_URL) as WebSocket,
+        webSocketFactory: () => new SockJS(env.WS_URL) as WebSocket,
         debug: (_str) => {},
         reconnectDelay: this.reconnectDelay,
         heartbeatIncoming: 4000,

@@ -46,7 +46,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { PageLoader } from "@/components/PageLoader";
-import { Search, UserPlus, Edit, Trash2, Loader2 } from "lucide-react";
+import {
+  Search,
+  UserPlus,
+  Edit,
+  Trash2,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { userAPI } from "@/services/user.api";
 import type { User } from "@/features/auth/types";
 import type { CreateUserRequest, UpdateUserRequest } from "@/types/types";
@@ -64,6 +72,8 @@ export function UsersTable() {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -188,11 +198,22 @@ export function UsersTable() {
       user.username?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Pagination logic
+  const totalPagesCalc = Math.ceil(filteredUsers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentUsers = filteredUsers.slice(startIndex, endIndex);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
   if (isLoading) {
     return (
       <Card>
         <CardContent className="py-12">
-          <PageLoader message="Đang tải danh sách users..." />
+          <PageLoader message="Đang tải danh sách người dùng..." />
         </CardContent>
       </Card>
     );
@@ -204,14 +225,14 @@ export function UsersTable() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Quản lý Users</CardTitle>
+              <CardTitle>Quản lý Người dùng</CardTitle>
               <CardDescription>
-                Danh sách tất cả users trong hệ thống ({users.length} users)
+                Danh sách tất cả người dùng trong hệ thống
               </CardDescription>
             </div>
             <Button onClick={handleCreate}>
               <UserPlus className="h-4 w-4 mr-2" />
-              Thêm User
+              Thêm Người dùng
             </Button>
           </div>
         </CardHeader>
@@ -242,7 +263,7 @@ export function UsersTable() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.length === 0 ? (
+                {currentUsers.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-8">
                       <div className="text-muted-foreground">
@@ -251,7 +272,7 @@ export function UsersTable() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredUsers.map((user) => (
+                  currentUsers.map((user) => (
                     <TableRow key={user.userid}>
                       <TableCell className="font-medium">
                         {user.username}
@@ -293,6 +314,77 @@ export function UsersTable() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination */}
+          {totalPagesCalc > 1 && (
+            <div className="flex items-center justify-between mt-6">
+              <div className="text-sm text-muted-foreground">
+                Hiển thị {startIndex + 1}-
+                {Math.min(endIndex, filteredUsers.length)} trong tổng số{" "}
+                {filteredUsers.length} người dùng
+              </div>
+              <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="h-8 w-8 sm:h-9 sm:w-9"
+                >
+                  <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+                </Button>
+
+                <div className="flex flex-wrap gap-1">
+                  {Array.from({ length: totalPagesCalc }, (_, i) => i + 1).map(
+                    (page) => {
+                      if (
+                        page === 1 ||
+                        page === totalPagesCalc ||
+                        (page >= currentPage - 1 && page <= currentPage + 1)
+                      ) {
+                        return (
+                          <Button
+                            key={page}
+                            variant={
+                              currentPage === page ? "default" : "outline"
+                            }
+                            size="icon"
+                            onClick={() => setCurrentPage(page)}
+                            className="h-8 w-8 sm:h-9 sm:w-9 text-xs sm:text-sm"
+                          >
+                            {page}
+                          </Button>
+                        );
+                      } else if (
+                        page === currentPage - 2 ||
+                        page === currentPage + 2
+                      ) {
+                        return (
+                          <span
+                            key={page}
+                            className="flex items-center px-1 sm:px-2 text-xs sm:text-sm"
+                          >
+                            ...
+                          </span>
+                        );
+                      }
+                      return null;
+                    }
+                  )}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPagesCalc}
+                  className="h-8 w-8 sm:h-9 sm:w-9"
+                >
+                  <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

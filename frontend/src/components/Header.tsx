@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect, useRef } from "react";
+import { useForm } from "react-hook-form";
 import {
   Link,
   useNavigate,
@@ -62,8 +63,13 @@ export default function Header() {
   // --- STATE ---
   const initialQuery =
     location.pathname === "/search" ? searchParams.get("q") || "" : "";
-  const [searchQuery, setSearchQuery] = useState(initialQuery);
+  const { register, handleSubmit, setValue } = useForm<{
+    searchQuery: string;
+  }>({
+    defaultValues: { searchQuery: initialQuery },
+  });
   const [showMegaMenu, setShowMegaMenu] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [activeCategory, setActiveCategory] = useState<
     (typeof categories)[0] | null
   >(null);
@@ -80,6 +86,13 @@ export default function Header() {
       dispatch(fetchCategories());
     }
   }, [dispatch, isCacheValid, categoriesLoading]);
+
+  // Update search query when URL changes
+  useEffect(() => {
+    const query =
+      location.pathname === "/search" ? searchParams.get("q") || "" : "";
+    setValue("searchQuery", query);
+  }, [location.pathname, searchParams, setValue]);
 
   // Auto-select first category when menu opens
   useEffect(() => {
@@ -102,11 +115,11 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+  const handleSearch = (data: { searchQuery: string }) => {
+    if (data.searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(data.searchQuery.trim())}`);
       setShowMegaMenu(false);
+      setShowMobileSearch(false);
     }
   };
 
@@ -153,17 +166,17 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur shadow-sm px-16">
-      <div className="container mx-auto px-4 relative">
-        <div className="flex h-16 items-center justify-between gap-4">
+    <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur shadow-sm">
+      <div className="container mx-auto px-2 sm:px-4 lg:px-16 relative">
+        <div className="flex h-14 sm:h-16 items-center justify-between gap-1 sm:gap-2 md:gap-4">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 shrink-0">
+          <Link to="/" className="flex items-center gap-1 sm:gap-2 shrink-0">
             <img
               src="/logo.png"
-              className="h-10 w-10 object-contain"
+              className="h-8 sm:h-10 w-8 sm:w-10 object-contain"
               alt="Logo"
             />
-            <span className="text-xl font-bold hidden sm:block text-primary">
+            <span className="text-base sm:text-xl font-bold hidden sm:block text-primary">
               AuctionHub
             </span>
           </Link>
@@ -173,78 +186,83 @@ export default function Header() {
             <Button
               variant="secondary"
               className={cn(
-                "gap-3 font-semibold transition-colors h-12 px-6",
+                "gap-1 sm:gap-2 font-semibold transition-colors h-9 sm:h-10 md:h-12 px-2 sm:px-3 md:px-6",
                 showMegaMenu
                   ? "bg-gray-100 hover:bg-gray-200 text-gray-700"
                   : "bg-transparent text-gray-700 hover:bg-transparent"
               )}
               onClick={() => setShowMegaMenu(!showMegaMenu)}
             >
-              <Menu className="h-6 w-6" />
-              <span className="hidden md:inline text-base">Danh mục</span>
+              <Menu className="h-4 sm:h-5 md:h-6 w-4 sm:w-5 md:w-6" />
+              <span className="hidden md:inline text-sm md:text-base">
+                Danh mục
+              </span>
             </Button>
 
             {/* --- MEGA MENU CONTENT --- */}
             {showMegaMenu && categories && categories.length > 0 && (
-              <div
-                className="absolute top-16 left-0 w-full md:max-w-4xl bg-white rounded-lg shadow-2xl border border-gray-200 z-50 flex overflow-hidden animate-in fade-in zoom-in-95 duration-200"
-                style={{ height: "550px" }}
-              >
+              <div className="absolute top-14 sm:top-16 left-0 right-0 w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl bg-white rounded-lg shadow-2xl border border-gray-200 z-50 flex flex-col sm:flex-row overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[calc(100vh-5rem)]">
                 {/* LEFT COLUMN: PARENT CATEGORIES */}
-                <div className="w-70 shrink-0 bg-gray-50 overflow-y-auto border-r scrollbar-thin scrollbar-thumb-gray-200">
+                <div className="w-full sm:w-48 md:w-56 lg:w-70 shrink-0 bg-gray-50 overflow-y-auto border-b sm:border-b-0 sm:border-r scrollbar-thin scrollbar-thumb-gray-200 max-h-48 sm:max-h-none">
                   {categories.map((category) => (
                     <div
                       key={category.id}
                       onMouseEnter={() => setActiveCategory(category)}
+                      onClick={() => setActiveCategory(category)}
                       className={cn(
-                        "flex items-center justify-between px-4 py-3 cursor-pointer transition-all text-sm font-medium border-l-[3px]",
+                        "flex items-center justify-between px-2 sm:px-3 md:px-4 py-2 sm:py-3 cursor-pointer transition-all text-xs sm:text-sm font-medium border-l-[3px]",
                         activeCategory?.id === category.id
                           ? "bg-white text-primary border-primary shadow-sm z-10 relative"
                           : "text-gray-600 border-transparent hover:bg-gray-100 hover:text-gray-900"
                       )}
                     >
-                      <div className="flex items-center gap-3">
-                        {getCategoryIcon(category.slug)}
-                        <span className="line-clamp-1">{category.name}</span>
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="hidden sm:block">
+                          {getCategoryIcon(category.slug)}
+                        </div>
+                        <span className="line-clamp-1 text-xs sm:text-sm">
+                          {category.name}
+                        </span>
                       </div>
                       {activeCategory?.id === category.id && (
-                        <ChevronRight className="h-4 w-4 text-primary" />
+                        <ChevronRight className="h-3 sm:h-4 w-3 sm:w-4 text-primary" />
                       )}
                     </div>
                   ))}
                 </div>
 
                 {/* RIGHT COLUMN: SUBCATEGORIES GRID */}
-                <div className="flex-1 p-6 overflow-y-auto bg-white">
+                <div className="flex-1 p-3 sm:p-4 md:p-6 overflow-y-auto bg-white">
                   {activeCategory ? (
                     <div className="h-full flex flex-col">
                       {/* Header of right column */}
-                      <div className="flex items-center justify-between mb-6 pb-4 border-b">
-                        <h3 className="text-2xl font-bold text-gray-800">
+                      <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-6 pb-2 sm:pb-3 md:pb-4 border-b">
+                        <h3 className="text-base sm:text-xl md:text-2xl font-bold text-gray-800">
                           {activeCategory.name}
                         </h3>
                         <Link
                           to={`/category/${activeCategory.id}`}
                           onClick={() => setShowMegaMenu(false)}
-                          className="text-sm font-medium text-primary hover:underline flex items-center group"
+                          className="text-xs sm:text-sm font-medium text-primary hover:underline flex items-center group whitespace-nowrap"
                         >
-                          Xem tất cả{" "}
-                          <ChevronRight className="h-4 w-4 ml-1 transition-transform group-hover:translate-x-1" />
+                          <span className="hidden sm:inline">Xem tất cả</span>
+                          <span className="sm:hidden">Tất cả</span>
+                          <ChevronRight className="h-3 sm:h-4 w-3 sm:w-4 ml-1 transition-transform group-hover:translate-x-1" />
                         </Link>
                       </div>
 
                       {/* Grid of subcategories */}
                       {activeCategory.subcategories &&
                       activeCategory.subcategories.length > 0 ? (
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                           {activeCategory.subcategories.map((sub) => (
                             <Link
                               key={sub.id}
                               to={`/category/${sub.id}`}
                               onClick={() => setShowMegaMenu(false)}
-                              className="group block p-3 rounded-lg hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all"
+                              className="group block p-2 sm:p-3 rounded-lg hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all"
                             >
-                              <div className="font-semibold text-gray-800 group-hover:text-primary mb-1">
+                              <div className="text-sm sm:text-base font-semibold text-gray-800 group-hover:text-primary mb-0.5 sm:mb-1">
                                 {sub.name}
                               </div>
                               <div className="text-xs text-gray-500 line-clamp-1">
@@ -270,17 +288,16 @@ export default function Header() {
             )}
           </div>
 
-          {/* Search Bar */}
+          {/* Search Bar - Desktop */}
           <form
-            onSubmit={handleSearch}
-            className="ml-auto w-full max-w-sm mr-4"
+            onSubmit={handleSubmit(handleSearch)}
+            className="hidden md:flex ml-auto w-full max-w-sm mr-2 lg:mr-4"
           >
-            <div className="relative group">
+            <div className="relative group w-full">
               <Input
                 placeholder="Bạn muốn mua gì hôm nay?"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pr-10 h-10 w-full rounded-lg bg-gray-50 border-gray-200 focus:bg-white focus:border-primary/50 transition-all shadow-sm"
+                {...register("searchQuery")}
+                className="pr-10 h-9 md:h-10 w-full rounded-lg bg-gray-50 border-gray-200 focus:bg-white focus:border-primary/50 transition-all shadow-sm text-sm"
               />
               <Button
                 type="submit"
@@ -293,17 +310,27 @@ export default function Header() {
             </div>
           </form>
 
+          {/* Search Button - Mobile */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="md:hidden h-9 w-9 p-0"
+            onClick={() => setShowMobileSearch(!showMobileSearch)}
+          >
+            <Search className="h-4 w-4" />
+          </Button>
+
           {/* User Menu */}
-          <div className="flex items-center gap-2 shrink-0 ml-2">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {isAuthenticated && user && <NotificationBell />}
             {isAuthenticated && user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="flex items-center gap-3 h-auto py-2 px-3"
+                    className="flex items-center gap-2 sm:gap-3 h-auto py-1 sm:py-2 px-1 sm:px-2 md:px-3"
                   >
-                    <div className="text-sm text-right hidden sm:block">
+                    <div className="text-xs sm:text-sm text-right hidden lg:block">
                       <p className="font-medium">
                         {user.hoVaTen || user.username}
                       </p>
@@ -318,9 +345,9 @@ export default function Header() {
                         </Badge>
                       </div>
                     </div>
-                    <Avatar className="h-10 w-10 ring-2 ring-primary/10">
+                    <Avatar className="h-8 sm:h-9 md:h-10 w-8 sm:w-9 md:w-10 ring-2 ring-primary/10">
                       <AvatarImage src={user.anhDaiDien} alt={user.username} />
-                      <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                      <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs sm:text-sm">
                         {user.username.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
@@ -431,16 +458,49 @@ export default function Header() {
               </DropdownMenu>
             ) : (
               <>
-                <Button variant="ghost" onClick={() => navigate("/auth/login")}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate("/auth/login")}
+                  className="h-8 sm:h-9 md:h-10 text-xs sm:text-sm px-2 sm:px-3 md:px-4"
+                >
                   Đăng nhập
                 </Button>
-                <Button onClick={() => navigate("/auth/register")}>
+                <Button
+                  size="sm"
+                  onClick={() => navigate("/auth/register")}
+                  className="h-8 sm:h-9 md:h-10 text-xs sm:text-sm px-2 sm:px-3 md:px-4"
+                >
                   Đăng ký
                 </Button>
               </>
             )}
           </div>
         </div>
+
+        {/* Mobile Search Bar */}
+        {showMobileSearch && (
+          <div className="md:hidden absolute top-14 left-0 right-0 bg-white border-b shadow-lg p-3 animate-in slide-in-from-top-2 z-40">
+            <form onSubmit={handleSubmit(handleSearch)}>
+              <div className="relative">
+                <Input
+                  placeholder="Tìm kiếm sản phẩm..."
+                  {...register("searchQuery")}
+                  className="pr-10 h-10 w-full rounded-lg bg-gray-50 border-gray-200 focus:bg-white focus:border-primary/50 transition-all"
+                  autoFocus
+                />
+                <Button
+                  type="submit"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full text-gray-500 hover:text-primary"
+                >
+                  <Search className="h-4 w-4" />
+                </Button>
+              </div>
+            </form>
+          </div>
+        )}
       </div>
     </header>
   );

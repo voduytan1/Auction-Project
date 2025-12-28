@@ -111,11 +111,13 @@ export function WatchList() {
 
   if (errorWatchlist || watchlistProducts.length === 0) {
     return (
-      <div className="container mx-auto py-8">
-        <div className="text-center py-12">
-          <Heart className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Danh sách yêu thích trống</h2>
-          <p className="text-muted-foreground mb-6">
+      <div className="container mx-auto py-4 sm:py-8 px-4">
+        <div className="text-center py-8 sm:py-12">
+          <Heart className="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground mb-4" />
+          <h2 className="text-xl sm:text-2xl font-bold mb-2">
+            Danh sách yêu thích trống
+          </h2>
+          <p className="text-sm sm:text-base text-muted-foreground mb-6">
             Bạn chưa thêm sản phẩm nào vào danh sách yêu thích
           </p>
           <Button onClick={() => navigate("/")}>Khám phá sản phẩm</Button>
@@ -126,15 +128,17 @@ export function WatchList() {
 
   return (
     <>
-      <div className="container mx-auto py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Danh sách yêu thích</h1>
-          <p className="text-muted-foreground">
+      <div className="container mx-auto py-4 sm:py-8 px-4 sm:px-6">
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+            Danh sách yêu thích
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             {watchlistProducts.length} sản phẩm đang theo dõi
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {watchlistProducts.map((product) => (
             <Card
               key={product.productid}
@@ -170,18 +174,20 @@ export function WatchList() {
                   </span>
                 </div>
               </CardContent>
-              <div className="px-6 pb-4 gap-2 flex">
+              <div className="px-4 sm:px-6 pb-4 gap-2 flex">
                 <Button
-                  className="flex-1"
+                  className="flex-1 text-sm sm:text-base"
                   onClick={() => handleViewProduct(product.productid)}
                 >
-                  <Eye className="h-4 w-4 mr-2" />
-                  Xem chi tiết
+                  <Eye className="h-4 w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Xem chi tiết</span>
+                  <span className="sm:hidden">Xem</span>
                 </Button>
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={() => setDeleteConfirmId(product.productid)}
+                  className="shrink-0"
                 >
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>

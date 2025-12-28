@@ -81,7 +81,7 @@ export function LoginForm() {
         </div>
       )}
       <CardHeader className="text-center">
-        <CardTitle>Đăng Nhập</CardTitle>
+        <CardTitle>Đăng nhập</CardTitle>
         <CardDescription>
           Nhập thông tin đăng nhập để truy cập tài khoản
         </CardDescription>
@@ -128,7 +128,7 @@ export function LoginForm() {
             <p className="text-sm text-destructive text-center">{error}</p>
           )}
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Đang đăng nhập..." : "Đăng Nhập"}
+            {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
           </Button>
 
           {/* Divider */}

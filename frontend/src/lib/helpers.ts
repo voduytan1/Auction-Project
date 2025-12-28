@@ -25,7 +25,8 @@ export const apiHelpers = {
         return {
           error: "Server Error",
           message:
-            (axiosError.response.data as any)?.message || "An error occurred",
+            (axiosError.response.data as ApiErrorResponse)?.message ||
+            "An error occurred",
           path: null,
           status: axiosError.response.status,
           timestamp: new Date().toISOString(),

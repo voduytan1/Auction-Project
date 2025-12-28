@@ -15,10 +15,6 @@ export type { DashboardStats, Activity, TopAuction } from "./dashboard";
 export { UsersTable, UpgradeRequestsTable } from "./users";
 export type { User, UpgradeRequest } from "./users";
 
-// Auctions
-export { AuctionsTable } from "./auctions";
-export type { Auction } from "./auctions";
-
 // Categories
 export { CategoriesTable } from "./categories";
 export type { Category, CategoryFormData } from "./categories";

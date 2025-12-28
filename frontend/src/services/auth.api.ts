@@ -4,6 +4,7 @@ import type {
   LoginResponse,
   RegisterRequest,
   RefreshTokenResponse,
+  User,
 } from "@/features/auth/types";
 
 const AUTH_ENDPOINTS = {
@@ -20,42 +21,34 @@ export const authAPI = {
    * Đăng nhập
    * Backend sẽ set refresh_token vào HTTP-only cookie
    */
-  login: async (credentials: LoginRequest) => {
-    const response = await api.post<LoginResponse>(
-      AUTH_ENDPOINTS.LOGIN,
-      credentials
-    );
-    // response.data đã được unwrap bởi interceptor (lấy data.data)
-    return response.data;
-  },
+  login: (credentials: LoginRequest) =>
+    api.post<LoginResponse>(AUTH_ENDPOINTS.LOGIN, credentials),
 
   /**
    * Đăng ký tài khoản mới
+   * POST /users - role mặc định là BIDDER
    */
-  register: async (userData: RegisterRequest) => {
-    const response = await api.post<LoginResponse>("/auth/register", userData);
-    return response.data;
-  },
+  register: (userData: RegisterRequest) =>
+    api.post<User>("/users", {
+      username: userData.username,
+      email: userData.email,
+      password: userData.password,
+      vaitro: "BIDDER",
+      hoVaTen: userData.hoVaTen,
+      captchaToken: userData.captchaToken, // reCAPTCHA v3 token for backend verification
+    }),
 
   /**
    * Đăng xuất - Xóa refresh_token cookie ở backend
    */
-  logout: async () => {
-    const response = await api.post<{ message: string }>(AUTH_ENDPOINTS.LOGOUT);
-    return response.data;
-  },
+  logout: () => api.post<{ message: string }>(AUTH_ENDPOINTS.LOGOUT),
 
   /**
    * Refresh access token
    * Sử dụng refresh_token từ cookie (tự động gửi với withCredentials: true)
    * Backend không cần userId nữa, tự định danh từ cookie
    */
-  refreshToken: async () => {
-    const response = await api.post<RefreshTokenResponse>(
-      AUTH_ENDPOINTS.REFRESH
-    );
-    return response.data;
-  },
+  refreshToken: () => api.post<RefreshTokenResponse>(AUTH_ENDPOINTS.REFRESH),
 
   // TODO: Implement these endpoints when backend is ready
   // forgotPassword: (email: string) => api.post("/auth/forgot-password", { email }),

@@ -133,9 +133,9 @@ const CategoryProductsPage = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6 md:py-8">
       {/* Breadcrumb */}
-      <nav className="mb-6 text-sm">
+      <nav className="mb-4 sm:mb-6 text-xs sm:text-sm">
         <ol className="flex flex-wrap items-center gap-2 text-muted-foreground">
           <li>
             <Link to="/" className="hover:text-foreground transition-colors">
@@ -163,19 +163,19 @@ const CategoryProductsPage = () => {
       </nav>
 
       {/* Header with Title & Sort */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 md:mb-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2">
             {categoryData?.tenDanhMuc}
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Tìm thấy {pagination?.totalElements || 0} sản phẩm
           </p>
         </div>
 
         {/* Sort Dropdown */}
         <Select value={sortBy} onValueChange={handleSort}>
-          <SelectTrigger className="w-full sm:w-50">
+          <SelectTrigger className="w-full sm:w-50 h-9 sm:h-10 text-sm">
             <SelectValue placeholder="Sắp xếp theo" />
           </SelectTrigger>
           <SelectContent>
@@ -189,15 +189,15 @@ const CategoryProductsPage = () => {
 
       {/* Empty State */}
       {categoryData && categoryData.products.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground mb-4">
+        <div className="text-center py-8 sm:py-12">
+          <p className="text-sm sm:text-base text-muted-foreground mb-4">
             Không có sản phẩm nào trong danh mục này.
           </p>
         </div>
       ) : (
         <>
           {/* Product Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-6 mb-6 sm:mb-8">
             {sortedProducts.map((product) => (
               <ProductCard key={product.productid} product={product} />
             ))}
@@ -205,15 +205,15 @@ const CategoryProductsPage = () => {
 
           {/* Pagination */}
           {pagination && pagination.totalPages > 1 && (
-            <div className="flex flex-wrap items-center justify-center gap-2 mt-8 pb-8">
+            <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2 mt-6 sm:mt-8 pb-6 sm:pb-8">
               <Button
                 variant="outline"
                 size="icon"
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="h-9 w-9"
+                className="h-8 w-8 sm:h-9 sm:w-9"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
 
               <div className="flex flex-wrap gap-1 justify-center">
@@ -232,7 +232,7 @@ const CategoryProductsPage = () => {
                         variant={currentPage === page ? "default" : "outline"}
                         size="icon"
                         onClick={() => handlePageChange(page)}
-                        className="h-9 w-9"
+                        className="h-8 w-8 sm:h-9 sm:w-9 text-xs sm:text-sm"
                       >
                         {page}
                       </Button>
@@ -244,7 +244,7 @@ const CategoryProductsPage = () => {
                     return (
                       <span
                         key={page}
-                        className="flex items-center px-2 text-sm"
+                        className="flex items-center px-1 sm:px-2 text-xs sm:text-sm"
                       >
                         ...
                       </span>
@@ -259,9 +259,9 @@ const CategoryProductsPage = () => {
                 size="icon"
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === pagination.totalPages}
-                className="h-9 w-9"
+                className="h-8 w-8 sm:h-9 sm:w-9"
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
             </div>
           )}

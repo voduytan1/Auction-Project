@@ -41,7 +41,7 @@ const steps: Step[] = [
   },
   {
     id: 1,
-    label: "Địa chỉ giao hàng",
+    label: "Địa chỉ",
     icon: <MapPin className="h-5 w-5" />,
     description: "Người mua cung cấp địa chỉ nhận hàng",
     buyerAction: "Nhập địa chỉ",

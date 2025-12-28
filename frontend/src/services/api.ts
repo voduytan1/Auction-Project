@@ -1,8 +1,7 @@
 import axios, { AxiosError } from "axios";
 import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
 import type { AppStore } from "@/store";
-
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import { env } from "@/config/env";
 
 // Declare window.__REDUX_STORE__ type
 declare global {
@@ -13,7 +12,7 @@ declare global {
 
 // Create axios instance
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: env.API_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -82,12 +81,33 @@ api.interceptors.response.use(
           }
         );
 
-        const { accessToken } = response.data.data;
+        const refreshData = response.data.data;
+        const { accessToken } = refreshData;
 
-        // Dispatch action to update token in Redux
+        // Transform to User object
+        const user = {
+          userid: refreshData.userid,
+          username: refreshData.username,
+          email: refreshData.email,
+          vaitro: refreshData.vaitro,
+          thoiHanBanHang: refreshData.thoiHanBanHang,
+          hoVaTen: refreshData.hoVaTen,
+          diaChi: refreshData.diaChi,
+          soDienThoai: refreshData.soDienThoai,
+          ngaySinh: refreshData.ngaySinh,
+          diemDanhGia: refreshData.diemDanhGia,
+          soLuotDanhGia: refreshData.soLuongDanhGia,
+          anhDaiDien: refreshData.anhDaiDien,
+          tyLeDanhGiaTot: 85, // Default
+        };
+
+        // Dispatch action to update token + user in Redux
         const store = window.__REDUX_STORE__;
         if (store) {
-          store.dispatch({ type: "auth/setAccessToken", payload: accessToken });
+          store.dispatch({
+            type: "auth/setCredentials",
+            payload: { user, accessToken },
+          });
         }
 
         if (originalRequest.headers) {
@@ -124,6 +144,18 @@ api.interceptors.response.use(
     // Handle 500 Server Error
     if (error.response?.status === 500) {
       console.error("Internal server error");
+    }
+
+    // Extract error message from backend response
+    if (error.response?.data) {
+      const data = error.response.data as { message?: string; error?: string };
+      const backendMessage = data.message || data.error;
+      if (backendMessage) {
+        const customError = new Error(backendMessage) as AxiosError;
+        customError.response = error.response;
+        customError.config = error.config;
+        return Promise.reject(customError);
+      }
     }
 
     return Promise.reject(error);

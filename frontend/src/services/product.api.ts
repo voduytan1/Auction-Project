@@ -115,4 +115,11 @@ export const productAPI = {
     status?: "PENDING" | "ACTIVE" | "COMPLETED" | "CANCELLED";
     sellerId?: string;
   }) => api.get<ApiResponse<ProductResponse[]>>("/products", { params }),
+
+  /**
+   * DELETE /products/{id} - Delete/Remove product (seller or admin only)
+   * Only active products can be removed
+   */
+  delete: (id: number | string) =>
+    api.delete<{ message: string }>(`/products/${id}`),
 };

@@ -14,22 +14,16 @@ export const loginUser = createAsyncThunk(
   async (credentials: LoginRequest, { rejectWithValue }) => {
     try {
       const response = await authAPI.login(credentials);
+      const data = response.data;
 
       const user: User = {
-        userid: response.userid,
-        username: response.username,
-        email: response.email,
-        vaitro: response.vaitro,
-        anhDaiDien: response.anhDaiDien,
-        hoVaTen: response.hoVaTen,
+        ...data,
         tyLeDanhGiaTot: 85,
-        diemDanhGia: 85,
-        soLuotDanhGia: 20,
       };
 
       return {
         user,
-        accessToken: response.accessToken,
+        accessToken: data.accessToken,
       };
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
@@ -45,22 +39,15 @@ export const registerUser = createAsyncThunk(
   async (userData: RegisterRequest, { rejectWithValue }) => {
     try {
       const response = await authAPI.register(userData);
+      const data = response.data;
 
       const user: User = {
-        userid: response.userid,
-        username: response.username,
-        email: response.email,
-        vaitro: response.vaitro,
-        anhDaiDien: response.anhDaiDien,
-        hoVaTen: response.hoVaTen,
+        ...data,
         tyLeDanhGiaTot: 85,
-        diemDanhGia: 85,
-        soLuotDanhGia: 20,
       };
 
       return {
         user,
-        accessToken: response.accessToken,
       };
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
@@ -69,15 +56,23 @@ export const registerUser = createAsyncThunk(
   }
 );
 
-// Refresh token - Backend không cần userId nữa, chỉ cần refresh_token cookie
+// Refresh token - Backend trả về accessToken + đầy đủ thông tin user
 export const refreshAccessToken = createAsyncThunk(
   "auth/refresh",
   async (_, { rejectWithValue }) => {
     try {
       const response = await authAPI.refreshToken();
+      const data = response.data;
+
+      const user: User = {
+        ...data,
+        tyLeDanhGiaTot: 85,
+      };
+
       return {
-        accessToken: response.accessToken,
-        expiresIn: response.expiresIn,
+        user,
+        accessToken: data.accessToken,
+        expiresIn: data.expiresIn,
       };
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
@@ -94,17 +89,13 @@ export const getUserMe = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await userAPI.getMe();
+      const data = response.data;
+
       const user: User = {
-        userid: response.data.userid,
-        username: response.data.username,
-        email: response.data.email,
-        vaitro: response.data.vaitro,
-        anhDaiDien: response.data.anhDaiDien,
-        hoVaTen: response.data.hoVaTen,
+        ...data,
         tyLeDanhGiaTot: 85,
-        diemDanhGia: 85,
-        soLuotDanhGia: 20,
       };
+
       return user;
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
@@ -194,17 +185,15 @@ const authSlice = createSlice({
         state.isInitializing = false;
       });
 
-    // Register
+    // Register - chỉ tạo tài khoản, không auto login
     builder
       .addCase(registerUser.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(registerUser.fulfilled, (state, action) => {
+      .addCase(registerUser.fulfilled, (state) => {
         state.isLoading = false;
-        state.user = action.payload.user;
-        state.accessToken = action.payload.accessToken;
-        state.isAuthenticated = true;
+        // Không set user/accessToken vì user cần login sau khi đăng ký
         state.isInitializing = false;
       })
       .addCase(registerUser.rejected, (state, action) => {
@@ -229,6 +218,7 @@ const authSlice = createSlice({
       })
       .addCase(refreshAccessToken.fulfilled, (state, action) => {
         state.isLoading = false;
+        state.user = action.payload.user;
         state.accessToken = action.payload.accessToken;
         state.isAuthenticated = true;
         state.isInitializing = false;
