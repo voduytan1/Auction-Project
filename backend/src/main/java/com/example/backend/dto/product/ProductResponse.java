@@ -43,5 +43,7 @@ public class ProductResponse {
 
     private Long transactionId;
 
+    private Boolean isHighlight;
+
     private List<String> images;
 }

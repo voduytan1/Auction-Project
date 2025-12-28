@@ -2,12 +2,17 @@ package com.example.backend.mapper;
 
 import com.example.backend.dto.product.CreateProductRequest;
 import com.example.backend.dto.product.ProductResponse;
+import com.example.backend.entity.ConfigVariable;
 import com.example.backend.entity.Product;
 import com.example.backend.entity.ProductDescriptionHistory;
 import com.example.backend.entity.ProductImage;
+import com.example.backend.service.ConfigurationService;
 import com.example.backend.utils.MyStringUtils;
 import org.mapstruct.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Comparator;
@@ -17,6 +22,9 @@ import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 public abstract class ProductMapper {
+    @Autowired
+    protected ConfigurationService configurationService;
+
     @Mapping(target = "productid", ignore = true)
     @Mapping(target = "images", ignore = true)
     @Mapping(target = "trangThai", ignore = true)
@@ -42,7 +50,16 @@ public abstract class ProductMapper {
     @Mapping(target = "bidderId", source = "product.currentBidder.userid")
     @Mapping(target = "tenBidder", source = "product.currentBidder.hoVaTen", qualifiedByName = "maskBidderName")
     @Mapping(target = "diemDanhGiaBidder", source = "product.currentBidder.diemDanhGia")
+    @Mapping(target = "isHighlight", source = "product.createdAt", qualifiedByName = "checkHighlight")
+
     public abstract ProductResponse toResponse(Product product);
+
+    @Named("checkHighlight")
+    protected Boolean checkHighlight(LocalDateTime createdAt) {
+        int highlightMins = configurationService.getConfigurationVariable(ConfigVariable.HIGHLIGHT_MINUTES).getValue();
+        long minutes = Duration.between(createdAt, LocalDateTime.now()).toMinutes();
+        return highlightMins >= minutes;
+    }
 
     @Named("maskBidderName")
     protected String maskBidderName(String fullName) {
