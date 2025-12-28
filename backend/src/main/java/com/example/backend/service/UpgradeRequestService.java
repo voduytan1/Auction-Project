@@ -1,6 +1,7 @@
 package com.example.backend.service;
 
 import com.example.backend.dto.admin.UpgradeRequest.UpgradeRequestResponse;
+import com.example.backend.dto.admin.dashboard.UpgradeRequestChartResponse;
 import com.example.backend.entity.Role;
 import com.example.backend.entity.UpgradeRequest;
 import com.example.backend.entity.UpgradeRequestStatus;
@@ -17,6 +18,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -106,5 +108,18 @@ public class UpgradeRequestService {
         upgradeRequestRepository.save(upgradeRequest);
     }
 
+    public UpgradeRequestChartResponse getUpgradeRequestChart(LocalDateTime startTime, LocalDateTime endTime){
+        Long approvedRequests = upgradeRequestRepository.countByTrangThaiAndUpdatedAtBetween(UpgradeRequestStatus.APPROVED, startTime, endTime);
+        Long rejectedRequests = upgradeRequestRepository.countByTrangThaiAndUpdatedAtBetween(UpgradeRequestStatus.REJECTED, startTime, endTime);
+        Long pendingRequests = upgradeRequestRepository.countByTrangThaiAndUpdatedAtBetween(UpgradeRequestStatus.PENDING, startTime, endTime);
+        Long totalRequests = approvedRequests + rejectedRequests + pendingRequests;
+
+        return UpgradeRequestChartResponse.builder()
+                .approved(approvedRequests)
+                .pending(pendingRequests)
+                .rejected(rejectedRequests)
+                .total(totalRequests)
+                .build();
+    }
 
 }

@@ -1,6 +1,7 @@
 package com.example.backend.repository;
 
 
+import com.example.backend.entity.Role;
 import com.example.backend.entity.User;
 import io.lettuce.core.dynamic.annotation.Param;
 import jakarta.transaction.Transactional;
@@ -40,4 +41,9 @@ public interface UserRepository extends JpaRepository<@NotNull User, @NotNull UU
             "WHERE u.vaitro = 'SELLER' " +
             "AND (u.thoiHanBanHang IS NULL OR u.thoiHanBanHang < :now)")
     int revokeExpiredSellers(@Param("now") LocalDateTime now);
+
+    Long countByVaitro(Role vaitro);
+
+    // Đếm user mới theo thời gian
+    Long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 }
