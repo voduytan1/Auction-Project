@@ -9,7 +9,6 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 // Import thêm Tooltip components
@@ -185,28 +184,26 @@ export function ProductInfo({ product }: ProductInfoProps) {
     <div className="space-y-6">
       {/* Title & Category */}
       <div className="mb-4">
-        <h1 className="text-3xl font-bold">{product.tenSanPham}</h1>
+        <h1 className="text-2xl md:text-3xl font-bold wrap-break-words">
+          {product.tenSanPham}
+        </h1>
       </div>
 
       {/* Price Info */}
       <Card className="border-primary bg-primary/5">
-        <CardContent className="p-6">
-          <div className="grid grid-cols-2 gap-4">
+        <CardContent className="p-4 md:p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             <div>
               <div className="text-sm text-slate-600">Giá hiện tại</div>
-              <div className="text-4xl font-bold text-primary leading-none my-1">
+              <div className="text-2xl md:text-3xl font-bold text-primary leading-none my-1">
                 {formatCurrency(product.giaHienTai)}
               </div>
-              <Badge variant="secondary" className="text-xs mt-2">
-                <TrendingUp className="mr-1 h-3 w-3" />
-                156 lượt ra giá
-              </Badge>
             </div>
 
             {product.giaMuaNgay && (
-              <div>
+              <div className="md:text-left border-t md:border-t-0 pt-4 md:pt-0 border-dashed border-slate-300">
                 <div className="text-sm text-slate-600">Giá mua ngay</div>
-                <div className="text-2xl font-semibold text-accent leading-none my-1">
+                <div className="text-2xl md:text-3xl font-bold text-accent leading-none my-1">
                   {formatCurrency(product.giaMuaNgay)}
                 </div>
               </div>
@@ -215,14 +212,14 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
           <Separator className="my-4" />
 
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
               <div className="text-slate-600">Giá khởi điểm</div>
               <div className="font-semibold">
                 {formatCurrency(product.giaKhoiDiem)}
               </div>
             </div>
-            <div>
+            <div className="md:text-left">
               <div className="text-slate-600">Bước giá</div>
               <div className="font-semibold">
                 {formatCurrency(product.buocGia)}
@@ -265,12 +262,12 @@ export function ProductInfo({ product }: ProductInfoProps) {
           </CardContent>
         </Card>
       ) : (
-        <div className="flex items-stretch gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch gap-3">
           {/* Nút Đặt giá - Luôn hiện và giãn rộng */}
           <>
             <Button
               size="lg"
-              className="flex-1 text-lg"
+              className="flex-1 text-base md:text-lg py-6 sm:py-0"
               onClick={() => {
                 if (!isAuthenticated) {
                   navigate("/auth/login");
@@ -284,7 +281,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
             </Button>
 
             <Dialog open={autoDialogOpen} onOpenChange={setAutoDialogOpen}>
-              <DialogContent>
+              <DialogContent className="w-[95vw] max-w-lg rounded-lg">
                 <DialogHeader>
                   <DialogTitle>Thiết lập đặt giá tự động</DialogTitle>
                   <DialogDescription>
@@ -303,7 +300,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
                     onChange={(e) => setAutoValue(e.target.value)}
                     placeholder={String(product.giaHienTai + product.buocGia)}
                   />
-                  <div className="mt-2 text-xs text-slate-500">
+                  <div className="mt-2 text-xs text-slate-500 space-y-1">
                     <div>
                       Giá hiện tại: {formatCurrency(product.giaHienTai)}
                     </div>
@@ -321,8 +318,8 @@ export function ProductInfo({ product }: ProductInfoProps) {
                   </div>
                 </div>
 
-                <DialogFooter>
-                  <DialogClose>
+                <DialogFooter className="gap-2 sm:gap-0">
+                  <DialogClose asChild>
                     <Button variant="outline">Hủy</Button>
                   </DialogClose>
                   <Button
@@ -427,7 +424,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
               size="lg"
               variant="default"
               className={
-                "flex-1 text-lg " +
+                "flex-1 text-base md:text-lg py-6 sm:py-0 " +
                 (product.giaMuaNgay
                   ? "bg-accent hover:bg-accent/90"
                   : "bg-accent cursor-not-allowed")
@@ -450,7 +447,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
             {/* Buy Now confirmation dialog (only meaningful when price exists) */}
             {product.giaMuaNgay && (
               <AlertDialog open={buyDialogOpen} onOpenChange={setBuyDialogOpen}>
-                <AlertDialogContent>
+                <AlertDialogContent className="w-[95vw] max-w-lg rounded-lg">
                   <AlertDialogHeader>
                     <AlertDialogTitle>Xác nhận mua ngay</AlertDialogTitle>
                     <AlertDialogDescription>
@@ -505,7 +502,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
                 <Button
                   variant="outline"
                   size="lg"
-                  className="aspect-square px-0"
+                  className="aspect-square px-0 w-full sm:w-auto py-6 sm:py-0"
                   onClick={handleWatchlistToggle}
                   disabled={watchlistLoading || !isAuthenticated}
                   title={
@@ -521,6 +518,8 @@ export function ProductInfo({ product }: ProductInfoProps) {
                       isInWatchlist ? "text-red-500 fill-red-500" : ""
                     }`}
                   />
+                  {/* Hiện text trên mobile cho nút này dễ hiểu hơn */}
+                  <span className="ml-2 sm:hidden">Yêu thích</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
@@ -538,16 +537,20 @@ export function ProductInfo({ product }: ProductInfoProps) {
       )}
 
       {/* Time Info */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-full bg-slate-100 p-3">
+              <div className="rounded-full bg-slate-100 p-3 shrink-0">
                 <Clock className="h-5 w-5 text-slate-600" />
               </div>
-              <div>
-                <div className="text-xs text-slate-600">Thời gian còn lại</div>
-                <div className="font-semibold">{getTimeRemaining()}</div>
+              <div className="min-w-0">
+                <div className="text-xs text-slate-600 truncate">
+                  Thời gian còn lại
+                </div>
+                <div className="font-semibold truncate">
+                  {getTimeRemaining()}
+                </div>
               </div>
             </div>
           </CardContent>
@@ -556,12 +559,14 @@ export function ProductInfo({ product }: ProductInfoProps) {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-full bg-slate-100 p-3">
+              <div className="rounded-full bg-slate-100 p-3 shrink-0">
                 <Gavel className="h-5 w-5 text-slate-600" />
               </div>
-              <div>
-                <div className="text-xs text-slate-600">Thời điểm đăng</div>
-                <div className="font-semibold">
+              <div className="min-w-0">
+                <div className="text-xs text-slate-600 truncate">
+                  Thời điểm đăng
+                </div>
+                <div className="font-semibold truncate">
                   {format(new Date(product.createdAt), "dd/MM/yyyy HH:mm", {
                     locale: vi,
                   })}
@@ -577,34 +582,36 @@ export function ProductInfo({ product }: ProductInfoProps) {
         <CardContent className="p-4">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 {product.anhDaiDienSeller ? (
                   <img
                     src={product.anhDaiDienSeller}
                     alt={product.tenSeller}
-                    className="h-12 w-12 rounded-full object-cover"
+                    className="h-10 w-10 md:h-12 md:w-12 rounded-full object-cover shrink-0"
                   />
                 ) : (
-                  <div className="rounded-full bg-primary/10 p-3">
+                  <div className="rounded-full bg-primary/10 p-2 md:p-3 shrink-0">
                     <User className="h-5 w-5 text-primary" />
                   </div>
                 )}
-                <div>
+                <div className="min-w-0">
                   <div className="text-xs text-slate-600">Người bán</div>
-                  <div className="font-semibold">
+                  <div className="font-semibold truncate">
                     {product.tenSeller || "Người bán"}
                   </div>
                 </div>
               </div>
               {product.diemDanhGiaSeller != null ? (
-                <div className="flex items-center gap-1 text-accent">
+                <div className="flex items-center gap-1 text-accent shrink-0">
                   <Star className="h-4 w-4 fill-current" />
                   <span className="font-semibold text-sm">
                     {product.diemDanhGiaSeller.toFixed(1)}/10
                   </span>
                 </div>
               ) : (
-                <div className="text-xs text-slate-500">Chưa có đánh giá</div>
+                <div className="text-xs text-slate-500 shrink-0">
+                  Chưa có đánh giá
+                </div>
               )}
             </div>
           </div>
@@ -617,13 +624,15 @@ export function ProductInfo({ product }: ProductInfoProps) {
           <CardContent className="p-4">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-full bg-green-100 p-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="rounded-full bg-green-100 p-2 md:p-3 shrink-0">
                     <TrendingUp className="h-5 w-5 text-green-600" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <div className="text-xs text-slate-600">Đang dẫn đầu</div>
-                    <div className="font-semibold">{product.tenBidder}</div>
+                    <div className="font-semibold truncate">
+                      {product.tenBidder}
+                    </div>
                   </div>
                 </div>
                 {product.diemDanhGiaBidder != null ? (
@@ -644,32 +653,32 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
       {/* Payment decision modal shown after buyNow response */}
       <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
-        <DialogContent>
+        <DialogContent className="w-[95vw] max-w-lg rounded-lg">
           <DialogHeader>
             <DialogTitle>Mua thành công!</DialogTitle>
             <DialogDescription>
-              Chúc mừng! Bạn đã mua sản phẩm thành công. Bạn có muốn thanh toán
-              ngay bây giờ không?
+              Chúc mừng! Bạn đã mua sản phẩm thành công.
             </DialogDescription>
           </DialogHeader>
 
           <div className="py-2">
             <div className="mb-4">
               <div className="text-sm text-slate-600">Sản phẩm</div>
-              <div className="font-semibold">{product.tenSanPham}</div>
+              <div className="font-semibold truncate">{product.tenSanPham}</div>
               <div className="text-sm text-slate-600 mt-2">Giá mua</div>
               <div className="font-semibold text-accent">
                 {formatCurrency(product.giaMuaNgay as number)}
               </div>
               {buyNowResponse ? (
-                <div className="mt-2 text-sm text-green-600">
+                <div className="mt-2 text-sm text-green-600 break-words">
                   ✓ {extractResponseMessage(buyNowResponse)}
                 </div>
               ) : null}
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button
+                className="flex-1"
                 onClick={async () => {
                   if (!transactionId) {
                     alert("Không tìm thấy thông tin giao dịch");
@@ -701,6 +710,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
               <Button
                 variant="outline"
+                className="flex-1"
                 onClick={() => {
                   setPaymentModalOpen(false);
                   toast.info(

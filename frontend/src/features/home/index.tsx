@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { HeroSection } from "./components/HeroSection";
 import { EndingSoonSection } from "./components/EndingSoonSection";
 import { HighestPriceSection } from "./components/HighestPriceSection";
 import { MostBidsSection } from "./components/MostBidsSection";
@@ -29,7 +30,6 @@ const Home = () => {
           sortOrder: "asc",
           status: "ACTIVE",
         });
-        console.log("Ending Soon:", endingSoon);
         setEndingSoonProducts((endingSoon?.data as any) || []);
 
         // Fetch highest price products (5 items, sort by price DESC)
@@ -64,10 +64,16 @@ const Home = () => {
   }
 
   return (
-    <div className="space-y-16 pb-16 w-full">
-      <EndingSoonSection products={endingSoonProducts} />
-      <MostBidsSection products={mostBidsProducts} />
-      <HighestPriceSection products={highestPriceProducts} />
+    <div className="w-full">
+      {/* Hero Section */}
+      <HeroSection />
+
+      {/* Product Sections */}
+      <div className="space-y-16 py-12">
+        <EndingSoonSection products={endingSoonProducts} />
+        <MostBidsSection products={mostBidsProducts} />
+        <HighestPriceSection products={highestPriceProducts} />
+      </div>
     </div>
   );
 };

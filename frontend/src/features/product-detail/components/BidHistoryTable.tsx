@@ -194,17 +194,17 @@ export function BidHistoryTable({
           <div className="py-8 text-center text-red-500">{error}</div>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div className="overflow-x-auto -mx-4 sm:mx-0">
+              <table className="w-full min-w-[350px]">
                 <thead>
                   <tr className="border-b">
-                    <th className="pb-3 text-left text-sm font-semibold text-slate-600">
+                    <th className="pl-4 sm:pl-0 pb-3 text-left text-xs sm:text-sm font-semibold text-slate-600">
                       Thời điểm
                     </th>
-                    <th className="pb-3 text-left text-sm font-semibold text-slate-600">
+                    <th className="pb-3 text-left text-xs sm:text-sm font-semibold text-slate-600">
                       Người mua
                     </th>
-                    <th className="pb-3 text-right text-sm font-semibold text-slate-600">
+                    <th className="pr-4 sm:pr-0 pb-3 text-right text-xs sm:text-sm font-semibold text-slate-600">
                       Giá
                     </th>
                   </tr>
@@ -217,25 +217,25 @@ export function BidHistoryTable({
                         index === 0 ? "bg-accent/5" : ""
                       }`}
                     >
-                      <td className="py-3 text-sm">
+                      <td className="pl-4 sm:pl-0 py-3 text-xs sm:text-sm whitespace-nowrap">
                         {formatDistanceToNow(new Date(bid.thoiGianDat), {
                           addSuffix: true,
                           locale: vi,
                         })}
                       </td>
-                      <td className="py-3">
-                        <span className="font-mono text-sm font-semibold">
+                      <td className="py-3 max-w-[100px] truncate sm:max-w-none">
+                        <span className="font-mono text-xs sm:text-sm font-semibold">
                           {bid.bidderName}
                         </span>
                         {index === 0 && (
-                          <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-xs text-white">
+                          <span className="hidden sm:inline-block ml-2 rounded-full bg-accent px-2 py-0.5 text-xs text-white">
                             Cao nhất
                           </span>
                         )}
                       </td>
-                      <td className="py-3 text-right">
+                      <td className="pr-4 sm:pr-0 py-3 text-right">
                         <span
-                          className={`font-semibold ${
+                          className={`font-semibold text-xs sm:text-sm ${
                             index === 0 ? "text-accent" : ""
                           }`}
                         >
