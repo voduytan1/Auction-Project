@@ -25,6 +25,9 @@ public class CreateUserRequest {
     @Email(message = "Email không đúng định dạng")
     String email;
 
+    @NotBlank(message = "Email không được để trống")
+    String OTP;
+
     Role vaitro = Role.BIDDER;
 
     @Size(max = 100, message = "Họ và tên không quá 100 ký tự")
