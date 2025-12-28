@@ -110,6 +110,20 @@ public class CategoryService extends BaseService<Category,Long, CreateCategoryRe
         return new PageImpl<>(categoryResponses, pageable, page.getTotalElements());
     }
 
+    public Page<@NotNull CategoryResponse> getPageCategoriesByParent(Long parentId, Pageable pageable) {
+        Category parent = categoryRepository.findById(parentId).orElseThrow(()-> new EntityNotFoundException("Không tìm thấy danh mục cha với id "+ parentId));
+        if(parent.getLevel()==2){
+            throw new IllegalArgumentException("Danh mục truyền vào không phải danh mục cha");
+        }
+        Page<@NotNull Category> page= categoryRepository.findAllByParentCategory_Categoryid(parentId, pageable);
+
+        List<CategoryResponse> categoryResponses = page.getContent().stream()
+                .map(categoryMapper::toResponse)
+                .toList();
+
+        return new PageImpl<>(categoryResponses, pageable, page.getTotalElements());
+    }
+
     public CategoryResponse getById(Long id) {
         Category result = findById(id).orElseThrow(()-> new EntityNotFoundException("Không tìm thấy danh mục với id " + id));
         return  categoryMapper.toResponse(result);

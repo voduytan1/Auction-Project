@@ -45,5 +45,5 @@ public interface UserRepository extends JpaRepository<@NotNull User, @NotNull UU
     Long countByVaitro(Role vaitro);
 
     // Đếm user mới theo thời gian
-    Long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+    Long countByVaitroAndCreatedAtBetween(Role vaitro, LocalDateTime start, LocalDateTime end);
 }

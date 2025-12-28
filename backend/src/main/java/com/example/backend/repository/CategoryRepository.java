@@ -14,6 +14,8 @@ import java.util.List;
 public interface CategoryRepository extends JpaRepository<@NotNull Category, @NotNull Long> {
     List<Category> findAllByLevel(int level);
     Page<@NotNull Category> findAllByLevel(int level, Pageable pageable);
+    Page<@NotNull Category> findAllByParentCategory_Categoryid(Long categoryid, Pageable pageable);
+
     Boolean existsBytenDanhMuc(@NotNull String tenDanhMuc);
     Boolean existsByParentCategoryCategoryid(@NotNull Long parentCategoryId);
 }

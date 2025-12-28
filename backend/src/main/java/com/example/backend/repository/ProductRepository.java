@@ -25,7 +25,11 @@ public interface ProductRepository extends JpaRepository<@NotNull Product, @NotN
     // Đếm theo thời gian tạo
     Long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 
+    Long countByThoiGianKetThucBetween(LocalDateTime start, LocalDateTime end);
     // Đếm theo status và thời gian update
+    Long countByTrangThaiAndCreatedAtBetween(
+            ProductStatus status, LocalDateTime start, LocalDateTime end
+    );
     Long countByTrangThaiAndUpdatedAtBetween(
             ProductStatus status, LocalDateTime start, LocalDateTime end
     );

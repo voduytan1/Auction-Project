@@ -24,6 +24,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -82,6 +83,18 @@ public class CategoryController {
         ));
     }
 
+    @GetMapping("/{id}/sub-category")
+    public ResponseEntity<@NotNull ApiResponse<List<CategoryResponse>>> getSubCategoryByParent(@PathVariable Long id, @ModelAttribute @Valid PaginationRequest paginationRequest) {
+        Pageable pageable = paginationRequest.getPageable();
+
+        Page<@NotNull CategoryResponse> result = categoryService.getPageCategoriesByParent(id,pageable);
+
+        PaginationInfo paginationInfo = PageUtils.fromPage(result, paginationRequest.getTrimmedSearch());
+
+        String message = "Lấy danh sách danh mục con thành công";
+
+        return ResponseEntity.ok(ApiResponse.successWithPagination(message,result.getContent(), paginationInfo));
+    }
     @GetMapping("/{id}")
     public ResponseEntity<@NotNull ApiResponse<CategoryResponse>> getCategoryById(@PathVariable Long id) {
         CategoryResponse result = categoryService.getById(id);
