@@ -1,5 +1,6 @@
 package com.example.backend.service;
 
+import com.example.backend.dto.admin.dashboard.RevenueDataPoint;
 import com.example.backend.dto.common.PaginationRequest;
 import com.example.backend.dto.rating.CreateRatingRequest;
 import com.example.backend.dto.transaction.TransactionResponse;
@@ -8,6 +9,7 @@ import com.example.backend.entity.TransactionStatus;
 import com.example.backend.exception.ForbiddenException;
 import com.example.backend.mapper.TransactionMapper;
 import com.example.backend.repository.TransactionRepository;
+import com.example.backend.utils.DateUtils;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -19,7 +21,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -170,5 +174,37 @@ public class TransactionService {
 
         webSocketEventPublisher.publishTransactionStatusChange(response, "Người bán đã gửi hủy giao dịch");
         return response;
+    }
+
+//    public List<RevenueDataPoint> getRevenueChart(LocalDateTime start, LocalDateTime end) {
+//        List<RevenueDataPoint> data = new ArrayList<>();
+//
+//        for(LocalDateTime dateTime = start; dateTime.isBefore(end); dateTime.plusDays(1)) {
+//            BigDecimal revenue = transactionRepository.sumRevenueByDateRange(dateTime, dateTime.plusDays(1).minusNanos(1));
+//            if (revenue == null) revenue = BigDecimal.ZERO;
+//
+//            data.add(RevenueDataPoint.builder()
+//                    .date(dateTime.toLocalDate().plusDays(1))
+//                    .revenue(revenue)
+//                    .build());
+//        }
+//        return data;
+//    }
+
+    public List<RevenueDataPoint> getMonthlyRevenueChart() {
+        List<RevenueDataPoint> data = new ArrayList<>();
+
+        for(int i = 1; i <= 12; i++) {
+            LocalDateTime start = DateUtils.getStartOfSpecificMonth(i);
+            LocalDateTime end = DateUtils.getEndOfSpecificMonth(i);
+            BigDecimal revenue = transactionRepository.sumRevenueByDateRange(start,end);
+            if (revenue == null) revenue = BigDecimal.ZERO;
+
+            data.add(RevenueDataPoint.builder()
+                    .month(i)
+                    .revenue(revenue)
+                    .build());
+        }
+        return data;
     }
 }

@@ -2,6 +2,7 @@ package com.example.backend.controller;
 
 import com.example.backend.dto.admin.UpgradeRequest.UpgradeRequestResponse;
 import com.example.backend.dto.admin.config.CreateConfigRequest;
+import com.example.backend.dto.admin.dashboard.RevenueDataPoint;
 import com.example.backend.dto.admin.dashboard.UpgradeRequestChartResponse;
 import com.example.backend.dto.common.ApiResponse;
 import com.example.backend.dto.common.PaginationInfo;
@@ -9,6 +10,7 @@ import com.example.backend.dto.common.PaginationRequest;
 import com.example.backend.entity.ConfigVariable;
 import com.example.backend.entity.Configuration;
 import com.example.backend.service.ConfigurationService;
+import com.example.backend.service.TransactionService;
 import com.example.backend.service.UpgradeRequestService;
 import com.example.backend.utils.DateUtils;
 import com.example.backend.utils.PageUtils;
@@ -27,10 +29,12 @@ import java.util.Map;
 public class AdminController {
     private final UpgradeRequestService  upgradeRequestService;
     private final ConfigurationService configurationService;
+    private final TransactionService transactionService;
 
-    public AdminController(UpgradeRequestService upgradeRequestService, ConfigurationService configurationService) {
+    public AdminController(UpgradeRequestService upgradeRequestService, ConfigurationService configurationService, TransactionService transactionService) {
         this.upgradeRequestService = upgradeRequestService;
         this.configurationService = configurationService;
+        this.transactionService = transactionService;
     }
     // Request
     @GetMapping("/request")
@@ -90,18 +94,22 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @GetMapping("/dashboard/upgrade-request/weekly")
+    @GetMapping("/dashboard/upgrade-request/this-week")
     public ResponseEntity<@NotNull ApiResponse<UpgradeRequestChartResponse>> getWeaklyUpgradeRequestChart(){
         UpgradeRequestChartResponse response = upgradeRequestService.getUpgradeRequestChart(DateUtils.getStartOfWeek(), DateUtils.getEndOfWeek());
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @GetMapping("/dashboard/upgrade-request/monthly")
+    @GetMapping("/dashboard/upgrade-request/this-month")
     public ResponseEntity<@NotNull ApiResponse<UpgradeRequestChartResponse>> getMonthlyUpgradeRequestChart(){
         UpgradeRequestChartResponse response = upgradeRequestService.getUpgradeRequestChart(DateUtils.getStartOfMonth(), DateUtils.getEndOfMonth());
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-
+    @GetMapping("/dashboard/revenue/this-year")
+    public ResponseEntity<@NotNull ApiResponse<List<RevenueDataPoint>>> getWeekRevenueChart(){
+        List<RevenueDataPoint> response = transactionService.getMonthlyRevenueChart();
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
 }
 
