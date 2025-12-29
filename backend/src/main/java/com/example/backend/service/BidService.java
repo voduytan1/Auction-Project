@@ -254,7 +254,7 @@ public class BidService {
         }
         return bidHistoryRepository
                 .findByProductProductidOrderByCreatedAtDesc(productId, pageable)
-                .map(bidHistoryMapper::toResponse);
+                .map(bidHistoryMapper::toResponseNoMask);
     }
 
     @Transactional

@@ -49,11 +49,20 @@ public class RatingService {
         }
 
         Integer soluongDanhGia = ratee.getSoLuongDanhGia();
-        if(soluongDanhGia==null ||soluongDanhGia==0){
-            ratee.setDiemDanhGia(createRatingRequest.getDiem().doubleValue());
+        int inputDiem = createRatingRequest.getDiem(); // 1 hoặc -1
+        double diemQuyDoi = (inputDiem == 1) ? 100.0 : 0.0;
+
+        if (soluongDanhGia == null || soluongDanhGia == 0) {
+            ratee.setDiemDanhGia(diemQuyDoi);
             ratee.setSoLuongDanhGia(1);
-        }else {
-            ratee.setDiemDanhGia(ratee.getDiemDanhGia() + (createRatingRequest.getDiem() / soluongDanhGia));
+        } else {
+            double diemTichLuyHienTai = ratee.getDiemDanhGia() * soluongDanhGia;
+
+            double diemMoi = (diemTichLuyHienTai + diemQuyDoi) / (soluongDanhGia + 1);
+
+            diemMoi = (double) Math.round(diemMoi * 100) / 100;
+
+            ratee.setDiemDanhGia(diemMoi);
             ratee.setSoLuongDanhGia(soluongDanhGia + 1);
         }
         User savedRatee = userRepository.save(ratee);
