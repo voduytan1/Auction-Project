@@ -1,7 +1,6 @@
-﻿import { useState } from "react";
+﻿import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import { PageWrapper } from "@/components/PageWrapper";
-import { TransactionNotification } from "@/components/TransactionNotification";
 import { TransactionStepper } from "./components/TransactionStepper";
 import { HorizontalStepper } from "./components/HorizontalStepper";
 import { TransactionSummary } from "./components/TransactionSummary";
@@ -16,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageLoader } from "@/components/PageLoader";
 import { useAppSelector } from "@/hooks/use-redux";
 import { useFetch } from "@/hooks/use-fetch";
+import { useTransactionWebSocket } from "@/hooks/use-transaction-websocket";
 import { transactionAPI } from "@/services/transaction.api";
 import { ratingAPI } from "@/services/rating.api";
 import { ArrowLeft, AlertCircle, Star } from "lucide-react";
@@ -54,6 +54,35 @@ export default function TransactionDetailPage() {
   // Use local state if available, otherwise use fetched data
   const currentTransaction: Transaction | null =
     localTransaction || transaction;
+
+  // Check if current user is involved in this transaction
+  const isUserInvolved =
+    user?.userid === currentTransaction?.buyerId ||
+    user?.userid === currentTransaction?.sellerId;
+
+  // WebSocket integration for real-time transaction updates
+  const handleTransactionStatusChange = (message: TransactionStatusMessage) => {
+    if (currentTransaction) {
+      setLocalTransaction({
+        ...currentTransaction,
+        trangThai: message.trangThai as any,
+      });
+      refetch();
+    }
+  };
+
+  useTransactionWebSocket({
+    transactionId: Number(transactionId),
+    onStatusChange: handleTransactionStatusChange,
+    enabled: isAuthenticated && isUserInvolved,
+  });
+
+  // Sync localTransaction with fetched transaction when it changes
+  useEffect(() => {
+    if (transaction && !localTransaction) {
+      setLocalTransaction(transaction);
+    }
+  }, [transaction, localTransaction]);
 
   if (loading) {
     return (
@@ -101,11 +130,6 @@ export default function TransactionDetailPage() {
     user?.userid === (currentTransaction as Transaction)?.buyerId
       ? "buyer"
       : "seller";
-
-  // Check if current user is involved in this transaction
-  const isUserInvolved =
-    user?.userid === currentTransaction?.buyerId ||
-    user?.userid === currentTransaction?.sellerId;
 
   const currentStep = getStepFromStatus(
     (currentTransaction as Transaction)?.trangThai
@@ -193,29 +217,8 @@ export default function TransactionDetailPage() {
     }
   };
 
-  // Handle transaction status change from WebSocket
-  const handleTransactionStatusChange = (message: TransactionStatusMessage) => {
-    // Update local transaction with new status
-    if (currentTransaction) {
-      setLocalTransaction({
-        ...currentTransaction,
-        trangThai: message.trangThai as any,
-      });
-      // Refetch to get full updated data
-      refetch();
-    }
-  };
-
   return (
     <PageWrapper title={`Giao dịch #${transactionId}`}>
-      {/* Transaction Status Update Notification - Only for buyer/seller */}
-      {transactionId && isUserInvolved && (
-        <TransactionNotification
-          transactionId={Number(transactionId)}
-          onStatusChange={handleTransactionStatusChange}
-        />
-      )}
-
       <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
         <div className="mb-4 flex gap-2 items-center">
           <Button

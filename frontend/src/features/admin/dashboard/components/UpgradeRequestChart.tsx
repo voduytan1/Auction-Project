@@ -142,26 +142,31 @@ export function UpgradeRequestChart() {
           <ResponsiveContainer width="100%" height={250} className="sm:h-75">
             <PieChart>
               <Pie
-                data={chartData}
+                data={chartData.filter((item) => item.value > 0)}
                 cx="50%"
                 cy="50%"
                 labelLine={false}
                 label={({ name, percent }) =>
-                  `${name} ${(percent * 100).toFixed(0)}%`
+                  percent > 0 ? `${name} ${(percent * 100).toFixed(0)}%` : ""
                 }
                 outerRadius={70}
                 fill="#8884d8"
                 dataKey="value"
               >
-                {chartData.map((_, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
+                {chartData
+                  .filter((item) => item.value > 0)
+                  .map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
               </Pie>
               <Tooltip />
-              <Legend />
+              <Legend
+                payload={chartData.map((item, index) => ({
+                  value: `${item.name}: ${item.value}`,
+                  type: "circle",
+                  color: item.color,
+                }))}
+              />
             </PieChart>
           </ResponsiveContainer>
         )}

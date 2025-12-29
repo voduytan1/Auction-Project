@@ -92,9 +92,10 @@ const extractResponseMessage = (response: unknown): string => {
 
 interface ProductInfoProps {
   product: ProductResponse;
+  onRefreshProduct?: () => Promise<void>;
 }
 
-export function ProductInfo({ product }: ProductInfoProps) {
+export function ProductInfo({ product, onRefreshProduct }: ProductInfoProps) {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAppSelector((s) => s.auth);
 
@@ -396,8 +397,11 @@ export function ProductInfo({ product }: ProductInfoProps) {
                         } else {
                           // Trường hợp đặt giá tự động bình thường
                           toast.success("Đặt giá tự động thành công!");
-                          // Reload lại product để cập nhật giá hiện tại
-                          window.location.reload();
+                          setAutoDialogOpen(false);
+                          // Refetch product để cập nhật giá hiện tại thay vì reload
+                          if (onRefreshProduct) {
+                            await onRefreshProduct();
+                          }
                         }
                       } catch (error) {
                         console.error("Auto bid error", error);

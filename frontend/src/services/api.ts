@@ -78,7 +78,7 @@ api.interceptors.response.use(
       try {
         // Refresh token - BE sẽ đọc refresh_token từ cookie
         const response = await axios.post(
-          `${API_BASE_URL}/auth/refresh`,
+          `${env.API_URL}/auth/refresh`,
           {},
           {
             withCredentials: true, // Gửi cookie

@@ -118,6 +118,9 @@ export function RegisterForm() {
         if (registerUser.fulfilled.match(result)) {
           toast.success("Đăng ký thành công! Vui lòng đăng nhập.");
           navigate("/auth/login");
+        } else if (registerUser.rejected.match(result)) {
+          const errorMessage = result.payload as string;
+          toast.error(errorMessage || "Đăng ký thất bại. Vui lòng thử lại!");
         }
       } catch (error) {
         console.error("Registration error:", error);

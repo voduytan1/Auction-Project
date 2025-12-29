@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import {
   User,
@@ -16,7 +16,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { useAppSelector } from "@/hooks/use-redux";
+import { useAppSelector, useAppDispatch } from "@/hooks/use-redux";
+import { userAPI } from "@/services/user.api";
+import { imageAPI } from "@/services/image.api";
+import { getUserMe } from "@/store/slices/authSlice";
 
 interface ProfileFormData {
   hoVaTen: string;
@@ -27,10 +30,32 @@ interface ProfileFormData {
 }
 
 export function EditProfileForm() {
+  const dispatch = useAppDispatch();
+  const { user: reduxUser } = useAppSelector((state) => state.auth);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const currentUser = useAppSelector((state) => state.auth.user);
+  const [currentUser, setCurrentUser] = useState(reduxUser);
+
+  // Fetch fresh user data from API on mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await userAPI.getMe();
+        setCurrentUser(response.data);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        // Fallback to Redux data if API fails
+        setCurrentUser(reduxUser);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [reduxUser]);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -52,6 +77,7 @@ export function EditProfileForm() {
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm<ProfileFormData>({
     defaultValues: {
       hoVaTen: currentUser?.hoVaTen || "",
@@ -62,23 +88,84 @@ export function EditProfileForm() {
     },
   });
 
-  const onSubmit = async (data: ProfileFormData) => {
-    try {
-      setIsSubmitting(true);
-
-      // TODO: Call API to update profile
-      // await profileApi.updateProfile(data);
-
-      console.log("Updating profile:", data);
-
-      toast.success("Cập nhật thông tin thành công!");
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      toast.error("Không thể cập nhật thông tin. Vui lòng thử lại!");
-    } finally {
-      setIsSubmitting(false);
+  // Update form when currentUser changes
+  useEffect(() => {
+    if (currentUser) {
+      reset({
+        hoVaTen: currentUser.hoVaTen || "",
+        email: currentUser.email || "",
+        soDienThoai: currentUser.soDienThoai || "",
+        diaChi: currentUser.diaChi || "",
+        ngaySinh: currentUser.ngaySinh || "",
+      });
     }
-  };
+  }, [currentUser, reset]);
+
+  const onSubmit = useCallback(
+    async (data: ProfileFormData) => {
+      if (!currentUser?.userid) {
+        toast.error("Không tìm thấy thông tin người dùng");
+        return;
+      }
+
+      try {
+        setIsSubmitting(true);
+
+        let avatarUrl =
+          data.email === currentUser.email ? currentUser.anhDaiDien : undefined;
+
+        // Upload avatar if selected
+        if (avatarFile) {
+          try {
+            const uploadResponse = await imageAPI.uploadSingle(avatarFile);
+            avatarUrl = uploadResponse.url;
+          } catch (uploadError) {
+            console.error("Error uploading avatar:", uploadError);
+            toast.error("Không thể tải lên ảnh đại diện");
+            return;
+          }
+        }
+
+        // Update user profile
+        const updateData = {
+          hoVaTen: data.hoVaTen,
+          soDienThoai: data.soDienThoai || undefined,
+          diaChi: data.diaChi || undefined,
+          ngaySinh: data.ngaySinh || undefined,
+          anhDaiDien: avatarUrl,
+        };
+
+        await userAPI.update(currentUser.userid, updateData);
+
+        // Refresh user in Redux
+        await dispatch(getUserMe());
+
+        toast.success("Cập nhật thông tin thành công!");
+        setAvatarFile(null);
+        setAvatarPreview(null);
+      } catch (error) {
+        console.error("Error updating profile:", error);
+        toast.error("Không thể cập nhật thông tin. Vui lòng thử lại!");
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [currentUser, avatarFile, dispatch]
+  );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-center py-12">
+              <p className="text-muted-foreground">Đang tải thông tin...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

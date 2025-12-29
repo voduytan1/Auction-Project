@@ -31,7 +31,7 @@ export function WatchlistSection() {
         setLoading(true);
         // Get watchlist product IDs
         const watchlistResponse = await watchlistAPI.getWatchlist();
-        const productIds = watchlistResponse.data || [];
+        const productIds = watchlistResponse.data?.data || [];
 
         if (productIds.length === 0) {
           setProducts([]);
@@ -118,9 +118,8 @@ export function WatchlistSection() {
                - Desktop (sm): Flex Row (Ảnh trái, Text phải)
             */}
             <div className="flex flex-col sm:flex-row h-full">
-              
               {/* === PRODUCT IMAGE === */}
-              <div 
+              <div
                 className="relative w-full sm:w-48 h-48 sm:h-auto shrink-0 bg-muted cursor-pointer group-hover:opacity-90 transition-opacity"
                 onClick={() => navigate(`/products/${product.productid}`)}
               >
@@ -135,11 +134,13 @@ export function WatchlistSection() {
                     <Heart className="h-10 w-10 text-muted-foreground/30" />
                   </div>
                 )}
-                
+
                 {/* Status Badge (Overlay on Image) */}
                 <div className="absolute top-2 left-2">
-                  <Badge 
-                    variant={product.trangThai === "ACTIVE" ? "default" : "secondary"}
+                  <Badge
+                    variant={
+                      product.trangThai === "ACTIVE" ? "default" : "secondary"
+                    }
                     className="shadow-sm"
                   >
                     {product.trangThai === "ACTIVE"
@@ -153,23 +154,22 @@ export function WatchlistSection() {
 
               {/* === PRODUCT DETAILS === */}
               <div className="flex flex-1 flex-col p-4 gap-3">
-                
                 {/* Header: Title & Delete Button */}
                 <div className="flex justify-between items-start gap-3">
                   <div className="space-y-1">
-                    <h3 
+                    <h3
                       className="font-semibold text-lg line-clamp-2 hover:text-primary cursor-pointer transition-colors"
                       onClick={() => navigate(`/products/${product.productid}`)}
                     >
                       {product.tenSanPham}
                     </h3>
-                    
+
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <User className="h-3 w-3" />
                       <span>{product.tenSeller}</span>
                     </div>
                   </div>
-                  
+
                   {/* Delete Button (Top Right) */}
                   <Button
                     size="icon"
@@ -188,10 +188,11 @@ export function WatchlistSection() {
                 {/* Footer: Stats & Action Button */}
                 {/* Use mt-auto to push this section to bottom on desktop */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 items-end mt-auto pt-2">
-                  
                   {/* Column 1: Price */}
                   <div className="col-span-2 sm:col-span-1">
-                    <p className="text-xs text-muted-foreground mb-0.5">Giá hiện tại</p>
+                    <p className="text-xs text-muted-foreground mb-0.5">
+                      Giá hiện tại
+                    </p>
                     <p className="text-xl font-bold text-primary">
                       {formatPrice(product.giaHienTai)}
                     </p>
@@ -199,11 +200,17 @@ export function WatchlistSection() {
 
                   {/* Column 2: Time & Bids */}
                   <div className="col-span-2 sm:col-span-1 space-y-1.5">
-                    <div className={`flex items-center gap-2 text-sm font-medium ${product.trangThai === 'ACTIVE' ? 'text-orange-600' : 'text-muted-foreground'}`}>
+                    <div
+                      className={`flex items-center gap-2 text-sm font-medium ${
+                        product.trangThai === "ACTIVE"
+                          ? "text-orange-600"
+                          : "text-muted-foreground"
+                      }`}
+                    >
                       <Clock className="h-4 w-4" />
                       <span>{formatTimeLeft(product.thoiGianKetThuc)}</span>
                     </div>
-                    
+
                     {product.soLuotRaGia !== undefined && (
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <TrendingUp className="h-3 w-3" />
@@ -214,12 +221,14 @@ export function WatchlistSection() {
 
                   {/* Column 3: Action Button */}
                   <div className="col-span-2 sm:col-span-1 flex justify-end">
-                    <Button 
+                    <Button
                       className="w-full sm:w-auto font-semibold"
                       onClick={() => navigate(`/products/${product.productid}`)}
                       disabled={product.trangThai !== "ACTIVE"}
                     >
-                      {product.trangThai === "ACTIVE" ? "Đấu giá ngay" : "Xem chi tiết"}
+                      {product.trangThai === "ACTIVE"
+                        ? "Đấu giá ngay"
+                        : "Xem chi tiết"}
                     </Button>
                   </div>
                 </div>

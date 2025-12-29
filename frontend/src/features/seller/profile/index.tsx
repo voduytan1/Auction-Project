@@ -7,8 +7,8 @@ import {
   User as UserIcon,
   Lock,
   ChevronRight,
-  LayoutDashboard,
 } from "lucide-react";
+import { PageWrapper } from "@/components/PageWrapper";
 import { useAppSelector } from "@/store/hooks";
 import {
   Card,
@@ -20,23 +20,13 @@ import {
 import { cn } from "@/lib/utils";
 
 // Import components
-import { SellerOverview } from "./components/SellerOverview";
 import { ChangePasswordForm } from "@/features/bidder/profile/components/ChangePasswordForm";
 import { EditProfileForm } from "@/features/bidder/profile/components/EditProfileForm";
 import { ViewRatingsSection } from "@/features/bidder/profile/components/ViewRatingsSection";
 import { ActiveProductsList } from "./components/ActiveProductsList";
 import { TransactionListPage } from "@/features/bidder/transactions/components/TransactionListPage";
 
-interface SellerStats {
-  diemDanhGia: number;
-  soLuotDanhGia: number;
-  soSanPhamDangBan: number;
-  soSanPhamDaBan: number;
-  doanhThu: number;
-}
-
 type MenuItem =
-  | "overview"
   | "profile"
   | "password"
   | "ratings"
@@ -48,11 +38,6 @@ const menuItems: {
   label: string;
   icon: React.ReactNode;
 }[] = [
-  {
-    id: "overview",
-    label: "Tổng quan",
-    icon: <LayoutDashboard className="h-5 w-5" />,
-  },
   {
     id: "profile",
     label: "Thông tin cá nhân",
@@ -80,15 +65,8 @@ export default function SellerProfileManagement() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAppSelector((state) => state.auth);
   const [activeMenu, setActiveMenu] = useState<MenuItem>(
-    (searchParams.get("tab") as MenuItem) || "overview"
+    (searchParams.get("tab") as MenuItem) || "profile"
   );
-  const [stats] = useState<SellerStats>({
-    diemDanhGia: 4.7,
-    soLuotDanhGia: 89,
-    soSanPhamDangBan: 12,
-    soSanPhamDaBan: 45,
-    doanhThu: 125000000, // VND
-  });
 
   const handleMenuChange = (menuId: MenuItem) => {
     setActiveMenu(menuId);
@@ -97,94 +75,89 @@ export default function SellerProfileManagement() {
 
   const renderContent = () => {
     switch (activeMenu) {
-      case "overview":
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle>Tổng quan</CardTitle>
-              <CardDescription>
-                Xem thống kê và tổng quan về cửa hàng của bạn
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <SellerOverview stats={stats} />
-            </CardContent>
-          </Card>
-        );
-
       case "profile":
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle>Thông tin cá nhân</CardTitle>
-              <CardDescription>
-                Cập nhật thông tin tài khoản của bạn
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <EditProfileForm />
-            </CardContent>
-          </Card>
+          <PageWrapper title="Thông tin cá nhân">
+            <Card>
+              <CardHeader>
+                <CardTitle>Thông tin cá nhân</CardTitle>
+                <CardDescription>
+                  Cập nhật thông tin tài khoản của bạn
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <EditProfileForm />
+              </CardContent>
+            </Card>
+          </PageWrapper>
         );
 
       case "password":
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle>Đổi mật khẩu</CardTitle>
-              <CardDescription>
-                Bảo vệ tài khoản của bạn bằng cách thay đổi mật khẩu định kỳ
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <ChangePasswordForm />
-            </CardContent>
-          </Card>
+          <PageWrapper title="Đổi mật khẩu">
+            <Card>
+              <CardHeader>
+                <CardTitle>Đổi mật khẩu</CardTitle>
+                <CardDescription>
+                  Bảo vệ tài khoản của bạn bằng cách thay đổi mật khẩu định kỳ
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <ChangePasswordForm />
+              </CardContent>
+            </Card>
+          </PageWrapper>
         );
 
       case "ratings":
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle>Đánh giá nhận được</CardTitle>
-              <CardDescription>Xem các đánh giá từ người mua</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ViewRatingsSection />
-            </CardContent>
-          </Card>
+          <PageWrapper title="Đánh giá nhận được">
+            <Card>
+              <CardHeader>
+                <CardTitle>Đánh giá nhận được</CardTitle>
+                <CardDescription>Xem các đánh giá từ người mua</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ViewRatingsSection />
+              </CardContent>
+            </Card>
+          </PageWrapper>
         );
 
       case "active-products":
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle>Sản phẩm đang bán</CardTitle>
-              <CardDescription>
-                Xem danh sách các sản phẩm bạn đang rao bán
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {user?.userid ? (
-                <ActiveProductsList sellerId={user.userid} />
-              ) : null}
-            </CardContent>
-          </Card>
+          <PageWrapper title="Sản phẩm đang bán">
+            <Card>
+              <CardHeader>
+                <CardTitle>Sản phẩm đang bán</CardTitle>
+                <CardDescription>
+                  Xem danh sách các sản phẩm bạn đang rao bán
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {user?.userid ? (
+                  <ActiveProductsList sellerId={user.userid} />
+                ) : null}
+              </CardContent>
+            </Card>
+          </PageWrapper>
         );
 
       case "sold-products":
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle>Sản phẩm đã bán</CardTitle>
-              <CardDescription>
-                Xem danh sách các sản phẩm bạn đã bán thành công
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <TransactionListPage role="seller" />
-            </CardContent>
-          </Card>
+          <PageWrapper title="Sản phẩm đã bán">
+            <Card>
+              <CardHeader>
+                <CardTitle>Sản phẩm đã bán</CardTitle>
+                <CardDescription>
+                  Xem danh sách các sản phẩm bạn đã bán thành công
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <TransactionListPage role="seller" />
+              </CardContent>
+            </Card>
+          </PageWrapper>
         );
 
       default:

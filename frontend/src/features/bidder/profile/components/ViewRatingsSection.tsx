@@ -34,9 +34,8 @@ export function ViewRatingsSection() {
           page: 1,
           size: 20,
         });
-        setReceivedRatings(response.data || []);
-      } catch (error: any) {
-        console.error("Error fetching received ratings:", error);
+        setReceivedRatings(Array.isArray(response.data) ? response.data : []);
+      } catch {
         toast.error("Không thể tải đánh giá nhận được");
       } finally {
         setLoadingReceived(false);
@@ -50,9 +49,8 @@ export function ViewRatingsSection() {
           page: 1,
           size: 20,
         });
-        setGivenRatings(response.data);
-      } catch (error: any) {
-        console.error("Error fetching given ratings:", error);
+        setGivenRatings(Array.isArray(response.data) ? response.data : []);
+      } catch {
         toast.error("Không thể tải đánh giá đã cho");
       } finally {
         setLoadingGiven(false);

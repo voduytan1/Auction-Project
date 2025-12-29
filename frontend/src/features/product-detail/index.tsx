@@ -1,7 +1,6 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { productAPI, type ProductResponse } from "@/services/product.api";
-import { BidNotification } from "@/components/BidNotification";
 import {
   Dialog,
   DialogContent,
@@ -88,6 +87,17 @@ const ProductDetail = () => {
     setShowWinnerDialog(false);
   };
 
+  const handleRefreshProduct = async () => {
+    if (!id) return;
+    try {
+      const response = await productAPI.getById(id);
+      setProduct(response.data);
+    } catch (err) {
+      console.error("Error refetching product:", err);
+      toast.error("Không thể cập nhật thông tin sản phẩm");
+    }
+  };
+
   if (loading) {
     return <PageLoader message="Đang tải sản phẩm..." />;
   }
@@ -105,15 +115,6 @@ const ProductDetail = () => {
 
   return (
     <div className="lg:px-20">
-      {/* Bid Real-time Notification - Only for seller */}
-      {id &&
-        isAuthenticated &&
-        user &&
-        product &&
-        String(product.sellerId) === String(user.userid) && (
-          <BidNotification productId={Number(id)} />
-        )}
-
       {/* Winner Dialog */}
       <Dialog open={showWinnerDialog} onOpenChange={setShowWinnerDialog}>
         <DialogContent className="sm:max-w-sm">
@@ -280,7 +281,10 @@ const ProductDetail = () => {
           */}
           <div className="order-2 mt-6 lg:mt-0 lg:col-span-5 lg:row-span-2">
             <div className="lg:sticky lg:top-20 space-y-4">
-              <ProductInfo product={product} />
+              <ProductInfo
+                product={product}
+                onRefreshProduct={handleRefreshProduct}
+              />
             </div>
           </div>
 

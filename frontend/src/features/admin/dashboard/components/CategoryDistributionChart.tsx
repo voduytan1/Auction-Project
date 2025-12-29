@@ -68,34 +68,41 @@ export function CategoryDistributionChart() {
     color: COLORS[index % COLORS.length],
   }));
 
+  const totalProducts = chartData.reduce((sum, item) => sum + item.products, 0);
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Phân bố theo danh mục</CardTitle>
         <p className="text-sm text-muted-foreground">
-          Tổng số: {chartData.reduce((sum, item) => sum + item.products, 0)} sản
-          phẩm
+          Tổng số: {totalProducts} sản phẩm
         </p>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={chartData} layout="vertical">
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis type="number" fontSize={12} />
-            <YAxis
-              dataKey="category"
-              type="category"
-              fontSize={12}
-              width={80}
-            />
-            <Tooltip />
-            <Bar dataKey="products" name="Sản phẩm" radius={[0, 4, 4, 0]}>
-              {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+        {chartData.length === 0 ? (
+          <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+            <p>Chưa có sản phẩm nào</p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={chartData} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis type="number" fontSize={12} />
+              <YAxis
+                dataKey="category"
+                type="category"
+                fontSize={12}
+                width={80}
+              />
+              <Tooltip />
+              <Bar dataKey="products" name="Sản phẩm" radius={[0, 4, 4, 0]}>
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </CardContent>
     </Card>
   );

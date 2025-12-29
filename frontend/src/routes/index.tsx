@@ -53,7 +53,6 @@ const AppendDescriptionPage = lazy(
 );
 
 // Bidder Pages
-const WatchListPage = lazy(() => import("./bidder/watchlist"));
 const BidderProfilePage = lazy(() => import("./bidder/profile"));
 const UpgradeRequestPage = lazy(() => import("./bidder/upgrade-request"));
 
@@ -61,10 +60,7 @@ const TransactionDetailPage = lazy(() => import("./transaction/detail"));
 const PaymentSuccessPage = lazy(() => import("./order/payment-success"));
 const PaymentCancelPage = lazy(() => import("./order/payment-cancel"));
 
-// Bidder Transaction Pages
-const MyPurchasesPage = lazy(() => import("./bidder/my-purchases"));
 
-// Seller Transaction Pages
 const SellerProfilePage = lazy(() => import("./seller/profile"));
 
 /**
@@ -359,14 +355,6 @@ export const router = createBrowserRouter([
     ),
     children: [
       {
-        path: "watchlist",
-        element: (
-          <PageWrapper title="Danh sách yêu thích">
-            <WatchListPage />
-          </PageWrapper>
-        ),
-      },
-      {
         path: "profile",
         element: (
           <PageWrapper title="Hồ sơ của tôi">
@@ -379,14 +367,6 @@ export const router = createBrowserRouter([
         element: (
           <PageWrapper title="Yêu cầu nâng cấp Seller">
             <UpgradeRequestPage />
-          </PageWrapper>
-        ),
-      },
-      {
-        path: "purchases",
-        element: (
-          <PageWrapper title="Giao dịch mua">
-            <MyPurchasesPage />
           </PageWrapper>
         ),
       },

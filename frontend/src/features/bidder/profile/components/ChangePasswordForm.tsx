@@ -45,6 +45,7 @@ export function ChangePasswordForm() {
       await profileAPI.changePassword(user.userid, {
         oldPassword: data.currentPassword,
         newPassword: data.newPassword,
+        confirmPassword: data.confirmPassword,
       });
 
       toast.success("Đổi mật khẩu thành công!");

@@ -9,7 +9,7 @@ export default function Profile() {
     return <Navigate to="/auth/login" replace />;
   }
 
-  switch (user.role) {
+  switch (user.vaitro) {
     case "BIDDER":
       return <Navigate to="/bidder/profile" replace />;
     case "SELLER":

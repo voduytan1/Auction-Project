@@ -50,9 +50,10 @@ export const registerUser = createAsyncThunk(
         user,
       };
     } catch (error: unknown) {
-      // Return simple error message only, không hiển thị validation details
+      const err = error as { response?: { data?: { message?: string } } };
       return rejectWithValue(
-        "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin!"
+        err.response?.data?.message ||
+          "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin!"
       );
     }
   }

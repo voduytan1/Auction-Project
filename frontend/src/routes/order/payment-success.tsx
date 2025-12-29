@@ -53,7 +53,7 @@ export default function PaymentSuccessPage() {
       navigate(`/transactions/${transactionId}/detail`);
     } else {
       toast.info("Không tìm thấy mã giao dịch, quay lại danh sách mua");
-      navigate("/bidder/purchases");
+      navigate("/bidder/profile?tab=won-auctions");
     }
   };
 

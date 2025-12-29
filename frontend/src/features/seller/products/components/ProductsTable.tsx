@@ -218,7 +218,7 @@ export function ProductsTable({ status }: ProductsTableProps) {
               {products.map((product) => (
                 <TableRow key={product.productid}>
                   <TableCell className="font-medium">
-                    <div className="max-w-[200px] sm:max-w-none truncate">
+                    <div className="max-w-50 sm:max-w-none truncate">
                       {product.tenSanPham}
                     </div>
                   </TableCell>

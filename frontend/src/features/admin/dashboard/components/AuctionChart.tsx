@@ -66,31 +66,37 @@ export function AuctionChart() {
         </p>
       </CardHeader>
       <CardContent className="px-2 sm:px-6">
-        <ResponsiveContainer width="100%" height={250} className="sm:h-75">
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" fontSize={12} />
-            <YAxis fontSize={12} />
-            <Tooltip />
-            <Legend />
-            <Line
-              type="monotone"
-              dataKey="auctions"
-              stroke="#8b5cf6"
-              strokeWidth={2}
-              name="Sản phẩm mới"
-              dot={{ r: 3 }}
-            />
-            <Line
-              type="monotone"
-              dataKey="completed"
-              stroke="#10b981"
-              strokeWidth={2}
-              name="Đã hoàn thành"
-              dot={{ r: 3 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        {chartData.length === 0 ? (
+          <div className="flex items-center justify-center h-[250px] text-muted-foreground">
+            <p>Chưa có dữ liệu</p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={250} className="sm:h-75">
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" fontSize={12} />
+              <YAxis fontSize={12} />
+              <Tooltip />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="auctions"
+                stroke="#8b5cf6"
+                strokeWidth={2}
+                name="Sản phẩm mới"
+                dot={{ r: 3 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="completed"
+                stroke="#10b981"
+                strokeWidth={2}
+                name="Đã hoàn thành"
+                dot={{ r: 3 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
       </CardContent>
     </Card>
   );

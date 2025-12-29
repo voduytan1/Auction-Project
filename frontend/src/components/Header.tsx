@@ -27,7 +27,6 @@ import {
   selectIsCacheValid,
 } from "@/store/slices/categorySlice";
 import { cn } from "@/lib/utils";
-import { NotificationBell } from "@/components/NotificationBell";
 import UserDropdown from "@/components/UserDropdown";
 
 // Helper function to select icon based on category slug
@@ -101,7 +100,13 @@ export default function Header() {
 
   const handleSearch = (data: { searchQuery: string }) => {
     if (data.searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(data.searchQuery.trim())}`);
+      const query = data.searchQuery.trim();
+      // If already on search page with same query, force reload by updating timestamp
+      if (location.pathname === "/search" && searchParams.get("q") === query) {
+        navigate(`/search?q=${encodeURIComponent(query)}&t=${Date.now()}`);
+      } else {
+        navigate(`/search?q=${encodeURIComponent(query)}`);
+      }
       setShowMegaMenu(false);
       setShowMobileSearch(false);
     }
@@ -264,7 +269,6 @@ export default function Header() {
 
           {/* User Menu */}
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            {isAuthenticated && user && <NotificationBell />}
             {isAuthenticated && user ? (
               <UserDropdown user={user} />
             ) : (

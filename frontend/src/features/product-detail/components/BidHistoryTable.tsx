@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageLoader } from "@/components/PageLoader";
 import { Button } from "@/components/ui/button";
 import { History, Lock, ChevronLeft, ChevronRight, Ban } from "lucide-react";
+import { useBidWebSocket } from "@/hooks/use-bid-websocket";
 import {
   Dialog,
   DialogContent,
@@ -12,16 +13,6 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { productAPI } from "@/services/product.api";
 import type { BidHistory } from "../types";
@@ -199,6 +190,18 @@ export function BidHistoryTable({
     fetchBidHistory();
   }, [isAuthenticated, fetchBidHistory]);
 
+  // WebSocket integration - refetch bid history when product updates
+  // Backend sends to /topic/product/{id}/bids when blocking bidder
+  useBidWebSocket({
+    productId,
+    onBidUpdate: useCallback(() => {
+      // Refetch bid history when receiving any bid update
+      // This includes: NEW_BID, AUTO_BID, NEW_WINNER_FOUND, HISTORY_REMOVED
+      fetchBidHistory();
+    }, [fetchBidHistory]),
+    enabled: isAuthenticated,
+  });
+
   const totalPages = total > 0 ? Math.ceil(total / size) : 1;
   const shouldShowPagination = total > size;
 
@@ -226,10 +229,11 @@ export function BidHistoryTable({
 
       // Refresh bid history
       fetchBidHistory();
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error blocking bidder:", error);
+      const axiosError = error as AxiosError<ApiErrorResponse>;
       toast.error(
-        error?.response?.data?.message || "Không thể từ chối lượt ra giá"
+        axiosError.response?.data?.message || "Không thể từ chối lượt ra giá"
       );
     } finally {
       setIsBlocking(false);
@@ -287,7 +291,7 @@ export function BidHistoryTable({
                       </td>
                       <td className="py-3 max-w-25 truncate sm:max-w-none">
                         <span className="font-mono text-xs sm:text-sm font-semibold">
-                          {bid.bidderName}
+                          {bid.tenBidder || bid.bidderName}
                         </span>
                         {index === 0 && (
                           <span className="hidden sm:inline-block ml-2 rounded-full bg-accent px-2 py-0.5 text-xs text-white">
@@ -310,8 +314,9 @@ export function BidHistoryTable({
                             size="sm"
                             variant="ghost"
                             onClick={() =>
-                              handleBlockBidder(bid.bidderId, bid.bidderName)
+                              handleBlockBidder(bid.bidderId, bid.tenBidder)
                             }
+                            disabled={!bid.bidderId}
                             className="text-destructive hover:text-destructive hover:bg-destructive/10"
                           >
                             <Ban className="h-4 w-4 mr-1" />
@@ -348,7 +353,6 @@ export function BidHistoryTable({
         <LoginOverlay onLogin={() => navigate("/auth/login")} />
       )}
 
-      {/* Block Bidder Dialog */}
       <Dialog open={blockDialogOpen} onOpenChange={setBlockDialogOpen}>
         <DialogContent>
           <DialogHeader>

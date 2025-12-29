@@ -2,11 +2,8 @@ import { useNavigate } from "react-router-dom";
 import {
   LogOut,
   User as UserIcon,
-  Heart,
-  Package,
   TrendingUp,
   LayoutDashboard,
-  Store,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -150,14 +147,6 @@ export default function UserDropdown({ user }: UserDropdownProps) {
             <DropdownMenuItem onClick={() => navigate("/bidder/profile")}>
               <UserIcon className="mr-2 h-4 w-4" />
               Hồ sơ của tôi
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate("/bidder/watchlist")}>
-              <Heart className="mr-2 h-4 w-4" />
-              Danh sách yêu thích
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate("/bidder/purchases")}>
-              <Package className="mr-2 h-4 w-4" />
-              Giao dịch của tôi
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => navigate("/bidder/upgrade-request")}

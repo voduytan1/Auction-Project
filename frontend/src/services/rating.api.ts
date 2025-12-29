@@ -1,3 +1,4 @@
+import type { PaginationMetadata } from "@/types/types";
 import api from "./api";
 
 /**
@@ -44,9 +45,12 @@ export const ratingAPI = {
    * Requires authentication
    */
   getMyRatings: (params?: { page?: number; size?: number }) =>
-    api.get<{ data: RatingResponse[]; metadata: any }>("/rating/mine", {
-      params,
-    }),
+    api.get<{ data: RatingResponse[]; metadata: PaginationMetadata }>(
+      "/rating/mine",
+      {
+        params,
+      }
+    ),
 
   /**
    * GET /rating/{id} - Lấy danh sách rating của một user (những rating mà user đó nhận được)
@@ -56,7 +60,10 @@ export const ratingAPI = {
     userId: string,
     params?: { page?: number; size?: number }
   ) =>
-    api.get<{ data: RatingResponse[]; metadata: any }>(`/rating/${userId}`, {
-      params,
-    }),
+    api.get<{ data: RatingResponse[]; metadata: PaginationMetadata }>(
+      `/rating/${userId}`,
+      {
+        params,
+      }
+    ),
 };

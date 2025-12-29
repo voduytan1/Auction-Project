@@ -83,7 +83,11 @@ export default function AdminProfilePage() {
 
     setIsLoading(true);
     try {
-      await profileAPI.changePassword(profileData.userid, data);
+      await profileAPI.changePassword(profileData.userid, {
+        oldPassword: data.currentPassword,
+        newPassword: data.newPassword,
+        confirmPassword: data.confirmPassword,
+      });
       toast.success("Đổi mật khẩu thành công!");
     } catch (error) {
       const err = error as { response?: { data?: { message?: string } } };

@@ -17,7 +17,7 @@ interface CancelActionProps {
   onCancel: () => void;
 }
 
-export function CancelAction({ currentUserRole, onCancel }: CancelActionProps) {
+export function CancelAction({ onCancel }: CancelActionProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleCancel = () => {

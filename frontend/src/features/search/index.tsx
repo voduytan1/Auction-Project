@@ -52,13 +52,30 @@ export default function SearchResults() {
     }
   }, [dispatch, isCacheValid, categoriesLoading]);
 
-  // Update URL khi filters thay đổi
+  // Sync state with URL params when URL changes (e.g., from Header search)
+  useEffect(() => {
+    const queryFromUrl = searchParams.get("q") || "";
+    const categoryFromUrl = searchParams.get("category") || "all";
+    const sortFromUrl = searchParams.get("sort") || "endTime-desc";
+    const pageFromUrl = Number(searchParams.get("page")) || 1;
+
+    setSearchQuery(queryFromUrl);
+    setSubmittedQuery(queryFromUrl);
+    setCategoryFilter(categoryFromUrl);
+    setSortBy(sortFromUrl);
+    setCurrentPage(pageFromUrl);
+  }, [searchParams]);
+
+  // Update URL khi filters thay đổi (but keep timestamp for force reload)
   useEffect(() => {
     const params = new URLSearchParams();
     if (submittedQuery) params.set("q", submittedQuery);
     if (categoryFilter !== "all") params.set("category", categoryFilter);
     if (sortBy !== "endTime-desc") params.set("sort", sortBy);
     if (currentPage > 1) params.set("page", currentPage.toString());
+    // Preserve timestamp if it exists (for forced reload)
+    const timestamp = searchParams.get("t");
+    if (timestamp) params.set("t", timestamp);
     setSearchParams(params);
   }, [submittedQuery, categoryFilter, sortBy, currentPage, setSearchParams]);
 

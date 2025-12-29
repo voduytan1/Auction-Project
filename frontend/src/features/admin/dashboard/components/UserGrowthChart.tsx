@@ -66,27 +66,33 @@ export function UserGrowthChart() {
         </p>
       </CardHeader>
       <CardContent className="px-2 sm:px-6">
-        <ResponsiveContainer width="100%" height={250} className="sm:h-75">
-          <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" fontSize={12} />
-            <YAxis fontSize={12} />
-            <Tooltip />
-            <Legend />
-            <Bar
-              dataKey="bidders"
-              fill="#3b82f6"
-              name="Bidders mới"
-              radius={[4, 4, 0, 0]}
-            />
-            <Bar
-              dataKey="sellers"
-              fill="#f59e0b"
-              name="Sellers mới"
-              radius={[4, 4, 0, 0]}
-            />
-          </BarChart>
-        </ResponsiveContainer>
+        {chartData.length === 0 ? (
+          <div className="flex items-center justify-center h-[250px] text-muted-foreground">
+            <p>Chưa có người dùng mới</p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={250} className="sm:h-75">
+            <BarChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" fontSize={12} />
+              <YAxis fontSize={12} />
+              <Tooltip />
+              <Legend />
+              <Bar
+                dataKey="bidders"
+                fill="#3b82f6"
+                name="Bidders mới"
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar
+                dataKey="sellers"
+                fill="#f59e0b"
+                name="Sellers mới"
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </CardContent>
     </Card>
   );
