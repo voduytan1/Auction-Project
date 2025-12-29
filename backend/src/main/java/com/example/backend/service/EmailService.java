@@ -176,4 +176,71 @@ public class EmailService {
 
         sendEmailToMultipleRecipients(new String[]{toEmail}, subject, content);
     }
+    @Async
+    public void sendNewQuestionNotification(String sellerEmail, String askerName, String productName, String questionContent, Long productId) {
+        String productUrl = "http://localhost:8080/products/" + productId; // Nên dùng domain.url
+        String subject = "❓ Bạn có câu hỏi mới về sản phẩm: " + productName;
+
+        String content = """
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 20px;">
+                <h2 style="color: #1976d2; text-align: center;">Khách hàng đang quan tâm sản phẩm của bạn</h2>
+                
+                <p>Xin chào,</p>
+                <p>Người dùng <b>%s</b> vừa đặt một câu hỏi cho sản phẩm <b>%s</b>.</p>
+                
+                <div style="background-color: #e3f2fd; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 5px solid #1976d2;">
+                    <p style="margin: 0; font-weight: bold; color: #0d47a1;">Nội dung câu hỏi:</p>
+                    <p style="margin-top: 5px; font-style: italic;">"%s"</p>
+                </div>
+                
+                <p>Hãy trả lời sớm để tăng khả năng chốt đơn nhé!</p>
+                
+                <div style="text-align: center; margin-top: 25px;">
+                    <a href="%s" style="background-color: #1976d2; color: white; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold;">
+                        Trả lời ngay
+                    </a>
+                </div>
+            </div>
+            """.formatted(askerName, productName, questionContent, productUrl);
+
+        sendEmailToMultipleRecipients(new String[]{sellerEmail}, subject, content);
+    }
+
+    /**
+     * Gửi mail cho Người hỏi khi Người bán đã trả lời
+     */
+    @Async
+    public void sendQuestionAnsweredNotification(String askerEmail, String sellerName, String productName, String questionContent, String answerContent, Long productId) {
+        String productUrl = "http://localhost:8080/products/" + productId;
+        String subject = "✅ Câu hỏi về " + productName + " đã được trả lời";
+
+        String content = """
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 20px;">
+                <h2 style="color: #2e7d32; text-align: center;">Người bán đã phản hồi câu hỏi của bạn!</h2>
+                
+                <p>Xin chào,</p>
+                <p>Người bán <b>%s</b> đã trả lời thắc mắc của bạn về sản phẩm <b>%s</b>.</p>
+                
+                <div style="margin: 20px 0;">
+                    <p><b>Câu hỏi của bạn:</b></p>
+                    <blockquote style="border-left: 4px solid #ccc; margin-left: 0; padding-left: 15px; color: #555;">
+                        %s
+                    </blockquote>
+                </div>
+                
+                <div style="background-color: #e8f5e9; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 5px solid #2e7d32;">
+                    <p style="margin: 0; font-weight: bold; color: #1b5e20;">Phản hồi từ người bán:</p>
+                    <p style="margin-top: 5px;">"%s"</p>
+                </div>
+                
+                <div style="text-align: center; margin-top: 25px;">
+                    <a href="%s" style="background-color: #2e7d32; color: white; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold;">
+                        Xem chi tiết sản phẩm
+                    </a>
+                </div>
+            </div>
+            """.formatted(sellerName, productName, questionContent, answerContent, productUrl);
+
+        sendEmailToMultipleRecipients(new String[]{askerEmail}, subject, content);
+    }
 }
