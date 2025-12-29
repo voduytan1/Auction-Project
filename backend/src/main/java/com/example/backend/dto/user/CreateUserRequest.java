@@ -44,4 +44,7 @@ public class CreateUserRequest {
     LocalDate ngaySinh;
 
     String anhDaiDien;
+
+    @NotBlank
+    String recaptchaToken;
 }

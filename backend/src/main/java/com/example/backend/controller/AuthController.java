@@ -5,6 +5,7 @@ import com.example.backend.dto.common.ApiResponse;
 import com.example.backend.mapper.AuthMapper;
 import com.example.backend.service.AuthService;
 import com.example.backend.service.EmailService;
+import com.example.backend.service.RecaptchaService;
 import com.example.backend.utils.CookieUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,11 +26,19 @@ public class AuthController {
 
     private final CookieUtils cookieUtils;
 
+    private final RecaptchaService recaptchaService;
+
     @Autowired
     private EmailService emailService;
 
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest loginRequest, HttpServletRequest request, HttpServletResponse response) {
+
+        boolean isCaptchaValid = recaptchaService.validateToken(loginRequest.getRecaptchaToken());
+
+        if (!isCaptchaValid) {
+            throw new IllegalArgumentException("Captcha không hợp lệ hoặc đã hết hạn!");
+        }
 
         LoginResponseWithRefreshToken fullResponse = authService.login(loginRequest);
 
