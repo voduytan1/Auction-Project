@@ -12,8 +12,11 @@ import com.example.backend.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -86,4 +89,13 @@ public class RatingService {
         return transaction;
     }
 
+    public Page<@NotNull RatingResponse> getAllByRaterId(UUID raterId, Pageable pageable) {
+        Page<@NotNull Rating> page = ratingRepository.findByRaterUserid(raterId, pageable);
+        return page.map(ratingMapper::toResponse);
+    }
+
+    public Page<@NotNull RatingResponse> getAllByRateeId(UUID rateeId, Pageable pageable) {
+        Page<@NotNull Rating> page = ratingRepository.findByRateeUserid(rateeId, pageable);
+        return page.map(ratingMapper::toResponse);
+    }
 }
