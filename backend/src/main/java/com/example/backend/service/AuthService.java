@@ -6,8 +6,11 @@ import com.example.backend.entity.User;
 import com.example.backend.exception.JwtAuthenticationException;
 import com.example.backend.mapper.JWTTokenMapper;
 import com.example.backend.repository.RedisRepository;
+import com.example.backend.repository.UserRepository;
 import com.example.backend.utils.AuthUtils;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,6 +38,7 @@ public class AuthService {
     private final AuthUtils authUtils;
 
     private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
 
 
     @Value("${jwt.refreshToken.expirationTime}")
@@ -135,5 +139,26 @@ public class AuthService {
     public void logout(String refreshToken) {
         String jti = authUtils.validateAndCheckRefreshToken(refreshToken);
         redisRepository.deleteById(jti);
+    }
+
+    public LoginResponseWithRefreshToken forgotPassword(ForgotPasswordRequest forgotPasswordRequest) {
+        String savedOtp = redisService.getOtp(forgotPasswordRequest.getEmail());
+
+        if (savedOtp == null || !savedOtp.equals(forgotPasswordRequest.getOTP())) {
+            throw new RuntimeException("OTP sai hoặc đã hết hạn!");
+        }
+
+        redisService.deleteOtp(forgotPasswordRequest.getEmail());
+
+        User user =  userService.getUserByEmail(forgotPasswordRequest.getEmail());
+
+        user.setPassword(authUtils.encodePassword(forgotPasswordRequest.getPassword()));
+
+        User saved = userRepository.save(user);
+
+        LoginRequest loginRequest = new LoginRequest(saved.getUsername(), forgotPasswordRequest.getPassword(), forgotPasswordRequest.getRecaptchaToken());
+
+        return login(loginRequest);
+
     }
 }

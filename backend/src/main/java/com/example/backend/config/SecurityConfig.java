@@ -43,7 +43,8 @@ public class SecurityConfig {
             "PUBLIC", Map.of(
                     HttpMethod.GET, new String[]{"/auth/**", "/actuator/**", "/categories","/categories/{id}", "/categories/{id}/products", "/categories/{id}/sub-category", "/categories/{id}/products/parent-category","/products", "/products/{id}", "/bids/history/{productId}/get-top", "/questions"},
                     HttpMethod.POST, new String[]{"/auth/login", "/users", "/auth/logout", "/auth/refresh", "/payment/webhook", "/rating", "/auth/send-otp"},
-                    HttpMethod.PUT, new String[]{}
+                    HttpMethod.PUT, new String[]{},
+                    HttpMethod.PATCH, new String[]{"/auth/forgot-password"}
             ),
             "ADMIN", Map.of(
                     HttpMethod.GET, new String[]{"/admin/**", "/config/**", "/admin/dashboard/**"},

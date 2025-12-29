@@ -69,6 +69,21 @@ public class AuthController {
         return ApiResponse.success("Log out successfully");
     }
 
+    @PatchMapping("/forgot-password")
+    public ApiResponse<LoginResponse> forgotPassword(@RequestBody @Valid ForgotPasswordRequest forgotPasswordRequest, HttpServletRequest request, HttpServletResponse response) {
+        boolean isCaptchaValid = recaptchaService.validateToken(forgotPasswordRequest.getRecaptchaToken());
+
+        if (!isCaptchaValid) {
+            throw new IllegalArgumentException("Captcha không hợp lệ hoặc đã hết hạn!");
+        }
+
+        LoginResponseWithRefreshToken fullResponse = authService.forgotPassword(forgotPasswordRequest);
+
+        cookieUtils.setRefreshTokenCookie(response, fullResponse.getRefreshToken());
+
+        return ApiResponse.success(authMapper.toLoginResponse(fullResponse));
+    }
+
     @PostMapping("/send-otp")
     public ResponseEntity<String> sendOtp(@RequestParam String email) {
         // Giả sử logic sinh OTP ngẫu nhiên

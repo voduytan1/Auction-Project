@@ -45,6 +45,6 @@ public class CreateUserRequest {
 
     String anhDaiDien;
 
-    @NotBlank
+    @NotBlank(message = "recaptcha token không được rỗng")
     String recaptchaToken;
 }

@@ -2,7 +2,6 @@ package com.example.backend.service;
 
 
 import com.example.backend.dto.admin.dashboard.NewUserDataPoint;
-import com.example.backend.dto.admin.dashboard.ProductDataPoint;
 import com.example.backend.dto.common.PaginationRequest;
 import com.example.backend.dto.user.CreateUserRequest;
 import com.example.backend.dto.user.UpdateUserRequest;
@@ -179,6 +178,10 @@ public class UserService extends BaseService<User, UUID, CreateUserRequest, Upda
         user.setVaitro(Role.SELLER);
         user.setThoiHanBanHang(LocalDateTime.now().plusDays(7));
         userRepository.save(user);
+    }
+
+    public User getUserByEmail(String email) {
+        return userRepository.findUserByEmail(email).orElseThrow(()-> new EntityNotFoundException("Không tìm thấy user với email "+ email));
     }
 
     public List<NewUserDataPoint> getNewUserChart() {
