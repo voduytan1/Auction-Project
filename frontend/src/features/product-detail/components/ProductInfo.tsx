@@ -22,7 +22,6 @@ import {
 
 import type { ProductResponse } from "@/services/product.api";
 import { bidAPI } from "@/services/bid.api";
-import { paymentAPI } from "@/services/payment.api";
 import { watchlistAPI } from "@/services/watchlist.api";
 import type { ApiErrorResponse } from "@/types/types";
 import type { AxiosError } from "axios";
@@ -61,65 +60,25 @@ const formatCurrency = (amount: number) => {
   }).format(amount);
 };
 
-// Utility: Extract transactionId from buy now response
-const extractTransactionId = (data: unknown): number | null => {
-  if (!data || typeof data !== "object") return null;
-
-  const response = data as Record<string, unknown>;
-
-  // Try transactionId first (new backend response)
-  if (response.transactionId) {
-    return response.transactionId as number;
-  }
-
-  // Try bidHistory.bidHistoryid (legacy)
-  if (response.bidHistory && typeof response.bidHistory === "object") {
-    const bidHistory = response.bidHistory as Record<string, unknown>;
-    if (bidHistory.bidHistoryid) return bidHistory.bidHistoryid as number;
-  }
-
-  return null;
-};
-
-// Utility: Extract message from response
-const extractResponseMessage = (response: unknown): string => {
-  if (response && typeof response === "object") {
-    const resp = response as { message?: string };
-    if (resp.message) return resp.message;
-  }
-  return JSON.stringify(response);
-};
-
 interface ProductInfoProps {
   product: ProductResponse;
   onRefreshProduct?: () => Promise<void>;
+  onProductUpdate?: (updates: Partial<ProductResponse>) => void;
 }
 
-export function ProductInfo({ product, onRefreshProduct }: ProductInfoProps) {
+export function ProductInfo({
+  product,
+  onRefreshProduct,
+  onProductUpdate,
+}: ProductInfoProps) {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAppSelector((s) => s.auth);
 
-  // Check if user is seller or winner (for completed products)
-  const isSeller =
-    product.sellerId && user?.userid
-      ? String(product.sellerId) === String(user.userid)
-      : false;
-  const isWinner =
-    product.bidderId && user?.userid
-      ? String(product.bidderId) === String(user.userid)
-      : false;
+  // Show completed card for ALL users when product is completed
+  const isCompleted = product.trangThai === "COMPLETED";
 
-  // Show completed card for:
-  // - Not logged in users when product is completed
-  // - Logged in users who are NOT seller or winner
-  const isCompletedForOthers =
-    product.trangThai === "COMPLETED" &&
-    (!isAuthenticated || (!isSeller && !isWinner));
   const [buyDialogOpen, setBuyDialogOpen] = useState(false);
   const [buyLoading, setBuyLoading] = useState(false);
-  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
-  const [transactionId, setTransactionId] = useState<number | null>(null);
-  const [buyNowResponse, setBuyNowResponse] = useState<unknown>(null);
   const [autoDialogOpen, setAutoDialogOpen] = useState(false);
   const [autoLoading, setAutoLoading] = useState(false);
   const [autoValue, setAutoValue] = useState<string>("");
@@ -232,7 +191,7 @@ export function ProductInfo({ product, onRefreshProduct }: ProductInfoProps) {
       </Card>
 
       {/* Action Buttons OR Completed Card */}
-      {isCompletedForOthers ? (
+      {isCompleted ? (
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-2 mb-4 text-amber-600">
@@ -326,6 +285,7 @@ export function ProductInfo({ product, onRefreshProduct }: ProductInfoProps) {
                     <Button variant="outline">Hủy</Button>
                   </DialogClose>
                   <Button
+                    className="ml-2"
                     onClick={async () => {
                       const parsed = Number(autoValue);
                       if (!parsed || parsed <= 0) {
@@ -359,21 +319,6 @@ export function ProductInfo({ product, onRefreshProduct }: ProductInfoProps) {
                         return;
                       }
 
-                      // Cảnh báo nếu >= giá mua ngay
-                      if (product.giaMuaNgay && parsed >= product.giaMuaNgay) {
-                        if (
-                          !confirm(
-                            `Giá tối đa của bạn (${formatCurrency(
-                              parsed
-                            )}) ≥ giá mua ngay (${formatCurrency(
-                              product.giaMuaNgay
-                            )}).\n\nSản phẩm sẽ được MUA NGAY TỰ ĐỘNG!\n\nBạn có chắc chắn muốn tiếp tục?`
-                          )
-                        ) {
-                          return;
-                        }
-                      }
-
                       try {
                         setAutoLoading(true);
                         const resp = await bidAPI.createAutoBid({
@@ -391,9 +336,19 @@ export function ProductInfo({ product, onRefreshProduct }: ProductInfoProps) {
                         const txId = responseData?.data?.transactionId;
 
                         if (txId) {
-                          // Trường hợp mua ngay
-                          setTransactionId(txId);
-                          setPaymentModalOpen(true);
+                          // Trường hợp mua ngay (auto bid >= giá mua ngay)
+                          toast.success(
+                            "Đặt giá tự động thành công! Sản phẩm đã được mua ngay."
+                          );
+
+                          // Update product status immediately
+                          if (onProductUpdate) {
+                            onProductUpdate({
+                              trangThai: "COMPLETED",
+                              bidderId: user?.userid,
+                              tenBidder: user?.hoVaTen || user?.email,
+                            });
+                          }
                         } else {
                           // Trường hợp đặt giá tự động bình thường
                           toast.success("Đặt giá tự động thành công!");
@@ -471,13 +426,21 @@ export function ProductInfo({ product, onRefreshProduct }: ProductInfoProps) {
                       onClick={async () => {
                         try {
                           setBuyLoading(true);
-                          const resp = await bidAPI.buyNow(product.productid);
-                          const txId = extractTransactionId(resp.data);
+                          await bidAPI.buyNow(product.productid);
 
-                          setBuyNowResponse(resp.data);
-                          setTransactionId(txId);
                           setBuyDialogOpen(false);
-                          setPaymentModalOpen(true);
+                          toast.success(
+                            "Mua ngay thành công! Vui lòng thanh toán."
+                          );
+
+                          // Update product status immediately after buy now success
+                          if (onProductUpdate) {
+                            onProductUpdate({
+                              trangThai: "COMPLETED",
+                              bidderId: user?.userid,
+                              tenBidder: user?.hoVaTen || user?.email,
+                            });
+                          }
                         } catch (error) {
                           console.error("Buy now error:", error);
                           const axiosError =
@@ -656,79 +619,6 @@ export function ProductInfo({ product, onRefreshProduct }: ProductInfoProps) {
       )}
 
       {/* Payment decision modal shown after buyNow response */}
-      <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
-        <DialogContent className="w-[95vw] max-w-lg rounded-lg">
-          <DialogHeader>
-            <DialogTitle>Mua thành công!</DialogTitle>
-            <DialogDescription>
-              Chúc mừng! Bạn đã mua sản phẩm thành công.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="py-2">
-            <div className="mb-4">
-              <div className="text-sm text-slate-600">Sản phẩm</div>
-              <div className="font-semibold truncate">{product.tenSanPham}</div>
-              <div className="text-sm text-slate-600 mt-2">Giá mua</div>
-              <div className="font-semibold text-accent">
-                {formatCurrency(product.giaMuaNgay as number)}
-              </div>
-              {buyNowResponse ? (
-                <div className="mt-2 text-sm text-green-600 wrap-break-words">
-                  {extractResponseMessage(buyNowResponse)}
-                </div>
-              ) : null}
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button
-                className="flex-1"
-                onClick={async () => {
-                  if (!transactionId) {
-                    toast.error("Không tìm thấy thông tin giao dịch");
-                    return;
-                  }
-
-                  try {
-                    toast.loading("Đang tạo phiên thanh toán...");
-                    const response =
-                      await paymentAPI.createStripeCheckoutSession(
-                        transactionId
-                      );
-                    const url = response.data?.url;
-                    toast.dismiss();
-                    toast.success("Chuyển hướng đến trang thanh toán...");
-                    window.location.href = url;
-                  } catch (error) {
-                    toast.dismiss();
-                    toast.error(
-                      "Lỗi khi tạo phiên thanh toán: " +
-                        (error as Error).message
-                    );
-                  }
-                }}
-                disabled={!transactionId}
-              >
-                Thanh toán ngay
-              </Button>
-
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => {
-                  setPaymentModalOpen(false);
-                  toast.info(
-                    "Bạn có thể thanh toán sau trong mục Giao dịch mua"
-                  );
-                  navigate(`/bidder/purchases`);
-                }}
-              >
-                Thanh toán sau
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

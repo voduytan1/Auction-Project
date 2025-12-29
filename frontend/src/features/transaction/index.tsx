@@ -38,18 +38,11 @@ export default function TransactionDetailPage() {
     data: transaction,
     loading,
     error,
-    refetch,
   } = useFetch(() =>
     transactionAPI
       .getTransactionById(Number(transactionId))
       .then((res) => res.data)
   );
-
-  // Redirect if not authenticated
-  if (!isAuthenticated || !user) {
-    navigate("/auth/login");
-    return null;
-  }
 
   // Use local state if available, otherwise use fetched data
   const currentTransaction: Transaction | null =
@@ -60,14 +53,36 @@ export default function TransactionDetailPage() {
     user?.userid === currentTransaction?.buyerId ||
     user?.userid === currentTransaction?.sellerId;
 
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      navigate("/auth/login");
+    }
+  }, [isAuthenticated, user, navigate]);
+
   // WebSocket integration for real-time transaction updates
   const handleTransactionStatusChange = (message: TransactionStatusMessage) => {
+    // Update transaction directly from WebSocket message (no refetch needed)
     if (currentTransaction) {
       setLocalTransaction({
         ...currentTransaction,
-        trangThai: message.trangThai as any,
+        transactionId: message.transactionId,
+        productId: message.productId,
+        tenSanPham: message.tenSanPham,
+        anhDaiDienSanPham: message.anhDaiDienSanPham,
+        buyerId: message.buyerId,
+        tenNguoiMua: message.tenNguoiMua,
+        sellerId: message.sellerId,
+        tenNguoiBan: message.tenNguoiBan,
+        gia: message.gia,
+        trangThai: message.trangThai as Transaction["trangThai"],
+        diaChiGiaoHang: message.diaChiGiaoHang,
+        maVanDon: message.maVanDon,
+        phuongThucThanhToan: message.phuongThucThanhToan,
+        thoiGianThanhToan: message.thoiGianThanhToan,
+        thoiGianGiaoHang: message.thoiGianGiaoHang,
+        thoiGianNhanHang: message.thoiGianNhanHang,
       });
-      refetch();
     }
   };
 
@@ -79,10 +94,10 @@ export default function TransactionDetailPage() {
 
   // Sync localTransaction with fetched transaction when it changes
   useEffect(() => {
-    if (transaction && !localTransaction) {
+    if (transaction) {
       setLocalTransaction(transaction);
     }
-  }, [transaction, localTransaction]);
+  }, [transaction]);
 
   if (loading) {
     return (
@@ -139,8 +154,7 @@ export default function TransactionDetailPage() {
 
   // Action handlers
   const handlePaymentComplete = () => {
-    // Reload transaction after payment
-    refetch();
+    // WebSocket will update transaction status automatically
     toast.success("Thanh toán thành công");
   };
 
@@ -198,8 +212,7 @@ export default function TransactionDetailPage() {
       });
 
       toast.success(`Đã đánh giá ${rating === 1 ? "+1" : "-1"} điểm`);
-      // Reload transaction để cập nhật trạng thái
-      refetch();
+      // WebSocket will update transaction status automatically
     } catch (error) {
       toast.error((error as Error).message || "Lỗi khi đánh giá");
     }

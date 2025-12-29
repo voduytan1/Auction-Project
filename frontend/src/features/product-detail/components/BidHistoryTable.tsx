@@ -190,15 +190,25 @@ export function BidHistoryTable({
     fetchBidHistory();
   }, [isAuthenticated, fetchBidHistory]);
 
-  // WebSocket integration - refetch bid history when product updates
-  // Backend sends to /topic/product/{id}/bids when blocking bidder
+  // WebSocket integration - update bid history directly from WebSocket data
   useBidWebSocket({
     productId,
-    onBidUpdate: useCallback(() => {
-      // Refetch bid history when receiving any bid update
-      // This includes: NEW_BID, AUTO_BID, NEW_WINNER_FOUND, HISTORY_REMOVED
-      fetchBidHistory();
-    }, [fetchBidHistory]),
+    onBidUpdate: useCallback(
+      (_message: unknown) => {
+        // When receiving bid update, refetch for owner (they see paginated data)
+        // For non-owners, onBidHistory will handle the update
+        if (isOwner) {
+          fetchBidHistory();
+        }
+      },
+      [isOwner, fetchBidHistory]
+    ),
+    onBidHistory: useCallback((messages: any[]) => {
+      // Directly update bid history from WebSocket (top N bids)
+      // This is sent to /topic/product/{id}/history
+      setBids(messages);
+      setTotal(messages.length);
+    }, []),
     enabled: isAuthenticated,
   });
 
@@ -314,7 +324,10 @@ export function BidHistoryTable({
                             size="sm"
                             variant="ghost"
                             onClick={() =>
-                              handleBlockBidder(bid.bidderId, bid.tenBidder)
+                              handleBlockBidder(
+                                bid.bidderId ?? "",
+                                bid.tenBidder ?? ""
+                              )
                             }
                             disabled={!bid.bidderId}
                             className="text-destructive hover:text-destructive hover:bg-destructive/10"

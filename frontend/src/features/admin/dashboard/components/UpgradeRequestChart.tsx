@@ -79,8 +79,6 @@ export function UpgradeRequestChart() {
     { name: "Từ chối", value: data.rejected, color: "#ef4444" },
   ];
 
-  const COLORS = chartData.map((item) => item.color);
-
   return (
     <Card>
       <CardHeader>
@@ -161,7 +159,7 @@ export function UpgradeRequestChart() {
               </Pie>
               <Tooltip />
               <Legend
-                payload={chartData.map((item, index) => ({
+                payload={chartData.map((item, _index) => ({
                   value: `${item.name}: ${item.value}`,
                   type: "circle",
                   color: item.color,
