@@ -2,6 +2,7 @@ package com.example.backend.repository;
 
 import aj.org.objectweb.asm.commons.Remapper;
 import com.example.backend.entity.BidHistory;
+import com.example.backend.entity.Product;
 import jakarta.transaction.Transactional;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
@@ -24,4 +25,8 @@ public interface BidHistoryRepository extends JpaRepository<@NotNull BidHistory,
     @Transactional
     @Query("DELETE FROM BidHistory b WHERE b.product.productid = :productId AND b.bidder.userid = :userId")
     void deleteAllByProductAndBidder(Long productId, UUID userId);
+
+    boolean existsByProductAndCreatedAtBetween(
+            Product product, LocalDateTime start, LocalDateTime end
+    );
 }

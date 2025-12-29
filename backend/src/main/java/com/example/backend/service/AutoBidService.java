@@ -221,10 +221,12 @@ public class AutoBidService {
         // Nếu đã có đánh giá, check tỷ lệ >= 80%
         Double ratingPercentage = ratingRepository.calculateRatingPercentage(bidder.getUserid());
         if (ratingPercentage < 80.0) {
-            throw new ForbiddenException(
-                    String.format("Điểm đánh giá của bạn là %.1f%%, cần tối thiểu 80%% để tham gia đấu giá",
-                            ratingPercentage)
-            );
+            if (!product.getChoPhepBidderChuaDanhGia()) {
+                throw new ForbiddenException(
+                        String.format("Điểm đánh giá của bạn là %.1f%%, cần tối thiểu 80%% để tham gia đấu giá",
+                                ratingPercentage)
+                );
+            }
         }
     }
 
