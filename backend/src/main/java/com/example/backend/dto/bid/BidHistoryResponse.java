@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -14,7 +15,8 @@ import java.time.LocalDateTime;
 @Builder
 public class BidHistoryResponse {
     private Long bidHistoryid;
-    private String tenBidder; // Đã mask: "****Khoa"
+    private String tenBidder;
+    private UUID bidderId;
     private BigDecimal giaDat;
     private LocalDateTime thoiGianDat;
 }
