@@ -83,4 +83,18 @@ public interface ProductRepository extends JpaRepository<@NotNull Product, @NotN
 
     // Top 10 sản phẩm nhiều lượt đấu giá nhất
     List<Product> findTop10ByTrangThaiOrderBySoLuotRaGiaDesc(ProductStatus status);
+
+    List<Product> findByTrangThaiAndThoiGianKetThucBefore(
+            ProductStatus status, LocalDateTime time
+    );
+
+    // Tìm sản phẩm cần check auto-extend
+    List<Product> findByTrangThaiAndChoPhepTuDongGiaHanAndThoiGianKetThucBetween(
+            ProductStatus status, Boolean autoExtend, LocalDateTime start, LocalDateTime end
+    );
+
+    // Đếm sản phẩm sắp hết hạn
+    Long countByTrangThaiAndThoiGianKetThucBetween(
+            ProductStatus status, LocalDateTime start, LocalDateTime end
+    );
 }

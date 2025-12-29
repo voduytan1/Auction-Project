@@ -244,4 +244,107 @@ public class EmailService {
 
         sendEmailToMultipleRecipients(new String[]{askerEmail}, subject, content);
     }
+
+    @Async
+    public void sendAuctionSuccessToWinner(String winnerEmail, String winnerName, String productName, BigDecimal finalPrice, Long productId) {
+        String productUrl = DOMAIN + "/payment/checkout/" + productId; // Hoặc dẫn đến trang Lịch sử giao dịch
+        NumberFormat currencyFormatter = NumberFormat.getInstance(new Locale("vi", "VN"));
+        String formattedPrice = currencyFormatter.format(finalPrice) + " đ";
+
+        String subject = "🏆 CHÚC MỪNG! Bạn đã thắng đấu giá: " + productName;
+
+        String content = """
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 20px;">
+                <h2 style="color: #2e7d32; text-align: center;">Chiến thắng thuộc về bạn!</h2>
+                
+                <p>Xin chào <b>%s</b>,</p>
+                <p>Chúc mừng bạn đã chiến thắng phiên đấu giá cho sản phẩm <b>%s</b>.</p>
+                
+                <div style="background-color: #e8f5e9; padding: 15px; border-radius: 5px; margin: 20px 0; border: 1px dashed #2e7d32;">
+                    <p style="margin: 0; font-size: 16px;">Số tiền chốt hạ:</p>
+                    <p style="margin: 5px 0 0 0; font-size: 24px; font-weight: bold; color: #2e7d32;">%s</p>
+                </div>
+                
+                <p>Vui lòng hoàn tất thanh toán để người bán có thể tiến hành giao hàng cho bạn.</p>
+                
+                <div style="text-align: center; margin-top: 25px;">
+                    <a href="%s" style="background-color: #d84315; color: white; padding: 12px 30px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 16px;">
+                        Thanh toán ngay
+                    </a>
+                </div>
+                
+                <p style="font-size: 12px; color: #666; margin-top: 20px;">Lưu ý: Nếu không thanh toán trong thời hạn quy định, tài khoản của bạn có thể bị đánh dấu vi phạm.</p>
+            </div>
+            """.formatted(winnerName, productName, formattedPrice, productUrl);
+
+        sendEmailToMultipleRecipients(new String[]{winnerEmail}, subject, content);
+    }
+
+    /**
+     * 2. Gửi cho SELLER: Bán thành công (Có người thắng)
+     */
+    @Async
+    public void sendAuctionSuccessToSeller(String sellerEmail, String sellerName, String productName, BigDecimal finalPrice, String winnerName, Long productId) {
+        String productUrl = DOMAIN + "/products/" + productId;
+        NumberFormat currencyFormatter = NumberFormat.getInstance(new Locale("vi", "VN"));
+        String formattedPrice = currencyFormatter.format(finalPrice) + " đ";
+
+        String subject = "💰 TIN VUI: Sản phẩm " + productName + " đã được bán!";
+
+        String content = """
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 20px;">
+                <h2 style="color: #f57f17; text-align: center;">Sản phẩm của bạn đã có chủ!</h2>
+                
+                <p>Xin chào <b>%s</b>,</p>
+                <p>Phiên đấu giá sản phẩm <b>%s</b> đã kết thúc thành công.</p>
+                
+                <div style="background-color: #fff8e1; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                    <ul style="list-style-type: none; padding: 0;">
+                        <li style="margin-bottom: 10px;">👤 <b>Người mua:</b> %s</li>
+                        <li style="margin-bottom: 10px;">💵 <b>Giá bán được:</b> <span style="font-weight: bold; color: #d84315;">%s</span></li>
+                    </ul>
+                </div>
+                
+                <p>Hệ thống đang chờ người mua thanh toán. Chúng tôi sẽ thông báo cho bạn ngay khi tiền về tài khoản.</p>
+                
+                <div style="text-align: center; margin-top: 25px;">
+                    <a href="%s" style="background-color: #f57f17; color: white; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold;">
+                        Xem chi tiết giao dịch
+                    </a>
+                </div>
+            </div>
+            """.formatted(sellerName, productName, winnerName, formattedPrice, productUrl);
+
+        sendEmailToMultipleRecipients(new String[]{sellerEmail}, subject, content);
+    }
+
+    /**
+     * 3. Gửi cho SELLER: Đấu giá thất bại (Không ai mua)
+     */
+    @Async
+    public void sendAuctionFailToSeller(String sellerEmail, String sellerName, String productName, Long productId) {
+        String productUrl = DOMAIN + "/products/" + productId;
+        String subject = "⚠️ Kết thúc phiên đấu giá: " + productName;
+
+        String content = """
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 20px;">
+                <h2 style="color: #546e7a; text-align: center;">Phiên đấu giá đã kết thúc</h2>
+                
+                <p>Xin chào <b>%s</b>,</p>
+                <p>Sản phẩm <b>%s</b> của bạn đã hết thời gian đấu giá nhưng tiếc là chưa có ai tham gia đặt giá.</p>
+                
+                <div style="background-color: #eceff1; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                    <p style="margin: 0; color: #455a64;">Đừng lo lắng, bạn có thể gia hạn hoặc đăng bán lại sản phẩm này bất cứ lúc nào.</p>
+                </div>
+                
+                <div style="text-align: center; margin-top: 25px;">
+                    <a href="%s" style="background-color: #546e7a; color: white; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold;">
+                        Quản lý sản phẩm
+                    </a>
+                </div>
+            </div>
+            """.formatted(sellerName, productName, productUrl);
+
+        sendEmailToMultipleRecipients(new String[]{sellerEmail}, subject, content);
+    }
 }
