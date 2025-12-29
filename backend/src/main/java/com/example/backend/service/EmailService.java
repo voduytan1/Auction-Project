@@ -20,6 +20,8 @@ public class EmailService {
     @Autowired
     private RedisService redisService;
 
+    private String DOMAIN = "http://localhost:5173";
+
     @Async
     public void sendOtpEmail(String toEmail, String otpCode) {
         SimpleMailMessage message = new SimpleMailMessage();
@@ -61,8 +63,7 @@ public class EmailService {
     @Async
     public void sendPlaceBidMail(String[] emails, String productName, Long productId, BigDecimal price, String currentBidderName) {
         // 1. Tạo đường dẫn sản phẩm
-        // Lưu ý: Nên đưa domain "http://localhost:8080" vào file properties để dễ đổi khi lên server thật
-        String productUrl = "http://localhost:8080/products/" + productId;
+        String productUrl = DOMAIN + "/products/" + productId;
 
         // 2. Format giá tiền cho đẹp (Ví dụ: 1000000 -> 1.000.000 đ)
         NumberFormat currencyFormatter = NumberFormat.getInstance(new Locale("vi", "VN"));
@@ -109,7 +110,7 @@ public class EmailService {
     @Async
     public void sendNewWinnerNotification(String toEmail, String productName, Long productId, BigDecimal price) {
         // 1. Setup URL và Format tiền
-        String productUrl = "http://localhost:8080/products/" + productId; // Nên dùng biến môi trường domain.url
+        String productUrl = DOMAIN + "/products/" + productId; // Nên dùng biến môi trường domain.url
         NumberFormat currencyFormatter = NumberFormat.getInstance(new Locale("vi", "VN"));
         String formattedPrice = currencyFormatter.format(price) + " đ";
 
@@ -178,7 +179,7 @@ public class EmailService {
     }
     @Async
     public void sendNewQuestionNotification(String sellerEmail, String askerName, String productName, String questionContent, Long productId) {
-        String productUrl = "http://localhost:8080/products/" + productId; // Nên dùng domain.url
+        String productUrl = DOMAIN + "/products/" + productId; // Nên dùng domain.url
         String subject = "❓ Bạn có câu hỏi mới về sản phẩm: " + productName;
 
         String content = """
@@ -211,7 +212,7 @@ public class EmailService {
      */
     @Async
     public void sendQuestionAnsweredNotification(String askerEmail, String sellerName, String productName, String questionContent, String answerContent, Long productId) {
-        String productUrl = "http://localhost:8080/products/" + productId;
+        String productUrl = DOMAIN + "/products/" + productId;
         String subject = "✅ Câu hỏi về " + productName + " đã được trả lời";
 
         String content = """
