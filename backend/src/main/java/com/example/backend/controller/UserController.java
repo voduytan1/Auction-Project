@@ -7,6 +7,7 @@ import com.example.backend.dto.user.CreateUserRequest;
 import com.example.backend.dto.user.UpdateUserRequest;
 import com.example.backend.dto.user.UserResponse;
 import com.example.backend.mapper.UserMapper;
+import com.example.backend.service.RecaptchaService;
 import com.example.backend.service.UpgradeRequestService;
 import com.example.backend.service.UserService;
 import com.example.backend.utils.PageUtils;
@@ -33,6 +34,7 @@ public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
     private final UpgradeRequestService upgradeRequestService;
+    private final RecaptchaService recaptchaService;
 
     @GetMapping
     public ResponseEntity<@NotNull ApiResponse<List<UserResponse>>> getAllUser(@Valid @ModelAttribute PaginationRequest request) {
@@ -71,6 +73,11 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<@NotNull ApiResponse<UserResponse>> createUser(@RequestBody @Valid CreateUserRequest request) {
+        boolean isCaptchaValid = recaptchaService.validateToken(request.getRecaptchaToken());
+
+        if (!isCaptchaValid) {
+            throw new IllegalArgumentException("Captcha không hợp lệ hoặc đã hết hạn!");
+        }
         UserResponse user = userService.createOne(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Tạo user thành công",  user));

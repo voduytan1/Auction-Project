@@ -11,8 +11,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LoginRequest {
-    @NotBlank
+    @NotBlank(message = "username không được rỗng")
     private String username;
-    @NotBlank
+    @NotBlank(message = "password không được rỗng")
     private String password;
+    @NotBlank(message = "recaptcha token không được rỗng")
+    private String recaptchaToken;
 }
