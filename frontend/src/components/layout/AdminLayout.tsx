@@ -1,29 +1,21 @@
-import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
+import { Outlet, Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
   Settings,
-  LogOut,
   ChevronLeft,
   FolderTree,
   Package,
   UserCog,
   Menu,
   X,
+  BarChart3,
 } from "lucide-react";
 import { Button } from "../ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
 import { useState } from "react";
 import { cn } from "../../lib/utils";
-import { useAppSelector, useAppDispatch } from "@/store/hooks";
-import { logoutUser } from "@/store/slices/authSlice";
+import { useAppSelector } from "@/store/hooks";
+import UserDropdown from "@/components/UserDropdown";
 
 /**
  * AdminLayout - For admin dashboard
@@ -32,27 +24,18 @@ import { logoutUser } from "@/store/slices/authSlice";
  */
 const AdminLayout = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const dispatch = useAppDispatch();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const { user } = useAppSelector((state) => state.auth);
 
   const navItems = [
-    { to: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+    { to: "/admin/dashboard", icon: LayoutDashboard, label: "Tổng quan" },
+    { to: "/admin/statistics", icon: BarChart3, label: "Thống kê" },
     { to: "/admin/users", icon: Users, label: "Người dùng" },
     { to: "/admin/categories", icon: FolderTree, label: "Danh mục" },
     { to: "/admin/products", icon: Package, label: "Sản phẩm" },
     { to: "/admin/upgrade-requests", icon: UserCog, label: "Yêu cầu nâng cấp" },
   ];
-
-  const handleLogout = async () => {
-    // Wait for logout to complete (clears localStorage)
-    await dispatch(logoutUser()).unwrap();
-    // Admin layout luôn redirect về login vì tất cả admin routes đều protected
-    // Dùng replace: true để không thể back lại trang admin
-    navigate("/auth/login", { replace: true });
-  };
 
   return (
     <div className="min-h-screen flex bg-muted/30">
@@ -209,46 +192,7 @@ const AdminLayout = () => {
                   ?.label || "Admin Panel"}
               </h1>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2 sm:gap-3 h-auto py-1 sm:py-2 px-1 sm:px-2"
-                >
-                  <div className="text-xs sm:text-sm text-right hidden md:block">
-                    <p className="font-medium">
-                      {user?.hoVaTen || user?.username}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {user?.username}
-                    </p>
-                  </div>
-                  <Avatar className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10">
-                    <AvatarImage
-                      src={user?.anhDaiDien}
-                      alt={user?.username || "User"}
-                    />
-                    <AvatarFallback className="text-xs sm:text-sm">
-                      {user?.username?.charAt(0).toUpperCase() || "A"}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={() => navigate("/profile")}>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Trang cá nhân
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={handleLogout}
-                  className="text-destructive"
-                >
-                  <LogOut className="mr-2 h-4 w-4 text-destructive" />
-                  Đăng xuất
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {user && <UserDropdown user={user} />}
           </div>
         </header>
 

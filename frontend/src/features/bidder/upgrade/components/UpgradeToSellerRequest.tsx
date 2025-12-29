@@ -107,8 +107,8 @@ export function UpgradeToSellerRequest() {
                 {...register("lyDo", {
                   required: "Vui lòng nhập lý do",
                   minLength: {
-                    value: 50,
-                    message: "Lý do phải có ít nhất 50 ký tự",
+                    value: 10,
+                    message: "Lý do phải có ít nhất 10 ký tự",
                   },
                   maxLength: {
                     value: 1000,

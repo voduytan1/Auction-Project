@@ -26,7 +26,6 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ShoppingBag, Store } from "lucide-react";
 import { toast } from "sonner";
 import { TransactionCard } from "./TransactionCard";
 import { RatingDialog } from "./RatingDialog";
@@ -37,6 +36,7 @@ import { webSocketService } from "@/services/websocket";
 import type { Transaction } from "@/types/transaction";
 import type { ApiResponse } from "@/types/types";
 import type { TransactionStatusMessage } from "@/types/websocket";
+import { Gavel } from "lucide-react";
 
 interface TransactionListPageProps {
   role: "buyer" | "seller";
@@ -241,39 +241,33 @@ export function TransactionListPage({ role }: TransactionListPageProps) {
     }
   };
 
-  const title = role === "buyer" ? "Giao dịch mua" : "Giao dịch bán";
-  const Icon = role === "buyer" ? ShoppingBag : Store;
+  const title = role === "buyer" ? "Sản phẩm đã mua" : "Sản phẩm đã bán";
 
   if (error) {
     return (
-      <PageWrapper title={title}>
-        <div className="container mx-auto px-4 py-8">
-          <Card>
-            <CardContent className="pt-6 text-center text-red-500">
-              Lỗi: {error.message}
-            </CardContent>
-          </Card>
-        </div>
-      </PageWrapper>
+      <div className="container mx-auto px-4 py-8">
+        <Card>
+          <CardContent className="pt-6 text-center text-red-500">
+            Lỗi: {error.message}
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
     <PageWrapper title={title}>
-      <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
-        <div className="flex items-center mb-4 sm:mb-6 gap-3">
-          <Icon className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-          <h1 className="text-2xl sm:text-3xl font-bold">{title} của tôi</h1>
-        </div>
-
+      <div className="container mx-auto p-0">
         {loading ? (
-          <PageLoader message="Đang tải giao dịch..." />
+          <PageLoader message="Đang tải danh sách..." />
         ) : transactions.length === 0 ? (
-          <Card>
-            <CardContent className="p-6 sm:p-8 text-center text-sm sm:text-base">
-              Chưa có giao dịch
-            </CardContent>
-          </Card>
+          <div className="text-center py-12 text-muted-foreground">
+            <Gavel className="h-12 w-12 mx-auto mb-3 opacity-50" />
+            <p>Chưa tham gia đấu giá sản phẩm nào</p>
+            <Button className="mt-4" onClick={() => navigate("/")}>
+              Khám phá sản phẩm
+            </Button>
+          </div>
         ) : (
           <>
             <TooltipProvider>

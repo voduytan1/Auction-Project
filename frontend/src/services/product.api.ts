@@ -36,6 +36,7 @@ export interface ProductResponse {
   thoiGianKetThuc: string; // LocalDateTime
   trangThai: "PENDING" | "ACTIVE" | "COMPLETED" | "CANCELLED";
   soLuotRaGia?: number; // Number of bids placed
+  isHighlight?: boolean; // Highlight badge from backend
 
   // Category info
   categoryId: number;
@@ -122,4 +123,11 @@ export const productAPI = {
    */
   delete: (id: number | string) =>
     api.delete<{ message: string }>(`/products/${id}`),
+
+  /**
+   * POST /products/block - Block bidder from product (seller only)
+   * Removes all bid history and reassigns winner if needed
+   */
+  blockBidder: (data: { productid: number; bidderid: string; lyDo?: string }) =>
+    api.post<{ message: string }>("/products/block", data),
 };

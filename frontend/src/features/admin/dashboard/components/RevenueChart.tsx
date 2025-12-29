@@ -9,8 +9,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { dashboardApi } from "@/services";
-import type { RevenueDataPoint } from "@/services";
+import { adminAPI } from "@/services/admin.api";
+import type { RevenueDataPoint } from "../types";
 import { toast } from "sonner";
 
 /**
@@ -24,8 +24,8 @@ export function RevenueChart() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await dashboardApi.getRevenueThisYear();
-        setData(response);
+        const response = await adminAPI.getRevenueThisYear();
+        setData(response.data || []);
       } catch (error) {
         console.error("Failed to fetch revenue data:", error);
         toast.error("Không thể tải dữ liệu doanh thu");
@@ -43,7 +43,7 @@ export function RevenueChart() {
         <CardHeader>
           <CardTitle>Doanh thu</CardTitle>
         </CardHeader>
-        <CardContent className="flex items-center justify-center h-[300px]">
+        <CardContent className="flex items-center justify-center h-75">
           <p className="text-muted-foreground">Đang tải...</p>
         </CardContent>
       </Card>
@@ -68,30 +68,39 @@ export function RevenueChart() {
         </p>
       </CardHeader>
       <CardContent className="px-2 sm:px-6">
-        <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
-          <AreaChart data={chartData}>
-            <defs>
-              <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#22c55e" stopOpacity={0.1} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" fontSize={12} />
-            <YAxis tickFormatter={formatRevenue} fontSize={12} />
-            <Tooltip
-              formatter={(value: number) => [`${value} triệu VNĐ`, "Doanh thu"]}
-            />
-            <Area
-              type="monotone"
-              dataKey="revenue"
-              stroke="#22c55e"
-              strokeWidth={2}
-              fillOpacity={1}
-              fill="url(#colorRevenue)"
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+        {chartData.length === 0 ? (
+          <div className="flex items-center justify-center h-[250px] text-muted-foreground">
+            <p>Chưa có dữ liệu doanh thu</p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={250} className="sm:h-75">
+            <AreaChart data={chartData}>
+              <defs>
+                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#22c55e" stopOpacity={0.1} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" fontSize={12} />
+              <YAxis tickFormatter={formatRevenue} fontSize={12} />
+              <Tooltip
+                formatter={(value: number) => [
+                  `${value} triệu VNĐ`,
+                  "Doanh thu",
+                ]}
+              />
+              <Area
+                type="monotone"
+                dataKey="revenue"
+                stroke="#22c55e"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#colorRevenue)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
       </CardContent>
     </Card>
   );

@@ -16,8 +16,8 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { dashboardApi } from "@/services";
-import type { UpgradeRequestChartResponse } from "@/services";
+import { adminAPI } from "@/services/admin.api";
+import type { UpgradeRequestChart } from "../types";
 import { toast } from "sonner";
 
 type TimePeriod = "today" | "week" | "month";
@@ -27,28 +27,28 @@ type TimePeriod = "today" | "week" | "month";
  */
 export function UpgradeRequestChart() {
   const [period, setPeriod] = useState<TimePeriod>("today");
-  const [data, setData] = useState<UpgradeRequestChartResponse | null>(null);
+  const [data, setData] = useState<UpgradeRequestChart | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        let response: UpgradeRequestChartResponse;
+        let response;
 
         switch (period) {
           case "today":
-            response = await dashboardApi.getUpgradeRequestToday();
+            response = await adminAPI.getUpgradeRequestToday();
             break;
           case "week":
-            response = await dashboardApi.getUpgradeRequestThisWeek();
+            response = await adminAPI.getUpgradeRequestWeek();
             break;
           case "month":
-            response = await dashboardApi.getUpgradeRequestThisMonth();
+            response = await adminAPI.getUpgradeRequestMonth();
             break;
         }
 
-        setData(response);
+        setData(response.data);
       } catch (error) {
         console.error("Failed to fetch upgrade request data:", error);
         toast.error("Không thể tải dữ liệu yêu cầu nâng cấp");
@@ -78,8 +78,6 @@ export function UpgradeRequestChart() {
     { name: "Đang chờ", value: data.pending, color: "#f59e0b" },
     { name: "Từ chối", value: data.rejected, color: "#ef4444" },
   ];
-
-  const COLORS = chartData.map((item) => item.color);
 
   return (
     <Card>
@@ -142,26 +140,31 @@ export function UpgradeRequestChart() {
           <ResponsiveContainer width="100%" height={250} className="sm:h-75">
             <PieChart>
               <Pie
-                data={chartData}
+                data={chartData.filter((item) => item.value > 0)}
                 cx="50%"
                 cy="50%"
                 labelLine={false}
                 label={({ name, percent }) =>
-                  `${name} ${(percent * 100).toFixed(0)}%`
+                  percent > 0 ? `${name} ${(percent * 100).toFixed(0)}%` : ""
                 }
                 outerRadius={70}
                 fill="#8884d8"
                 dataKey="value"
               >
-                {chartData.map((_, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
+                {chartData
+                  .filter((item) => item.value > 0)
+                  .map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
               </Pie>
               <Tooltip />
-              <Legend />
+              <Legend
+                payload={chartData.map((item, _index) => ({
+                  value: `${item.name}: ${item.value}`,
+                  type: "circle",
+                  color: item.color,
+                }))}
+              />
             </PieChart>
           </ResponsiveContainer>
         )}

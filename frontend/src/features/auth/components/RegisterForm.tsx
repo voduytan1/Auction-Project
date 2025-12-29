@@ -3,6 +3,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { toast } from "sonner";
+import { useState, useEffect, useCallback } from "react";
+import { FcGoogle } from "react-icons/fc";
+import { FaFacebook, FaGithub } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
+import { Eye, EyeOff } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -17,10 +22,7 @@ import { PageLoader } from "@/components/PageLoader";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { registerUser, clearError } from "@/store/slices/authSlice";
 import { registerSchema, type RegisterFormData } from "../schemas/validation";
-import { useEffect, useCallback } from "react";
-import { FcGoogle } from "react-icons/fc";
-import { FaFacebook, FaGithub } from "react-icons/fa";
-import { FaXTwitter } from "react-icons/fa6";
+import { authAPI } from "@/services/auth.api";
 
 export function RegisterForm() {
   const navigate = useNavigate();
@@ -29,14 +31,30 @@ export function RegisterForm() {
   const { isLoading, error, isAuthenticated } = useAppSelector(
     (state) => state.auth
   );
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
   });
+
+  const email = watch("email");
+
+  // Countdown timer for OTP resend
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown]);
 
   // Redirect nếu đã đăng nhập
   useEffect(() => {
@@ -51,31 +69,65 @@ export function RegisterForm() {
     };
   }, [dispatch]);
 
-  // Handle reCAPTCHA verification and form submission
+  // Handle sending OTP
+  const handleSendOtp = async () => {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error("Vui lòng nhập email hợp lệ!");
+      return;
+    }
+
+    setIsSendingOtp(true);
+    try {
+      await authAPI.sendOtp(email);
+      toast.success("Mã OTP đã được gửi đến email của bạn!");
+      setOtpSent(true);
+      setCountdown(60); // 60 seconds countdown
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Gửi OTP thất bại!");
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  // Handle form submission
   const onSubmit = useCallback(
     async (data: RegisterFormData) => {
+      // Check if OTP was sent
+      if (!otpSent) {
+        toast.error("Vui lòng nhấn 'Gửi mã' để nhận OTP qua email!");
+        return;
+      }
+
+      // Check if OTP was entered
+      if (!data.otp || data.otp.trim() === "") {
+        toast.error("Vui lòng nhập mã OTP đã được gửi đến email của bạn!");
+        return;
+      }
+
       if (!executeRecaptcha) {
         toast.error("reCAPTCHA chưa sẵn sàng. Vui lòng thử lại!");
         return;
       }
 
       try {
-        // Get reCAPTCHA token
-        const captchaToken = await executeRecaptcha("register");
-
-        // Submit with captcha token
-        const result = await dispatch(registerUser({ ...data, captchaToken }));
+        const recaptchaToken = await executeRecaptcha("register");
+        const result = await dispatch(
+          registerUser({ ...data, recaptchaToken })
+        );
 
         if (registerUser.fulfilled.match(result)) {
           toast.success("Đăng ký thành công! Vui lòng đăng nhập.");
           navigate("/auth/login");
+        } else if (registerUser.rejected.match(result)) {
+          const errorMessage = result.payload as string;
+          toast.error(errorMessage || "Đăng ký thất bại. Vui lòng thử lại!");
         }
       } catch (error) {
-        console.error("reCAPTCHA error:", error);
-        toast.error("Xác thực reCAPTCHA thất bại. Vui lòng thử lại!");
+        console.error("Registration error:", error);
+        toast.error("Đăng ký thất bại. Vui lòng thử lại!");
       }
     },
-    [executeRecaptcha, dispatch, navigate]
+    [dispatch, navigate, otpSent, executeRecaptcha]
   );
 
   return (
@@ -92,6 +144,57 @@ export function RegisterForm() {
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <div className="flex gap-2">
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                {...register("email")}
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSendOtp();
+                }}
+                disabled={isSendingOtp || countdown > 0 || !email}
+              >
+                {countdown > 0
+                  ? `${countdown}s`
+                  : isSendingOtp
+                  ? "Đang gửi..."
+                  : otpSent
+                  ? "Gửi lại"
+                  : "Gửi mã"}
+              </Button>
+            </div>
+            {errors.email && (
+              <p className="text-sm text-destructive">{errors.email.message}</p>
+            )}
+          </div>
+          {otpSent && (
+            <div className="space-y-2">
+              <Label htmlFor="otp">Mã OTP</Label>
+              <Input
+                id="otp"
+                type="text"
+                placeholder="Nhập mã OTP từ email"
+                maxLength={6}
+                {...register("otp")}
+              />
+              {errors.otp && (
+                <p className="text-sm text-destructive">{errors.otp.message}</p>
+              )}
+              <p className="text-sm text-muted-foreground">
+                Mã OTP đã được gửi đến email của bạn
+              </p>
+            </div>
+          )}
+          <div className="space-y-2">
             <Label htmlFor="username">Tên đăng nhập</Label>
             <Input
               id="username"
@@ -103,18 +206,6 @@ export function RegisterForm() {
               <p className="text-sm text-destructive">
                 {errors.username.message}
               </p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              {...register("email")}
-            />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
             )}
           </div>
           <div className="space-y-2">
@@ -133,12 +224,29 @@ export function RegisterForm() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Mật khẩu</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              {...register("password")}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                autoComplete="new-password"
+                {...register("password")}
+                className="pr-10"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <Eye className="h-4 w-4 text-muted-foreground" />
+                )}
+              </Button>
+            </div>
             {errors.password && (
               <p className="text-sm text-destructive">
                 {errors.password.message}
@@ -147,12 +255,29 @@ export function RegisterForm() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">Xác nhận mật khẩu</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              placeholder="••••••••"
-              {...register("confirmPassword")}
-            />
+            <div className="relative">
+              <Input
+                id="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="••••••••"
+                autoComplete="new-password"
+                {...register("confirmPassword")}
+                className="pr-10"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <Eye className="h-4 w-4 text-muted-foreground" />
+                )}
+              </Button>
+            </div>
             {errors.confirmPassword && (
               <p className="text-sm text-destructive">
                 {errors.confirmPassword.message}

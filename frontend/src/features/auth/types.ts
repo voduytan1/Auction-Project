@@ -20,6 +20,7 @@ export interface User {
 export interface LoginRequest {
   username: string;
   password: string;
+  recaptchaToken: string;
 }
 
 export interface RegisterRequest {
@@ -30,7 +31,8 @@ export interface RegisterRequest {
   diaChi?: string;
   soDienThoai?: string;
   ngaySinh?: string; // LocalDate format: YYYY-MM-DD
-  captchaToken?: string; // reCAPTCHA v3 token
+  recaptchaToken?: string; // reCAPTCHA v3 token
+  otp?: string; // OTP code from email
 }
 
 export interface LoginResponse {
