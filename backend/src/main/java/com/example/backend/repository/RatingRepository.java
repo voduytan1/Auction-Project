@@ -47,4 +47,9 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
 
     // Lấy tất cả rating của 1 sản phẩm
     List<Rating> findByProductProductid(Long productid);
+
+    Page<Rating> findByRaterUserid(UUID userid, Pageable pageable);
+
+    Page<Rating> findByRateeUserid(UUID userid, Pageable pageable);
+
 }
