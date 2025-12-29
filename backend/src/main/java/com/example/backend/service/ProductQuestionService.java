@@ -27,12 +27,14 @@ public class ProductQuestionService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final ProductQuestionMapper productQuestionMapper;
+    private final EmailService emailService;
 
-    public ProductQuestionService(ProductQuestionRepository productQuestionRepository, UserRepository userRepository, ProductRepository productRepository, ProductQuestionMapper productQuestionMapper) {
+    public ProductQuestionService(ProductQuestionRepository productQuestionRepository, UserRepository userRepository, ProductRepository productRepository, ProductQuestionMapper productQuestionMapper, EmailService emailService) {
         this.productQuestionRepository = productQuestionRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.productQuestionMapper = productQuestionMapper;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -48,6 +50,15 @@ public class ProductQuestionService {
         productQuestion.setAsker(asker);
 
         ProductQuestion saved = productQuestionRepository.save(productQuestion);
+        if (!asker.getUserid().equals(product.getSeller().getUserid())) {
+            emailService.sendNewQuestionNotification(
+                    product.getSeller().getEmail(),   // Email người bán
+                    asker.getHoVaTen(),                  // Tên người hỏi (hoặc dùng asker.getEmail() nếu không có name)
+                    product.getTenSanPham(),          // Tên sản phẩm
+                    saved.getNoiDungCauHoi(),         // Nội dung câu hỏi
+                    product.getProductid()            // ID sản phẩm để tạo link
+            );
+        }
         return productQuestionMapper.toResponse(saved);
     }
 
@@ -83,6 +94,15 @@ public class ProductQuestionService {
         productQuestion.setThoiGianTraLoi(LocalDateTime.now());
 
         ProductQuestion saved = productQuestionRepository.save(productQuestion);
+
+        emailService.sendQuestionAnsweredNotification(
+                saved.getAsker().getEmail(),      // Email người hỏi
+                product.getSeller().getHoVaTen(),    // Tên người bán (người trả lời)
+                product.getTenSanPham(),          // Tên sản phẩm
+                saved.getNoiDungCauHoi(),         // Câu hỏi gốc
+                saved.getNoiDungTraLoi(),         // Câu trả lời mới
+                product.getProductid()
+        );
 
         return  productQuestionMapper.toResponse(saved);
     }
