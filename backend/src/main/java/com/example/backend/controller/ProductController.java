@@ -1,5 +1,7 @@
 package com.example.backend.controller;
 
+import com.example.backend.dto.blockedbidder.BlockedBidderResponse;
+import com.example.backend.dto.blockedbidder.CreateBlockedBidderRequest;
 import com.example.backend.dto.common.ApiResponse;
 import com.example.backend.dto.common.PaginationInfo;
 import com.example.backend.dto.common.PaginationRequest;
@@ -8,6 +10,7 @@ import com.example.backend.dto.product.ProductResponse;
 import com.example.backend.dto.product.descriptionhistory.AppendDescriptionRequest;
 import com.example.backend.dto.product.descriptionhistory.DescriptionHistoryResponse;
 import com.example.backend.dto.product.filtercriteria.ProductFilterRequest;
+import com.example.backend.service.BlockedBidderService;
 import com.example.backend.service.ProductDescriptionHistoryService;
 import com.example.backend.service.ProductService;
 import com.example.backend.utils.PageUtils;
@@ -29,10 +32,12 @@ import java.util.UUID;
 public class ProductController {
     private final ProductService productService;
     private final ProductDescriptionHistoryService productDescriptionHistoryService;
+    private final BlockedBidderService blockedBidderService;
 
-    public ProductController(ProductService productService, ProductDescriptionHistoryService productDescriptionHistoryService) {
+    public ProductController(ProductService productService, ProductDescriptionHistoryService productDescriptionHistoryService, BlockedBidderService blockedBidderService) {
         this.productService = productService;
         this.productDescriptionHistoryService = productDescriptionHistoryService;
+        this.blockedBidderService = blockedBidderService;
     }
 
     @GetMapping
@@ -64,6 +69,16 @@ public class ProductController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Lỗi access token không hợp lệ"));
         }
         ProductResponse result = productService.createProduct(UUID.fromString(sub), request);
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    @PostMapping("/block")
+    public ResponseEntity<@NotNull ApiResponse<BlockedBidderResponse>> blockBidder(@AuthenticationPrincipal Jwt jwt, @RequestBody @Valid CreateBlockedBidderRequest request) {
+        String sub = jwt != null ? jwt.getSubject() : null;
+        if(sub == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Lỗi access token không hợp lệ"));
+        }
+        BlockedBidderResponse result = blockedBidderService.createOne(request,UUID.fromString(sub));
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 

@@ -54,8 +54,8 @@ public class SecurityConfig {
             ),
             "SELLER",Map.of(
                     HttpMethod.GET, new String[]{},
-                    HttpMethod.POST, new String[]{"/products", "/transactions/{id}/ma-van-don", "/transactions/{id}/huy"},
-                    HttpMethod.PATCH, new String[]{"/products", "/questions/{id}"},
+                    HttpMethod.POST, new String[]{"/products"},
+                    HttpMethod.PATCH, new String[]{},
                     HttpMethod.DELETE, new String[]{}
             ),
             "BIDDER",Map.of(
@@ -66,8 +66,9 @@ public class SecurityConfig {
             ),
             "AUTHENTICATED",Map.of(
                     HttpMethod.GET, new String[]{"/users/me", "/bids/**", "/bids/history/{productId}", "/transactions/buyer", "/transactions/seller","/transactions/{id}", "/theo-doi"},
-                    HttpMethod.POST, new String[]{"/users/request-seller", "/images/**","/image/**", "/bids/**", "/payment/create-checkout-session", "/transactions/{id}/dia-chi", "/transactions/{id}/hoan-thanh", "/theo-doi", "/questions"},
+                    HttpMethod.POST, new String[]{"/users/request-seller", "/images/**","/image/**", "/bids/**", "/payment/create-checkout-session", "/transactions/{id}/dia-chi", "/transactions/{id}/hoan-thanh", "/theo-doi", "/questions", "/transactions/{id}/ma-van-don", "/transactions/{id}/huy", "/products/block"},
                     HttpMethod.PUT, new String[]{"/users/{id}"},
+                    HttpMethod.PATCH, new String[]{"/products", "/questions/{id}"},
                     HttpMethod.DELETE, new String[]{"/theo-doi"}
             )
     );

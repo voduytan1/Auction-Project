@@ -42,4 +42,6 @@ public interface AutoBidRepository extends JpaRepository<AutoBid, Long> {
             "AND ab.isActive = true AND ab.product.trangThai = 'ACTIVE' " +
             "ORDER BY ab.createdAt DESC")
     List<AutoBid> findActiveAutoBidsByBidderOnActiveProducts(@Param("bidderid") UUID bidderid);
+
+    Void deleteByBidderUseridAndProductProductid(UUID bidderid, Long productid);
 }
