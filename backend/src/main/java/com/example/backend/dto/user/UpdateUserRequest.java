@@ -18,7 +18,10 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class UpdateUserRequest {
     @Size(min = 6, max = 100, message = "Password phải từ 6-100 ký tự")
-    String password;
+    String oldPassword;
+
+    @Size(min = 6, max = 100, message = "Password phải từ 6-100 ký tự")
+    String newPassword;
 
     @Email(message = "Email không đúng định dạng")
     String email;

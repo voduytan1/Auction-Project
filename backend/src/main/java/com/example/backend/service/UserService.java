@@ -18,6 +18,7 @@ import com.example.backend.utils.UserValidationUtils;
 import jakarta.persistence.EntityNotFoundException;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import tools.jackson.databind.json.JsonMapper;
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,10 +48,11 @@ public class UserService extends BaseService<User, UUID, CreateUserRequest, Upda
     private final JsonMapper jsonMapper;
     private final UserValidationUtils userValidationUtils;
     private final RedisService redisService;
+    private final PasswordEncoder passwordEncoder;
 
 
     public UserService(UserRepository userRepository, UserMapper userMapper,
-                       AuthUtils authUtils, CacheManager cacheManager, JsonMapper jsonMapper, UserValidationUtils userValidationUtils, RedisService redisService) {
+                       AuthUtils authUtils, CacheManager cacheManager, JsonMapper jsonMapper, UserValidationUtils userValidationUtils, RedisService redisService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.authUtils = authUtils;
@@ -58,6 +60,7 @@ public class UserService extends BaseService<User, UUID, CreateUserRequest, Upda
         this.cacheManager = cacheManager;
         this.userValidationUtils = userValidationUtils;
         this.redisService = redisService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     // Implementation of abstract methods
@@ -98,7 +101,10 @@ public class UserService extends BaseService<User, UUID, CreateUserRequest, Upda
 
     @Override
     protected void beforeUpdate(User entity, UpdateUserRequest dto) {
-        setPasswordIfProvided(entity, dto.getPassword());
+        if(!passwordEncoder.matches(dto.getOldPassword(), entity.getPassword())) {
+            throw new IllegalArgumentException("Password cũ không đúng");
+        }
+        setPasswordIfProvided(entity, dto.getNewPassword());
 
         entity.setUpdatedAt(LocalDateTime.now());
     }
