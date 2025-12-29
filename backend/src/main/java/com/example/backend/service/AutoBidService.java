@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -39,6 +40,7 @@ public class AutoBidService {
     private final BidHistoryMapper bidHistoryMapper;
     private final WebSocketEventPublisher webSocketEventPublisher;
     private final TransactionService transactionService;
+    private final EmailService emailService;
 
     @Transactional
     public PlaceAutoBidResponse placeAutoBid(UUID bidderid, PlaceAutoBidRequest request) {
@@ -63,15 +65,113 @@ public class AutoBidService {
 
         // 5. CHECK GIÁ TỐI ĐA HỢP LỆ
         validateMaxPrice(product, request.getGiaToiDa());
-        
+
+        // get email người giữ giá cũ
+        String oldBidderEmail;
+        if(product.getCurrentBidder() == null){
+            oldBidderEmail=null;
+        }else{
+            oldBidderEmail = product.getCurrentBidder().getEmail();
+        }
+
         // 6. XỬ LÝ AUTOBID
         AutoBid autoBid = processAutoBid(bidder, product, request.getGiaToiDa());
 
         // 7. CHẠY LOGIC COMPETE GIỮA CÁC AUTOBID
-        runAutoBidCompetition(product);
+        Product productResult = runAutoBidCompetition(product);
 
+        // Gửi email cho người giữ giá hiện tại, người giữ giá cũ, người bán
+        List<String> emailList = new ArrayList<>();
+
+        emailList.add(bidder.getEmail());
+        emailList.add(product.getSeller().getEmail());
+
+        if (oldBidderEmail != null) {
+            emailList.add(oldBidderEmail);
+        }
+
+        // Chuyển List thành Array
+        String[] emails = emailList.toArray(new String[0]);
+
+        emailService.sendPlaceBidMail(emails,productResult.getTenSanPham(),productResult.getProductid(), productResult.getGiaHienTai(), productResult.getCurrentBidder().getHoVaTen());
         // 9. TẠO RESPONSE
         return createResponse(autoBid, product);
+    }
+
+    @Transactional
+    public void processBlockedBidder(Product product, BlockedBidder blockedBidder) {
+        UUID blockedBidderId = blockedBidder.getBidder().getUserid();
+        String blockedEmail = blockedBidder.getBidder().getEmail();
+        String reason = blockedBidder.getLyDo();
+
+        // 1. Gửi mail thông báo
+        emailService.sendBlockedNotification(blockedEmail, product.getTenSanPham(), reason);
+
+        // 2. Vô hiệu hóa AutoBid (nếu có)
+        Optional<AutoBid> autoBidOpt = autoBidRepository
+                .findByProductProductidAndBidderUseridAndIsActiveTrue(product.getProductid(), blockedBidderId);
+        if (autoBidOpt.isPresent()) {
+            AutoBid autoBid = autoBidOpt.get();
+            autoBid.setIsActive(false);
+            autoBidRepository.save(autoBid);
+        }
+
+        // --- BƯỚC MỚI: XÓA LỊCH SỬ ĐẤU GIÁ (BID HISTORY) ---
+        // Xóa dòng này khỏi DB để không hiện trong danh sách lịch sử nữa.
+        // LƯU Ý: Ta KHÔNG trừ field "soLuotRaGia" trong entity Product
+        // để thỏa mãn yêu cầu "vẫn giữ số lượng ra giá".
+        bidHistoryRepository.deleteAllByProductAndBidder(product.getProductid(), blockedBidderId);
+
+        log.info("Đã xóa lịch sử đấu giá của user {} cho sản phẩm {}", blockedBidderId, product.getProductid());
+
+
+        // 3. Kiểm tra xem người bị chặn có đang là Winner không?
+        User currentWinner = product.getCurrentBidder();
+
+        // Nếu người bị chặn đang giữ giá cao nhất -> Cần reset và tính lại
+        if (currentWinner != null && currentWinner.getUserid().equals(blockedBidderId)) {
+            log.info("Người bị chặn đang là Winner -> Tiến hành tính toán lại giá");
+
+            // Reset người thắng về null
+            product.setCurrentBidder(null);
+
+            // Reset giá về khởi điểm tạm thời
+            // (Thuật toán runAutoBidCompetition sẽ tự nâng giá lên dựa trên các BidHistory CÒN LẠI)
+            product.setGiaHienTai(product.getGiaKhoiDiem());
+
+            // Lưu trạng thái tạm (đã xóa winner, giá về mo)
+            productRepository.save(product);
+
+            // --- CHẠY LẠI ĐẤU GIÁ ---
+            // Lúc này trong bảng BidHistory đã mất sạch dữ liệu của ông bị chặn
+            // Nên hàm này sẽ tự động tìm ra người cao nhất trong số những người còn lại.
+            Product newProductState = runAutoBidCompetition(product);
+
+            // --- GỬI THÔNG BÁO CHO WINNER MỚI (NẾU CÓ) ---
+            if (newProductState != null && newProductState.getCurrentBidder() != null) {
+                User newWinner = newProductState.getCurrentBidder();
+
+                // Gửi mail chúc mừng Winner mới
+                emailService.sendNewWinnerNotification(
+                        newWinner.getEmail(),
+                        newProductState.getTenSanPham(),
+                        newProductState.getProductid(),
+                        newProductState.getGiaHienTai()
+                );
+
+                // Báo socket UI cập nhật lại tên người thắng và giá mới
+                webSocketEventPublisher.publishBidUpdate(newProductState, "NEW_WINNER_FOUND");
+            } else {
+                // Trường hợp không còn ai khác đấu giá
+                webSocketEventPublisher.publishBidUpdate(product, "NO_BIDDER_LEFT");
+            }
+        } else {
+            // Trường hợp người bị chặn KHÔNG phải là Winner (chỉ là người lót đường)
+            // Ta đã xóa BidHistory ở trên rồi, nhưng vì họ không giữ giá cao nhất
+            // nên giá hiện tại của sản phẩm KHÔNG đổi.
+            // Tuy nhiên, ta vẫn cần báo socket để UI xóa tên họ khỏi danh sách lịch sử đấu giá bên tay phải (nếu có hiện).
+            webSocketEventPublisher.publishBidUpdate(product, "HISTORY_REMOVED");
+        }
     }
 
     /**
@@ -180,7 +280,7 @@ public class AutoBidService {
      * TÍCH HỢP WEBSOCKET ĐỂ BROADCAST REAL-TIME
      */
     @Transactional
-    public void runAutoBidCompetition(Product product) {
+    public Product runAutoBidCompetition(Product product) {
         log.info("Chạy AutoBid competition cho product {}", product.getProductid());
 
         // Lấy tất cả autobid active, sắp xếp theo giá tối đa giảm dần
@@ -188,7 +288,7 @@ public class AutoBidService {
                 .findActiveAutoBidsByProductOrderByGiaToiDaDesc(product.getProductid());
 
         if (autoBids.isEmpty()) {
-            return;
+            return null;
         }
 
         // Lấy autobid cao nhất (winner)
@@ -214,13 +314,14 @@ public class AutoBidService {
             newPrice = highestAutoBid.getGiaToiDa().min(priceBasedOnSecond);
         }
 
+        Product productResult = null;
         // Chỉ cập nhật nếu giá mới > giá hiện tại
         if (newPrice.compareTo(product.getGiaHienTai()) > 0) {
             // Cập nhật giá sản phẩm
             product.setGiaHienTai(newPrice);
             product.setCurrentBidder(highestAutoBid.getBidder());
             product.setSoLuotRaGia(product.getSoLuotRaGia() + 1);
-            productRepository.save(product);
+            productResult = productRepository.save(product);
 
             // Ghi lịch sử
             BidHistory bidHistory = BidHistory.builder()
@@ -237,6 +338,7 @@ public class AutoBidService {
             webSocketEventPublisher.publishBidUpdate(product, "AUTO_BID");
             webSocketEventPublisher.publishNewBidHistory(bidHistory);
         }
+        return productResult;
     }
 
 
@@ -248,6 +350,11 @@ public class AutoBidService {
     public PlaceAutoBidResponse handleBuyNowFromAutoBid(User bidder, Product product) {
         log.info("Auto-bid {} triggered BUY NOW for product {} - Buy now: {}",
                 bidder.getUserid(), product.getProductid(), product.getGiaMuaNgay());
+
+        if (blockedBidderRepository.existsByProductProductidAndBidderUserid(
+                product.getProductid(), bidder.getUserid())) {
+            throw new ForbiddenException("Bạn đã bị từ chối đấu giá sản phẩm này");
+        }
 
         // Cập nhật product về trạng thái COMPLETED
         product.setGiaHienTai(product.getGiaMuaNgay());

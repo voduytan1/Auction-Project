@@ -1,17 +1,23 @@
 package com.example.backend.controller;
 
+import com.example.backend.dto.auth.FullRefreshTokenResponse;
+import com.example.backend.dto.auth.RefreshTokenResponse;
 import com.example.backend.dto.common.ApiResponse;
 import com.example.backend.dto.common.PaginationInfo;
 import com.example.backend.dto.common.PaginationRequest;
 import com.example.backend.dto.user.CreateUserRequest;
 import com.example.backend.dto.user.UpdateUserRequest;
 import com.example.backend.dto.user.UserResponse;
+import com.example.backend.mapper.AuthMapper;
 import com.example.backend.mapper.UserMapper;
+import com.example.backend.service.AuthService;
 import com.example.backend.service.RecaptchaService;
 import com.example.backend.service.UpgradeRequestService;
 import com.example.backend.service.UserService;
+import com.example.backend.utils.CookieUtils;
 import com.example.backend.utils.PageUtils;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
@@ -35,6 +41,9 @@ public class UserController {
     private final UserMapper userMapper;
     private final UpgradeRequestService upgradeRequestService;
     private final RecaptchaService recaptchaService;
+    private final AuthService authService;
+    private final CookieUtils cookieUtils;
+    private final AuthMapper authMapper;
 
     @GetMapping
     public ResponseEntity<@NotNull ApiResponse<List<UserResponse>>> getAllUser(@Valid @ModelAttribute PaginationRequest request) {
@@ -94,11 +103,16 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<@NotNull ApiResponse<UserResponse>> updateUser(@PathVariable UUID id, @RequestBody @Valid UpdateUserRequest dto) {
-        return userService.update(id, dto)
-                .map(updated -> ResponseEntity.ok(ApiResponse.success("Cập nhật user thành công", updated)))
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(ApiResponse.error("Không tìm thấy user " + id)));
+    public ResponseEntity<@NotNull ApiResponse<RefreshTokenResponse>> updateUser(@PathVariable UUID id, @RequestBody @Valid UpdateUserRequest dto, @CookieValue("refresh_token") String refreshToken, HttpServletResponse response) {
+        UserResponse useResponse = userService.update(id, dto)
+                .orElseThrow(()-> new EntityNotFoundException("Không tìm thấy user " + id));
+
+        FullRefreshTokenResponse result = authService.refreshToken(refreshToken);
+        cookieUtils.setRefreshTokenCookie(response, result.getRefreshToken());
+
+        return ResponseEntity.ok(ApiResponse.success(authMapper.toRefreshTokenResponse(result)));
+
+
     }
 
     @DeleteMapping("/{id}")

@@ -3,6 +3,8 @@ package com.example.backend.dto.blockedbidder;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+import java.util.UUID;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -12,7 +14,7 @@ public class CreateBlockedBidderRequest {
     private Long productid;
 
     @NotNull(message = "Bidder ID không được để trống")
-    private Long bidderid;
+    private UUID bidderid;
 
     private String lyDo; // Lý do block
 }

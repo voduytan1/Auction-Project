@@ -101,8 +101,14 @@ public class UserService extends BaseService<User, UUID, CreateUserRequest, Upda
 
     @Override
     protected void beforeUpdate(User entity, UpdateUserRequest dto) {
-        if(!passwordEncoder.matches(dto.getOldPassword(), entity.getPassword())) {
+        if(dto.getNewPassword() != null && dto.getOldPassword() != null && !passwordEncoder.matches(dto.getOldPassword(), entity.getPassword())) {
             throw new IllegalArgumentException("Password cũ không đúng");
+        }
+        if(dto.getNewPassword() != null && dto.getOldPassword() == null ) {
+            throw new IllegalArgumentException("Vui lòng nhập password cũ");
+        }
+        if(dto.getNewPassword() == null && dto.getOldPassword() != null ) {
+            throw new IllegalArgumentException("Vui lòng nhập password mới");
         }
         setPasswordIfProvided(entity, dto.getNewPassword());
 
