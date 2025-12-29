@@ -7,6 +7,7 @@ export const loginSchema = z.object({
     .min(3, "Username phải có ít nhất 3 ký tự")
     .max(30, "Username tối đa 30 ký tự"),
   password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
+  // recaptchaToken is generated at runtime, not validated in form
 });
 
 export type LoginFormData = z.infer<typeof loginSchema>;
@@ -25,6 +26,10 @@ export const registerSchema = z
       .max(50, "Họ và tên tối đa 50 ký tự"),
     password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
     confirmPassword: z.string().min(1, "Xác nhận mật khẩu là bắt buộc"),
+    otp: z
+      .string()
+      .min(6, "Mã OTP phải có 6 ký tự")
+      .max(6, "Mã OTP phải có 6 ký tự"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Mật khẩu không khớp",

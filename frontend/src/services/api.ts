@@ -26,6 +26,10 @@ api.interceptors.request.use(
     const store = window.__REDUX_STORE__;
     const accessToken = store?.getState()?.auth?.accessToken;
 
+    console.log("🔑 Access Token:", accessToken);
+    console.log("📡 Request URL:", config.url);
+    console.log("📝 Request Method:", config.method?.toUpperCase());
+
     if (accessToken && config.headers) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }

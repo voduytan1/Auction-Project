@@ -1,6 +1,8 @@
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -24,6 +26,7 @@ export function LoginForm() {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
+  const { executeRecaptcha } = useGoogleReCaptcha();
   const { isLoading, error, isAuthenticated } = useAppSelector(
     (state) => state.auth
   );
@@ -57,10 +60,20 @@ export function LoginForm() {
 
   const onSubmit = async (data: LoginFormData) => {
     console.log("Form submitted - no reload should happen", data);
+    console.log("executeRecaptcha available?", !!executeRecaptcha);
+
+    if (!executeRecaptcha) {
+      toast.error("reCAPTCHA chưa sẵn sàng. Vui lòng thử lại!");
+      return;
+    }
 
     try {
       setIsLoginAttempted(true);
-      const result = await dispatch(loginUser(data));
+      console.log("Generating reCAPTCHA token...");
+      const recaptchaToken = await executeRecaptcha("login");
+      console.log("reCAPTCHA token generated:", recaptchaToken ? "✓" : "✗");
+
+      const result = await dispatch(loginUser({ ...data, recaptchaToken }));
       console.log("Login result:", result);
 
       // Check if login was successful
@@ -112,17 +125,18 @@ export function LoginForm() {
               placeholder="••••••••"
               {...register("password")}
             />
+
+            {errors.password && (
+              <p className="text-sm text-destructive">
+                {errors.password.message}
+              </p>
+            )}
             <Link
               to="/auth/forgot-password"
               className="text-sm text-primary hover:underline text-right block"
             >
               Quên mật khẩu?
             </Link>
-            {errors.password && (
-              <p className="text-sm text-destructive">
-                {errors.password.message}
-              </p>
-            )}
           </div>
           {error && (
             <p className="text-sm text-destructive text-center">{error}</p>

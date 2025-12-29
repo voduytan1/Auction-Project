@@ -196,12 +196,26 @@ const ProductDetail = () => {
               . Hãy chờ người mua thanh toán và hoàn tất giao dịch.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4">
             <Button
+              variant="outline"
               onClick={() => setShowSellerDialog(false)}
-              className="w-full"
+              className="flex-1"
             >
-              Đã hiểu
+              Để sau
+            </Button>
+            <Button
+              onClick={() => {
+                if (!product?.transactionId) {
+                  toast.error("Không tìm thấy thông tin giao dịch");
+                  return;
+                }
+                navigate(`/transactions/${product.transactionId}/detail`);
+                setShowSellerDialog(false);
+              }}
+              className="flex-1"
+            >
+              Xem chi tiết
             </Button>
           </DialogFooter>
         </DialogContent>

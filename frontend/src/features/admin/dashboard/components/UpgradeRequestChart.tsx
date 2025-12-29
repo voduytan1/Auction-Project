@@ -16,8 +16,8 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { dashboardApi } from "@/services";
-import type { UpgradeRequestChartResponse } from "@/services";
+import { adminAPI } from "@/services/admin.api";
+import type { UpgradeRequestChart } from "../types";
 import { toast } from "sonner";
 
 type TimePeriod = "today" | "week" | "month";
@@ -27,28 +27,28 @@ type TimePeriod = "today" | "week" | "month";
  */
 export function UpgradeRequestChart() {
   const [period, setPeriod] = useState<TimePeriod>("today");
-  const [data, setData] = useState<UpgradeRequestChartResponse | null>(null);
+  const [data, setData] = useState<UpgradeRequestChart | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        let response: UpgradeRequestChartResponse;
+        let response;
 
         switch (period) {
           case "today":
-            response = await dashboardApi.getUpgradeRequestToday();
+            response = await adminAPI.getUpgradeRequestToday();
             break;
           case "week":
-            response = await dashboardApi.getUpgradeRequestThisWeek();
+            response = await adminAPI.getUpgradeRequestWeek();
             break;
           case "month":
-            response = await dashboardApi.getUpgradeRequestThisMonth();
+            response = await adminAPI.getUpgradeRequestMonth();
             break;
         }
 
-        setData(response);
+        setData(response.data);
       } catch (error) {
         console.error("Failed to fetch upgrade request data:", error);
         toast.error("Không thể tải dữ liệu yêu cầu nâng cấp");

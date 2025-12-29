@@ -25,6 +25,15 @@ export const authAPI = {
     api.post<LoginResponse>(AUTH_ENDPOINTS.LOGIN, credentials),
 
   /**
+   * Gửi mã OTP qua email
+   * POST /auth/send-otp?email=...
+   */
+  sendOtp: (email: string) =>
+    api.post<{ message: string }>("/auth/send-otp", null, {
+      params: { email },
+    }),
+
+  /**
    * Đăng ký tài khoản mới
    * POST /users - role mặc định là BIDDER
    */
@@ -35,7 +44,8 @@ export const authAPI = {
       password: userData.password,
       vaitro: "BIDDER",
       hoVaTen: userData.hoVaTen,
-      captchaToken: userData.captchaToken, // reCAPTCHA v3 token for backend verification
+      recaptchaToken: userData.recaptchaToken, // reCAPTCHA v3 token for backend verification
+      OTP: userData.otp, // OTP code from email - backend expects "OTP" not "otp"
     }),
 
   /**
@@ -50,10 +60,20 @@ export const authAPI = {
    */
   refreshToken: () => api.post<RefreshTokenResponse>(AUTH_ENDPOINTS.REFRESH),
 
-  // TODO: Implement these endpoints when backend is ready
-  // forgotPassword: (email: string) => api.post("/auth/forgot-password", { email }),
-  // resetPassword: (token: string, newPassword: string) => api.post("/auth/reset-password", { token, newPassword }),
-  // getProfile: () => api.get("/auth/profile"),
-  // verifyEmail: (token: string) => api.post("/auth/verify-email", { token }),
-  // resendVerification: (email: string) => api.post("/auth/resend-verification", { email }),
+  /**
+   * Forgot password - Reset password with OTP and recaptcha
+   * PATCH /auth/forgot-password
+   */
+  forgotPassword: (
+    email: string,
+    otp: string,
+    password: string,
+    recaptchaToken: string
+  ) =>
+    api.patch<LoginResponse>("/auth/forgot-password", {
+      email,
+      OTP: otp,
+      password,
+      recaptchaToken,
+    }),
 };

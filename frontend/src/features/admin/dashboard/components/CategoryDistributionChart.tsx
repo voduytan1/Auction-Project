@@ -10,8 +10,8 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
-import { dashboardApi } from "@/services";
-import type { CategoryDistribution } from "@/services";
+import { adminAPI } from "@/services/admin.api";
+import type { CategoryDistribution } from "../types";
 import { toast } from "sonner";
 
 /**
@@ -25,8 +25,8 @@ export function CategoryDistributionChart() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await dashboardApi.getCategoryDistribution();
-        setData(response);
+        const response = await adminAPI.getCategoryDistribution();
+        setData(response.data || []);
       } catch (error) {
         console.error("Failed to fetch category distribution:", error);
         toast.error("Không thể tải dữ liệu phân bố danh mục");

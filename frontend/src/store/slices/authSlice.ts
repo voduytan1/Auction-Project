@@ -18,7 +18,7 @@ export const loginUser = createAsyncThunk(
 
       const user: User = {
         ...data,
-        tyLeDanhGiaTot: 85,
+        tyLeDanhGiaTot: data.diemDanhGia || 0,
       };
 
       return {
@@ -43,15 +43,17 @@ export const registerUser = createAsyncThunk(
 
       const user: User = {
         ...data,
-        tyLeDanhGiaTot: 85,
+        tyLeDanhGiaTot: data.diemDanhGia || 0,
       };
 
       return {
         user,
       };
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      return rejectWithValue(err.response?.data?.message || "Đăng ký thất bại");
+      // Return simple error message only, không hiển thị validation details
+      return rejectWithValue(
+        "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin!"
+      );
     }
   }
 );
@@ -66,7 +68,7 @@ export const refreshAccessToken = createAsyncThunk(
 
       const user: User = {
         ...data,
-        tyLeDanhGiaTot: 85,
+        tyLeDanhGiaTot: data.diemDanhGia || 0,
       };
 
       return {
@@ -93,7 +95,7 @@ export const getUserMe = createAsyncThunk(
 
       const user: User = {
         ...data,
-        tyLeDanhGiaTot: 85,
+        tyLeDanhGiaTot: data.diemDanhGia || 0,
       };
 
       return user;

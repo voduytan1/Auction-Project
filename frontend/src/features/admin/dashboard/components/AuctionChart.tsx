@@ -10,8 +10,8 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { dashboardApi } from "@/services";
-import type { ProductDataPoint } from "@/services";
+import { adminAPI } from "@/services/admin.api";
+import type { ProductDataPoint } from "../types";
 import { toast } from "sonner";
 
 /**
@@ -25,8 +25,8 @@ export function AuctionChart() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await dashboardApi.getProductThisYear();
-        setData(response);
+        const response = await adminAPI.getProductThisYear();
+        setData(response.data || []);
       } catch (error) {
         console.error("Failed to fetch product data:", error);
         toast.error("Không thể tải dữ liệu sản phẩm");
@@ -66,7 +66,7 @@ export function AuctionChart() {
         </p>
       </CardHeader>
       <CardContent className="px-2 sm:px-6">
-        <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
+        <ResponsiveContainer width="100%" height={250} className="sm:h-75">
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" fontSize={12} />

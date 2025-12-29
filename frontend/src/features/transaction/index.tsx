@@ -70,7 +70,9 @@ export default function TransactionDetailPage() {
 
   if (error || !currentTransaction) {
     const backRoute =
-      user?.vaitro === "SELLER" ? "/seller/my-sales" : "/bidder/purchases";
+      user?.vaitro === "SELLER"
+        ? "/seller/profile?tab=sold-products"
+        : "/bidder/profile?tab=won-auctions";
     return (
       <PageWrapper title="Lỗi">
         <div className="container mx-auto px-4 py-4 sm:py-8">
@@ -221,8 +223,8 @@ export default function TransactionDetailPage() {
             onClick={() =>
               navigate(
                 currentUserRole === "seller"
-                  ? "/seller/my-sales"
-                  : "/bidder/purchases"
+                  ? "/seller/profile?tab=sold-products"
+                  : "/bidder/profile?tab=won-auctions"
               )
             }
             size="sm"

@@ -38,4 +38,25 @@ export const ratingAPI = {
    */
   createRating: (data: CreateRatingRequest) =>
     api.post<RatingResponse>("/rating", data),
+
+  /**
+   * GET /rating/mine - Lấy danh sách rating mà mình đã đánh giá người khác
+   * Requires authentication
+   */
+  getMyRatings: (params?: { page?: number; size?: number }) =>
+    api.get<{ data: RatingResponse[]; metadata: any }>("/rating/mine", {
+      params,
+    }),
+
+  /**
+   * GET /rating/{id} - Lấy danh sách rating của một user (những rating mà user đó nhận được)
+   * Public endpoint - không cần authentication
+   */
+  getRatingsOfUser: (
+    userId: string,
+    params?: { page?: number; size?: number }
+  ) =>
+    api.get<{ data: RatingResponse[]; metadata: any }>(`/rating/${userId}`, {
+      params,
+    }),
 };

@@ -10,8 +10,8 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { dashboardApi } from "@/services";
-import type { NewUserDataPoint } from "@/services";
+import { adminAPI } from "@/services/admin.api";
+import type { NewUserDataPoint } from "../types";
 import { toast } from "sonner";
 
 /**
@@ -25,8 +25,8 @@ export function UserGrowthChart() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await dashboardApi.getNewUserThisYear();
-        setData(response);
+        const response = await adminAPI.getNewUserThisYear();
+        setData(response.data || []);
       } catch (error) {
         console.error("Failed to fetch new user data:", error);
         toast.error("Không thể tải dữ liệu người dùng mới");
@@ -44,7 +44,7 @@ export function UserGrowthChart() {
         <CardHeader>
           <CardTitle>Người dùng mới</CardTitle>
         </CardHeader>
-        <CardContent className="flex items-center justify-center h-[300px]">
+        <CardContent className="flex items-center justify-center h-75">
           <p className="text-muted-foreground">Đang tải...</p>
         </CardContent>
       </Card>
@@ -66,7 +66,7 @@ export function UserGrowthChart() {
         </p>
       </CardHeader>
       <CardContent className="px-2 sm:px-6">
-        <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
+        <ResponsiveContainer width="100%" height={250} className="sm:h-75">
           <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" fontSize={12} />

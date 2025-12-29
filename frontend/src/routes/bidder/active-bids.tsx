@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageLoader } from "@/components/PageLoader";
 import { formatCurrency, formatTimeRemaining } from "@/lib/format";
+import { bidAPI } from "@/services/bid.api";
+import { toast } from "sonner";
 
 interface ActiveBid {
   productId: number;
@@ -29,34 +31,15 @@ export default function ActiveBidsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // TODO: Fetch từ API GET /bids/my-active
     const fetchActiveBids = async () => {
       try {
-        // Mock data for now
-        setActiveBids([
-          {
-            productId: 1,
-            tenSanPham: "iPhone 15 Pro Max 256GB",
-            anhSanPham: "https://placehold.co/200x200",
-            giaHienTai: 28000000,
-            giaCuaToi: 27500000,
-            thoiGianKetThuc: new Date(Date.now() + 3600000).toISOString(),
-            dangDanDau: false,
-            soLuotDauGia: 15,
-          },
-          {
-            productId: 2,
-            tenSanPham: "MacBook Pro M3 16GB",
-            anhSanPham: "https://placehold.co/200x200",
-            giaHienTai: 45000000,
-            giaCuaToi: 45000000,
-            thoiGianKetThuc: new Date(Date.now() + 7200000).toISOString(),
-            dangDanDau: true,
-            soLuotDauGia: 8,
-          },
-        ]);
-      } catch (error) {
+        const response = await bidAPI.getMyAutoBids();
+        setActiveBids(response.data || []);
+      } catch (error: any) {
         console.error("Error fetching active bids:", error);
+        toast.error(
+          error?.response?.data?.message || "Không thể tải danh sách đấu giá"
+        );
       } finally {
         setIsLoading(false);
       }

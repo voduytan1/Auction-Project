@@ -34,15 +34,16 @@ const NotFoundPage = lazy(() => import("./not-found"));
 
 // Admin Pages
 const DashboardPage = lazy(() => import("./admin/dashboard"));
+const StatisticsPage = lazy(() => import("./admin/statistics"));
 const UsersPage = lazy(() => import("./admin/users"));
 // const AuctionsPage = lazy(() => import("./admin/auctions")); // Admin does NOT manage auctions
 const CategoriesPage = lazy(() => import("./admin/categories"));
 const ProductsPage = lazy(() => import("./admin/products"));
 const UpgradeRequestsPage = lazy(() => import("./admin/upgrade-requests"));
 const AdminSettingsPage = lazy(() => import("./admin/settings"));
+const AdminProfilePage = lazy(() => import("./admin/profile"));
 
 // Seller Pages
-const SellerProductsPage = lazy(() => import("./seller/products"));
 const CreateProductPage = lazy(() => import("./seller/create-product"));
 const AppendDescriptionPage = lazy(
   () =>
@@ -55,9 +56,6 @@ const AppendDescriptionPage = lazy(
 const WatchListPage = lazy(() => import("./bidder/watchlist"));
 const BidderProfilePage = lazy(() => import("./bidder/profile"));
 const UpgradeRequestPage = lazy(() => import("./bidder/upgrade-request"));
-const BidderRatingsPage = lazy(() => import("./bidder/ratings"));
-const ActiveBidsPage = lazy(() => import("./bidder/active-bids"));
-const WonAuctionsPage = lazy(() => import("./bidder/won-auctions"));
 
 const TransactionDetailPage = lazy(() => import("./transaction/detail"));
 const PaymentSuccessPage = lazy(() => import("./order/payment-success"));
@@ -67,7 +65,7 @@ const PaymentCancelPage = lazy(() => import("./order/payment-cancel"));
 const MyPurchasesPage = lazy(() => import("./bidder/my-purchases"));
 
 // Seller Transaction Pages
-const MySalesPage = lazy(() => import("./seller/my-sales"));
+const SellerProfilePage = lazy(() => import("./seller/profile"));
 
 /**
  * Router configuration với lazy loading và SEO
@@ -230,8 +228,16 @@ export const router = createBrowserRouter([
       {
         path: "dashboard",
         element: (
-          <PageWrapper title="Dashboard - Admin">
+          <PageWrapper title="Tổng quan - Admin">
             <DashboardPage />
+          </PageWrapper>
+        ),
+      },
+      {
+        path: "statistics",
+        element: (
+          <PageWrapper title="Thống kê - Admin">
+            <StatisticsPage />
           </PageWrapper>
         ),
       },
@@ -285,6 +291,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "profile",
+        element: (
+          <PageWrapper title="Hồ sơ cá nhân - Admin">
+            <AdminProfilePage />
+          </PageWrapper>
+        ),
+      },
+      {
         index: true,
         element: <Navigate to="/admin/dashboard" replace />,
       },
@@ -300,14 +314,14 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      {
-        path: "products",
-        element: (
-          <PageWrapper title="Sản phẩm của tôi">
-            <SellerProductsPage />
-          </PageWrapper>
-        ),
-      },
+      // {
+      //   path: "products",
+      //   element: (
+      //     <PageWrapper title="Sản phẩm của tôi">
+      //       <SellerProductsPage />
+      //     </PageWrapper>
+      //   ),
+      // },
       {
         path: "products/create",
         element: (
@@ -321,16 +335,16 @@ export const router = createBrowserRouter([
         element: <AppendDescriptionPage />,
       },
       {
-        path: "my-sales",
+        path: "profile",
         element: (
-          <PageWrapper title="Giao dịch bán">
-            <MySalesPage />
+          <PageWrapper title="Hồ sơ Seller">
+            <SellerProfilePage />
           </PageWrapper>
         ),
       },
       {
         index: true,
-        element: <Navigate to="/seller/products" replace />,
+        element: <Navigate to="/seller/profile" replace />,
       },
     ],
   },
@@ -357,30 +371,6 @@ export const router = createBrowserRouter([
         element: (
           <PageWrapper title="Hồ sơ của tôi">
             <BidderProfilePage />
-          </PageWrapper>
-        ),
-      },
-      {
-        path: "ratings",
-        element: (
-          <PageWrapper title="Lịch sử đánh giá">
-            <BidderRatingsPage />
-          </PageWrapper>
-        ),
-      },
-      {
-        path: "active-bids",
-        element: (
-          <PageWrapper title="Đang đấu giá">
-            <ActiveBidsPage />
-          </PageWrapper>
-        ),
-      },
-      {
-        path: "won-auctions",
-        element: (
-          <PageWrapper title="Đấu giá thắng">
-            <WonAuctionsPage />
           </PageWrapper>
         ),
       },

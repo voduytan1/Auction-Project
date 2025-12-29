@@ -7,6 +7,7 @@ import {
   ShoppingCart,
   Heart,
   CheckCircle2,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -310,9 +311,10 @@ export function ProductInfo({ product }: ProductInfoProps) {
                       {formatCurrency(product.giaHienTai + product.buocGia)}
                     </div>
                     {product.giaMuaNgay && (
-                      <div className="text-orange-600 font-medium">
-                        ⚠️ Nếu giá ≥ {formatCurrency(product.giaMuaNgay)} → Mua
-                        ngay tự động
+                      <div className="text-orange-600 font-medium flex items-center gap-1.5">
+                        <AlertTriangle className="w-4 h-4" />
+                        Nếu giá ≥ {formatCurrency(product.giaMuaNgay)} → Mua
+                        ngay
                       </div>
                     )}
                   </div>
@@ -326,14 +328,14 @@ export function ProductInfo({ product }: ProductInfoProps) {
                     onClick={async () => {
                       const parsed = Number(autoValue);
                       if (!parsed || parsed <= 0) {
-                        alert("Vui lòng nhập mức giá hợp lệ");
+                        toast.error("Vui lòng nhập mức giá hợp lệ");
                         return;
                       }
 
                       // Validate giá tối thiểu
                       const minRequired = product.giaHienTai + product.buocGia;
                       if (parsed < minRequired) {
-                        alert(
+                        toast.error(
                           `Giá tối đa phải ≥ ${formatCurrency(
                             minRequired
                           )} (giá hiện tại + bước giá)`
@@ -348,7 +350,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
                           product.giaHienTai +
                           Math.ceil(difference / product.buocGia) *
                             product.buocGia;
-                        alert(
+                        toast.error(
                           `Giá phải có dạng: giá hiện tại + n × bước giá.\nGợi ý: ${formatCurrency(
                             suggested
                           )}`
@@ -401,7 +403,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
                         console.error("Auto bid error", error);
                         const axiosError =
                           error as AxiosError<ApiErrorResponse>;
-                        alert(
+                        toast.error(
                           axiosError.response?.data?.message ||
                             "Lỗi khi đặt giá tự động"
                         );
@@ -476,7 +478,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
                           console.error("Buy now error:", error);
                           const axiosError =
                             error as AxiosError<ApiErrorResponse>;
-                          alert(
+                          toast.error(
                             axiosError.response?.data?.message ||
                               "Mua ngay thất bại"
                           );
@@ -603,7 +605,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
                 <div className="flex items-center gap-1 text-accent shrink-0">
                   <Star className="h-4 w-4 fill-current" />
                   <span className="font-semibold text-sm">
-                    {product.diemDanhGiaSeller.toFixed(1)}/10
+                    {product.diemDanhGiaSeller.toFixed(0)}%
                   </span>
                 </div>
               ) : (
@@ -637,7 +639,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
                   <div className="flex items-center gap-1 text-accent">
                     <Star className="h-4 w-4 fill-current" />
                     <span className="font-semibold text-sm">
-                      {product.diemDanhGiaBidder.toFixed(1)}/10
+                      {product.diemDanhGiaBidder.toFixed(0)}%
                     </span>
                   </div>
                 ) : (
@@ -679,7 +681,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
                 className="flex-1"
                 onClick={async () => {
                   if (!transactionId) {
-                    alert("Không tìm thấy thông tin giao dịch");
+                    toast.error("Không tìm thấy thông tin giao dịch");
                     return;
                   }
 

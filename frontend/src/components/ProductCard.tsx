@@ -40,9 +40,9 @@ export function ProductCard({ product }: ProductCardProps) {
             className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
           />
           {/* NEW Badge */}
-          {product.createdAt && (
+          {product.isHighlight && (
             <div className="absolute top-2 left-2">
-              <NewProductBadge createdAt={product.createdAt} />
+              <NewProductBadge isHighlight={product.isHighlight} />
             </div>
           )}
           {/* Time Badge */}

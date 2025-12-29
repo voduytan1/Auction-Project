@@ -30,14 +30,11 @@ export const profileAPI = {
   /**
    * Change password
    */
-  changePassword: async (data: ChangePasswordData) => {
-    const response = await api.post<{ message: string }>(
-      "/users/change-password",
-      {
-        currentPassword: data.oldPassword,
-        newPassword: data.newPassword,
-      }
-    );
+  changePassword: async (userId: string, data: ChangePasswordData) => {
+    const response = await api.put<{ message: string }>(`/users/${userId}`, {
+      oldPassword: data.oldPassword,
+      newPassword: data.newPassword,
+    });
     return response.data;
   },
 
