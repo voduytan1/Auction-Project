@@ -1,7 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   CheckCircle2,
@@ -11,7 +9,6 @@ import {
   MapPin,
   Package,
   XCircle,
-  MessageSquare,
 } from "lucide-react";
 import type { Transaction, TransactionStatus } from "@/types/transaction";
 import { getStepFromStatus } from "@/types/transaction";
@@ -219,16 +216,6 @@ export function TransactionStepper({
             })}
           </div>
         )}
-
-        {/* Chat button */}
-        <Separator className="my-6" />
-        <Button variant="outline" className="w-full" disabled>
-          <MessageSquare className="mr-2 h-4 w-4" />
-          Chat với {currentUserRole === "buyer" ? "người bán" : "người mua"}
-          <Badge variant="secondary" className="ml-2">
-            Sắp có
-          </Badge>
-        </Button>
       </CardContent>
     </Card>
   );

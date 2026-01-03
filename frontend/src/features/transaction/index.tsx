@@ -24,6 +24,7 @@ import type { Transaction } from "@/types/transaction";
 import type { TransactionStatusMessage } from "@/types/websocket";
 import { getStepFromStatus } from "@/types/transaction";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { FloatingChatBox } from "./components/FloatingChatBox";
 
 export default function TransactionDetailPage() {
   const { transactionId } = useParams<{ transactionId: string }>();
@@ -33,7 +34,7 @@ export default function TransactionDetailPage() {
     null
   );
 
-  // Fetch transaction tá»« API
+  // Fetch transaction từ API
   const {
     data: transaction,
     loading,
@@ -229,6 +230,12 @@ export default function TransactionDetailPage() {
       toast.error((error as Error).message || "Lỗi khi hủy giao dịch");
     }
   };
+
+  // Xác định tên người chat cùng
+  const otherUserName =
+    currentUserRole === "buyer"
+      ? currentTransaction?.tenNguoiBan || "Người bán"
+      : currentTransaction?.tenNguoiMua || "Người mua";
 
   return (
     <PageWrapper title={`Giao dịch #${transactionId}`}>
@@ -479,6 +486,14 @@ export default function TransactionDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Floating Chat Box - MOVED HERE (Outside grid) */}
+      {currentTransaction && (
+        <FloatingChatBox
+          transactionId={currentTransaction.transactionId}
+          otherUserName={otherUserName}
+        />
+      )}
     </PageWrapper>
   );
 }
