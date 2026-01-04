@@ -60,7 +60,6 @@ const TransactionDetailPage = lazy(() => import("./transaction/detail"));
 const PaymentSuccessPage = lazy(() => import("./order/payment-success"));
 const PaymentCancelPage = lazy(() => import("./order/payment-cancel"));
 
-
 const SellerProfilePage = lazy(() => import("./seller/profile"));
 
 /**

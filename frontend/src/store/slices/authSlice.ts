@@ -6,6 +6,7 @@ import type {
   RegisterRequest,
 } from "@/features/auth/types";
 import { authAPI } from "@/services/auth.api";
+import { oauthAPI } from "@/services/oauth.api";
 import { userAPI } from "@/services/user.api";
 
 // Async thunks
@@ -16,19 +17,34 @@ export const loginUser = createAsyncThunk(
       const response = await authAPI.login(credentials);
       const data = response.data;
 
-      const user: User = {
-        ...data,
-        tyLeDanhGiaTot: data.diemDanhGia || 0,
-      };
-
       return {
-        user,
+        user: data,
         accessToken: data.accessToken,
       };
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       return rejectWithValue(
         err.response?.data?.message || "Đăng nhập thất bại"
+      );
+    }
+  }
+);
+
+export const loginWithGoogle = createAsyncThunk(
+  "auth/loginWithGoogle",
+  async (accessToken: string, { rejectWithValue }) => {
+    try {
+      const response = await oauthAPI.loginWithGoogle(accessToken);
+      const data = response.data;
+
+      return {
+        user: data,
+        accessToken: data.accessToken,
+      };
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      return rejectWithValue(
+        err.response?.data?.message || "Đăng nhập Google thất bại"
       );
     }
   }
@@ -41,13 +57,8 @@ export const registerUser = createAsyncThunk(
       const response = await authAPI.register(userData);
       const data = response.data;
 
-      const user: User = {
-        ...data,
-        tyLeDanhGiaTot: data.diemDanhGia || 0,
-      };
-
       return {
-        user,
+        user: data,
       };
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
@@ -67,13 +78,8 @@ export const refreshAccessToken = createAsyncThunk(
       const response = await authAPI.refreshToken();
       const data = response.data;
 
-      const user: User = {
-        ...data,
-        tyLeDanhGiaTot: data.diemDanhGia || 0,
-      };
-
       return {
-        user,
+        user: data,
         accessToken: data.accessToken,
         expiresIn: data.expiresIn,
       };
@@ -94,12 +100,7 @@ export const getUserMe = createAsyncThunk(
       const response = await userAPI.getMe();
       const data = response.data;
 
-      const user: User = {
-        ...data,
-        tyLeDanhGiaTot: data.diemDanhGia || 0,
-      };
-
-      return user;
+      return data;
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       return rejectWithValue(
