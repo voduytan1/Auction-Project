@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -44,40 +45,85 @@ public class RatingService {
 
         User ratee = validateUser(createRatingRequest.getRateeId(),transaction);
 
-        if(ratingRepository.existsByRaterUseridAndRateeUseridAndProductProductid(raterId,ratee.getUserid(),transaction.getProduct().getProductid())){
-            throw new IllegalStateException("Bạn đã đánh giá rồi");
-        }
+        Optional<Rating> existingRatingOpt = ratingRepository.findByRaterUseridAndRateeUseridAndProductProductid(
+                raterId, ratee.getUserid(), transaction.getProduct().getProductid()
+        );
 
-        Integer soluongDanhGia = ratee.getSoLuongDanhGia();
-        int inputDiem = createRatingRequest.getDiem(); // 1 hoặc -1
-        double diemQuyDoi = (inputDiem == 1) ? 100.0 : 0.0;
+        int inputDiemMoi = createRatingRequest.getDiem(); // 1 hoặc -1
+        double diemQuyDoiMoi = (inputDiemMoi == 1) ? 100.0 : 0.0;
 
-        if (soluongDanhGia == null || soluongDanhGia == 0) {
-            ratee.setDiemDanhGia(diemQuyDoi);
-            ratee.setSoLuongDanhGia(1);
+        Rating ratingToSave;
+
+        if (existingRatingOpt.isPresent()) {
+            // === TRƯỜNG HỢP 1: ĐÃ TỒN TẠI -> CẬP NHẬT (UPDATE) ===
+            Rating existingRating = existingRatingOpt.get();
+
+            int inputDiemCu = existingRating.getDiem();
+
+            // Chỉ tính toán lại điểm nếu điểm số thay đổi (VD: từ Tốt -> Tệ hoặc ngược lại)
+            if (inputDiemCu != inputDiemMoi) {
+                double diemQuyDoiCu = (inputDiemCu == 1) ? 100.0 : 0.0;
+
+                Integer currentCount = ratee.getSoLuongDanhGia();
+                Double currentAvg = ratee.getDiemDanhGia();
+
+                // Công thức: (Tổng điểm cũ - Điểm đánh giá cũ + Điểm đánh giá mới) / Số lượng cũ
+                double currentTotalScore = currentAvg * currentCount;
+                double newTotalScore = currentTotalScore - diemQuyDoiCu + diemQuyDoiMoi;
+
+                double newAvg = newTotalScore / currentCount;
+
+                // Làm tròn 2 chữ số thập phân
+                newAvg = (double) Math.round(newAvg * 100) / 100;
+
+                ratee.setDiemDanhGia(newAvg);
+                // ratee.setSoLuongDanhGia() -> KHÔNG ĐỔI
+            }
+
+            // Cập nhật nội dung đánh giá
+            existingRating.setDiem(inputDiemMoi);
+            existingRating.setNhanXet(createRatingRequest.getNhanXet());
+            // existingRating.setUpdatedAt(LocalDateTime.now()); // Nếu có field này
+
+            ratingToSave = existingRating;
+
         } else {
-            double diemTichLuyHienTai = ratee.getDiemDanhGia() * soluongDanhGia;
+            // === TRƯỜNG HỢP 2: CHƯA TỒN TẠI -> TẠO MỚI (CREATE) ===
+            Integer soluongDanhGia = ratee.getSoLuongDanhGia();
 
-            double diemMoi = (diemTichLuyHienTai + diemQuyDoi) / (soluongDanhGia + 1);
+            if (soluongDanhGia == null || soluongDanhGia == 0) {
+                ratee.setDiemDanhGia(diemQuyDoiMoi);
+                ratee.setSoLuongDanhGia(1);
+            } else {
+                // Công thức: (Tổng điểm cũ + Điểm mới) / (Số lượng cũ + 1)
+                double diemTichLuyHienTai = ratee.getDiemDanhGia() * soluongDanhGia;
+                double diemMoi = (diemTichLuyHienTai + diemQuyDoiMoi) / (soluongDanhGia + 1);
 
-            diemMoi = (double) Math.round(diemMoi * 100) / 100;
+                diemMoi = (double) Math.round(diemMoi * 100) / 100;
 
-            ratee.setDiemDanhGia(diemMoi);
-            ratee.setSoLuongDanhGia(soluongDanhGia + 1);
+                ratee.setDiemDanhGia(diemMoi);
+                ratee.setSoLuongDanhGia(soluongDanhGia + 1);
+            }
+
+            ratingToSave = Rating.builder()
+                    .rater(rater)
+                    .ratee(ratee) // Lưu ý: Entity User đã được set lại điểm ở trên
+                    .product(transaction.getProduct())
+                    .diem(inputDiemMoi)
+                    .nhanXet(createRatingRequest.getNhanXet())
+                    .build();
         }
+
+        // Lưu User (đã cập nhật điểm)
         User savedRatee = userRepository.save(ratee);
 
-        Rating rate = Rating.builder()
-                .rater(rater)
-                .ratee(savedRatee)
-                .product(transaction.getProduct())
-                .diem(createRatingRequest.getDiem())
-                .nhanXet(createRatingRequest.getNhanXet())
-                .build();
+        // Đảm bảo Rating trỏ tới User mới nhất (nếu cần thiết với JPA, thường thì object reference tự handle)
+        ratingToSave.setRatee(savedRatee);
 
-        Rating saved = ratingRepository.save(rate);
+        // Lưu Rating
+        Rating savedRating = ratingRepository.save(ratingToSave);
 
-        return ratingMapper.toResponse(saved);
+        return ratingMapper.toResponse(savedRating);
     }
 
 

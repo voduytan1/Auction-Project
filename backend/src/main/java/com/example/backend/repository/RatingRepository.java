@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -40,8 +41,10 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
             UUID raterid, UUID rateeid, Long productid
     );
 
+
+
     // Lấy rating giữa 2 user trên 1 sản phẩm
-    List<Rating> findByRaterUseridAndRateeUseridAndProductProductid(
+    Optional<Rating> findByRaterUseridAndRateeUseridAndProductProductid(
             UUID raterid, UUID rateeid, Long productid
     );
 

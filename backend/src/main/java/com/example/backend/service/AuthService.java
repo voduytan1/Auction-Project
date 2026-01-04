@@ -206,11 +206,6 @@ public class AuthService {
                 user.setProvider(AuthProvider.GOOGLE); // Nên thêm field này để phân biệt
 
                 user = userRepository.save(user);
-            }else{
-                if (user.getProvider() == null) {
-                    user.setProvider(AuthProvider.GOOGLE);
-                    userRepository.save(user);
-                }
             }
 
             String userId = user.getUserid().toString();
