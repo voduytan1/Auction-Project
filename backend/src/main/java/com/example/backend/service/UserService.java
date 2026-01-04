@@ -34,6 +34,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -199,9 +200,11 @@ public class UserService extends BaseService<User, UUID, CreateUserRequest, Upda
     public List<NewUserDataPoint> getNewUserChart() {
         List<NewUserDataPoint> data = new ArrayList<>();
 
+        int year = LocalDate.now().getYear();
+
         for(int i = 1; i <= 12; i++) {
-            LocalDateTime start = DateUtils.getStartOfSpecificMonth(i);
-            LocalDateTime end = DateUtils.getEndOfSpecificMonth(i);
+            LocalDateTime start = DateUtils.getStartOfSpecificMonth(i, year);
+            LocalDateTime end = DateUtils.getEndOfSpecificMonth(i, year);
             Long bidder = userRepository.countByVaitroAndCreatedAtBetween(Role.BIDDER, start, end);
             Long seller = userRepository.countByVaitroAndCreatedAtBetween(Role.SELLER, start, end);
 
@@ -214,11 +217,10 @@ public class UserService extends BaseService<User, UUID, CreateUserRequest, Upda
         return userRepository.count();
     }
 
-    public Long countByMonth(int month){
-        LocalDateTime start = DateUtils.getStartOfSpecificMonth(month);
-        LocalDateTime end = DateUtils.getEndOfSpecificMonth(month);
+    public Long countByMonth(int month, int year){
+        LocalDateTime start = DateUtils.getStartOfSpecificMonth(month, year);
+        LocalDateTime end = DateUtils.getEndOfSpecificMonth(month, year);
         return userRepository.countByCreatedAtBetween(start, end);
-
     }
     private void setPasswordIfProvided(User entity, String rawPassword) {
         if (rawPassword != null && !rawPassword.trim().isEmpty()) {

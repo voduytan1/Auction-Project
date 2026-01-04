@@ -124,10 +124,10 @@ public class ProductService {
 
     public List<ProductDataPoint> getNewProductChart() {
         List<ProductDataPoint> data = new ArrayList<>();
-
+        int year = LocalDateTime.now() .getYear();
         for(int i = 1; i <= 12; i++) {
-            LocalDateTime start = DateUtils.getStartOfSpecificMonth(i);
-            LocalDateTime end = DateUtils.getEndOfSpecificMonth(i);
+            LocalDateTime start = DateUtils.getStartOfSpecificMonth(i, year);
+            LocalDateTime end = DateUtils.getEndOfSpecificMonth(i, year);
             Long newProduct = productRepository.countByTrangThaiAndCreatedAtBetween(ProductStatus.ACTIVE,start, end);
             Long completedProduct = productRepository.countByTrangThaiAndUpdatedAtBetween(ProductStatus.COMPLETED,start, end);
 

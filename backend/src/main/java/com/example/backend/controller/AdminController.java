@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -140,11 +141,19 @@ public class AdminController {
 
     @GetMapping("/dashboard/stat")
     public ResponseEntity<@NotNull ApiResponse<WebStat>> Stats(){
-        int thisMonth = LocalDateTime.now().getMonth().getValue();
+        LocalDate today = LocalDate.now();
+
+        // 1. Tính toán thời gian hiện tại
+        int thisMonth = today.getMonthValue();
+        int thisYear = today.getYear();
+
+        LocalDate lastMonthDate = today.minusMonths(1);
+        int prevMonth = lastMonthDate.getMonthValue();
+        int prevYear = lastMonthDate.getYear();
 
         Long usersCount = userService.countAll();
-        Long previousMonth = userService.countByMonth(thisMonth-1);
-        Long currentMonth = userService.countByMonth(thisMonth);
+        Long previousMonth = userService.countByMonth(prevMonth, prevYear);
+        Long currentMonth = userService.countByMonth(thisMonth, thisYear);
         Integer userGrowth = 0;
         if(previousMonth != 0){
             long diff = currentMonth - previousMonth;
@@ -163,8 +172,8 @@ public class AdminController {
         Long todayBidsCount = bidHistoryRepository.countByCreatedAtBetween(DateUtils.getStartOfToday(), DateUtils.getEndOfToday());
 
         BigDecimal revenue = transactionService.getRevenue();
-        BigDecimal thisMonthRevenue = transactionService.getMonthRevenue(thisMonth);
-        BigDecimal previousRevenue = transactionService.getMonthRevenue(thisMonth-1);
+        BigDecimal thisMonthRevenue = transactionService.getMonthRevenue(thisMonth, thisYear);
+        BigDecimal previousRevenue = transactionService.getMonthRevenue(prevMonth, prevYear);
         Integer revenueGrowth = 0;
         if (previousRevenue.compareTo(BigDecimal.ZERO) != 0) {
 

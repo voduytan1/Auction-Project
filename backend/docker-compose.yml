@@ -51,7 +51,7 @@ services:
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - KIBANA_SYSTEM_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
       - LOGSTASH_SYSTEM_PASSWORD=${LOGSTASH_SYSTEM_PASSWORD}
-      - "ES_JAVA_OPTS=-Xms2048m -Xmx2048m"
+      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
     ports:
       - "9200:9200"
       - "9300:9300"
@@ -62,7 +62,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 12
-      start_period: 40s
+      start_period: 120s
     networks:
       - elk
 

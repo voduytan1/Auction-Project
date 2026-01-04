@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -194,9 +195,11 @@ public class TransactionService {
     public List<RevenueDataPoint> getMonthlyRevenueChart() {
         List<RevenueDataPoint> data = new ArrayList<>();
 
+        int year = LocalDate.now().getYear();
+
         for(int i = 1; i <= 12; i++) {
-            LocalDateTime start = DateUtils.getStartOfSpecificMonth(i);
-            LocalDateTime end = DateUtils.getEndOfSpecificMonth(i);
+            LocalDateTime start = DateUtils.getStartOfSpecificMonth(i, year);
+            LocalDateTime end = DateUtils.getEndOfSpecificMonth(i, year);
             BigDecimal revenue = transactionRepository.sumRevenueByDateRange(start,end);
             if (revenue == null) revenue = BigDecimal.ZERO;
 
@@ -208,9 +211,10 @@ public class TransactionService {
         return data;
     }
 
-    public BigDecimal getMonthRevenue(int month){
-        LocalDateTime start = DateUtils.getStartOfSpecificMonth(month);
-        LocalDateTime end = DateUtils.getEndOfSpecificMonth(month);
+    public BigDecimal getMonthRevenue(int month, int year){
+
+        LocalDateTime start = DateUtils.getStartOfSpecificMonth(month, year);
+        LocalDateTime end = DateUtils.getEndOfSpecificMonth(month, year);
         return transactionRepository.sumRevenueByDateRange(start,end);
     }
 
