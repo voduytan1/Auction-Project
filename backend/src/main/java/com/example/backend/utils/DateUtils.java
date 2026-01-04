@@ -81,12 +81,11 @@ public class DateUtils {
      * Lấy thời điểm bắt đầu của một tháng cụ thể trong năm nay.
      * @param month Tháng cần lấy (1 - 12)
      */
-    public static LocalDateTime getStartOfSpecificMonth(int month) {
+    public static LocalDateTime getStartOfSpecificMonth(int month, int year) {
         if (month < 1 || month > 12) {
             throw new IllegalArgumentException("Tháng phải từ 1 đến 12");
         }
-        int currentYear = LocalDate.now(USER_ZONE).getYear();
-        LocalDate firstDay = LocalDate.of(currentYear, month, 1);
+        LocalDate firstDay = LocalDate.of(year, month, 1);
         return getStartOfDay(firstDay);
     }
 
@@ -94,13 +93,12 @@ public class DateUtils {
      * Lấy thời điểm kết thúc của một tháng cụ thể trong năm nay.
      * @param month Tháng cần lấy (1 - 12)
      */
-    public static LocalDateTime getEndOfSpecificMonth(int month) {
+    public static LocalDateTime getEndOfSpecificMonth(int month, int year) {
         if (month < 1 || month > 12) {
             throw new IllegalArgumentException("Tháng phải từ 1 đến 12");
         }
-        int currentYear = LocalDate.now(USER_ZONE).getYear();
         // Lấy ngày đầu tháng đó, rồi chỉnh tới ngày cuối tháng
-        LocalDate lastDay = LocalDate.of(currentYear, month, 1)
+        LocalDate lastDay = LocalDate.of(year, month, 1)
                 .with(TemporalAdjusters.lastDayOfMonth());
         return getEndOfDay(lastDay);
     }
