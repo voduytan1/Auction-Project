@@ -8,11 +8,11 @@ import type { LoginResponse } from "@/features/auth/types";
 
 export const oauthAPI = {
   /**
-   * POST /auth/google-login - Đăng nhập với Google
+   * POST /auth/google - Đăng nhập với Google
    * Response giống LoginResponse
    */
   loginWithGoogle: (credential: string) =>
-    api.post<LoginResponse>("/auth/google-login", {
-      credential,
+    api.post<LoginResponse>("/auth/google", {
+      token: credential,
     }),
 };
