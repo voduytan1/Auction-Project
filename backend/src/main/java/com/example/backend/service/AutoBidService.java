@@ -294,53 +294,83 @@ public class AutoBidService {
         }
 
         // Lấy autobid cao nhất (winner)
-        AutoBid highestAutoBid = autoBids.get(0);
+        AutoBid highestBid = autoBids.get(0);
+        User currentWinner = product.getCurrentBidder();
+
+        BigDecimal currentPrice = product.getGiaHienTai();
+        BigDecimal startPrice = product.getGiaKhoiDiem();
+        BigDecimal stepPrice = product.getBuocGia();
+
         BigDecimal newPrice;
 
         if (autoBids.size() == 1) {
-            // Chỉ có 1 người đấu giá
-            // Giá = max(giá khởi điểm, giá hiện tại) + bước giá
-            newPrice = product.getGiaHienTai().max(product.getGiaKhoiDiem()).add(product.getBuocGia());
-            
-            // Đảm bảo không vượt quá giá tối đa
-            if (newPrice.compareTo(highestAutoBid.getGiaToiDa()) > 0) {
-                newPrice = highestAutoBid.getGiaToiDa();
+            // Nếu người này ĐÃ LÀ Winner rồi -> DO NOTHING (Chặn lỗi tự nâng giá)
+            if (currentWinner != null && currentWinner.getUserid().equals(highestBid.getBidder().getUserid())) {
+                log.info("User {} tự update giá max nhưng đang là winner -> Giữ nguyên giá hiện tại", currentWinner.getUsername());
+                return null;
             }
-        } else {
-            // Có >= 2 người đấu giá
-            AutoBid secondHighestAutoBid = autoBids.get(1);
 
-            // Giá mới = min(giá tối đa của winner, giá tối đa của người thứ 2 + bước giá)
-            BigDecimal priceBasedOnSecond = secondHighestAutoBid.getGiaToiDa()
-                    .add(product.getBuocGia());
-            newPrice = highestAutoBid.getGiaToiDa().min(priceBasedOnSecond);
+            // Nếu là người đầu tiên đặt giá cho sản phẩm
+            // Giá = Giá khởi điểm
+            newPrice = startPrice;
+
+            // Đảm bảo không thấp hơn giá hiện tại (nếu có logic nào đó set giá trước đó)
+            newPrice = newPrice.max(currentPrice);
+        } else {
+            // Người về nhì (Người đẩy giá)
+            AutoBid secondHighestBid = autoBids.get(1);
+
+            // [QUAN TRỌNG] Logic chuẩn Proxy Bidding:
+            // Giá sàn để thắng = Giá Max của người về Nhì + 1 Bước giá
+            // (Đây là lý do tại sao dòng #3 và #5 trong ví dụ của bạn lại cộng thêm bước giá)
+            BigDecimal priceToBeat = secondHighestBid.getGiaToiDa().add(stepPrice);
+
+            // Giá mới không được vượt quá "Khả năng chi trả tối đa" của người thắng (Highest Bidder)
+            newPrice = priceToBeat.min(highestBid.getGiaToiDa());
+
+            // Safety check: Giá mới không được thấp hơn giá hiện tại
+            newPrice = newPrice.max(currentPrice);
+
+            // [CHECK LỖI SPAM]
+            // Nếu người Nhất đang giữ giá, và Giá tính toán (newPrice) bằng y hệt Giá hiện tại
+            // Thì không cần update lại DB làm gì.
+            if (currentWinner != null
+                    && currentWinner.getUserid().equals(highestBid.getBidder().getUserid())
+                    && newPrice.compareTo(currentPrice) == 0) {
+                return null;
+            }
         }
 
-        Product productResult = null;
-        // Chỉ cập nhật nếu giá mới > giá hiện tại
-        if (newPrice.compareTo(product.getGiaHienTai()) > 0) {
-            // Cập nhật giá sản phẩm
-            product.setGiaHienTai(newPrice);
-            product.setCurrentBidder(highestAutoBid.getBidder());
-            product.setSoLuotRaGia(product.getSoLuotRaGia() + 1);
-            productResult = productRepository.save(product);
+        // --- CẬP NHẬT DB VÀ GỬI SOCKET ---
+        // Update khi có sự thay đổi về Giá hoặc Người thắng
+        boolean priceChanged = newPrice.compareTo(currentPrice) != 0;
+        boolean winnerChanged = currentWinner == null || !currentWinner.getUserid().equals(highestBid.getBidder().getUserid());
 
-            // Ghi lịch sử
+        if (priceChanged || winnerChanged) {
+            product.setGiaHienTai(newPrice);
+            product.setCurrentBidder(highestBid.getBidder());
+            product.setSoLuotRaGia(product.getSoLuotRaGia() + 1);
+            Product productResult = productRepository.save(product);
+
+            // Ghi lịch sử đấu giá
             BidHistory bidHistory = BidHistory.builder()
                     .product(product)
-                    .bidder(highestAutoBid.getBidder())
+                    .bidder(highestBid.getBidder())
                     .giaDat(newPrice)
                     .build();
             bidHistory = bidHistoryRepository.save(bidHistory);
 
-            log.info("Product {} - Giá mới: {} - Winner: {}",
-                    product.getProductid(), newPrice, highestAutoBid.getBidder().getUsername());
+            log.info("Product {} - Update: Giá {} - Winner {}",
+                    product.getProductid(), newPrice, highestBid.getBidder().getUsername());
 
-            // ⚡ BROADCAST REAL-TIME UPDATE QUA WEBSOCKET
+            // Broadcast Socket
             webSocketEventPublisher.publishBidUpdate(product, "AUTO_BID");
             webSocketEventPublisher.publishNewBidHistory(bidHistory);
+
+            return productResult;
         }
-        return productResult;
+
+        return null;
     }
 
 
