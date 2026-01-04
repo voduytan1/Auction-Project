@@ -10,39 +10,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { XCircle } from "lucide-react";
-import { toast } from "sonner";
 
 interface CancelActionProps {
   currentUserRole: "buyer" | "seller";
-  onCancel: (reason: string) => void;
+  onCancel: () => void;
 }
 
-export function CancelAction({ currentUserRole, onCancel }: CancelActionProps) {
+export function CancelAction({ onCancel }: CancelActionProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [reason, setReason] = useState("");
 
   const handleCancel = () => {
-    if (!reason.trim()) {
-      toast.error("Vui lÃ²ng nháº­p lÃ½ do há»§y");
-      return;
-    }
-    onCancel(reason);
+    onCancel();
     setDialogOpen(false);
   };
 
   return (
     <>
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">hoặc</span>
-        </div>
-      </div>
+      <div className="border-t my-4" />
       <Button
         variant="destructive"
         onClick={() => setDialogOpen(true)}
@@ -59,23 +44,19 @@ export function CancelAction({ currentUserRole, onCancel }: CancelActionProps) {
               Hủy giao dịch
             </AlertDialogTitle>
             <AlertDialogDescription className="text-xs sm:text-sm">
-              Hành động này không thể hoàn tác. Người{" "}
-              {currentUserRole === "seller" ? "mua" : "bán"} sẽ nhận đánh giá -1
-              điểm.
+              Người thắng sẽ tự động nhận đánh giá <strong>-1 điểm</strong> với
+              nội dung: <em>"Người thắng không thanh toán"</em>.
+              <br />
+              <br />
+              Bạn có chắc chắn muốn hủy giao dịch này?
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="space-y-2">
-            <Label htmlFor="cancelReason">Lý do hủy</Label>
-            <Textarea
-              id="cancelReason"
-              placeholder="Nhập lý do hủy giao dịch..."
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-            />
-          </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Quay lại</AlertDialogCancel>
-            <AlertDialogAction onClick={handleCancel}>
+            <AlertDialogAction
+              onClick={handleCancel}
+              className="bg-destructive hover:bg-destructive/90"
+            >
               Xác nhận hủy
             </AlertDialogAction>
           </AlertDialogFooter>

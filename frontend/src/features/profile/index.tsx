@@ -89,7 +89,9 @@ export default function ProfilePage() {
 
     setIsLoading(true);
     try {
-      await profileAPI.changePassword(data);
+      const userId = profileData?.userid;
+      if (!userId) return;
+      await profileAPI.changePassword(userId, data);
       toast.success("Đổi mật khẩu thành công!");
       setIsPasswordDialogOpen(false);
     } catch (error) {

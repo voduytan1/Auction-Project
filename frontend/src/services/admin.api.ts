@@ -89,4 +89,93 @@ export const adminAPI = {
       `/admin/config`,
       data
     ),
+
+  // Dashboard endpoints
+  /**
+   * GET /admin/dashboard/upgrade-request/today - Get today's upgrade request chart
+   */
+  getUpgradeRequestToday: () =>
+    api.get<{
+      pending: number;
+      approved: number;
+      rejected: number;
+      total: number;
+    }>("/admin/dashboard/upgrade-request/today"),
+
+  /**
+   * GET /admin/dashboard/upgrade-request/this-week - Get this week's upgrade request chart
+   */
+  getUpgradeRequestWeek: () =>
+    api.get<{
+      pending: number;
+      approved: number;
+      rejected: number;
+      total: number;
+    }>("/admin/dashboard/upgrade-request/this-week"),
+
+  /**
+   * GET /admin/dashboard/upgrade-request/this-month - Get this month's upgrade request chart
+   */
+  getUpgradeRequestMonth: () =>
+    api.get<{
+      pending: number;
+      approved: number;
+      rejected: number;
+      total: number;
+    }>("/admin/dashboard/upgrade-request/this-month"),
+
+  /**
+   * GET /admin/dashboard/revenue/this-year - Get monthly revenue chart for this year
+   */
+  getRevenueThisYear: () =>
+    api.get<Array<{ month: number; revenue: number }>>(
+      "/admin/dashboard/revenue/this-year"
+    ),
+
+  /**
+   * GET /admin/dashboard/new-user/this-year - Get monthly new user chart for this year
+   */
+  getNewUserThisYear: () =>
+    api.get<Array<{ month: number; bidder: number; seller: number }>>(
+      "/admin/dashboard/new-user/this-year"
+    ),
+
+  /**
+   * GET /admin/dashboard/product/this-year - Get monthly product chart for this year
+   */
+  getProductThisYear: () =>
+    api.get<
+      Array<{ month: number; newProduct: number; completedProduct: number }>
+    >("/admin/dashboard/product/this-year"),
+
+  /**
+   * GET /admin/dashboard/categories - Get category distribution chart
+   */
+  getCategoryDistribution: () =>
+    api.get<
+      Array<{ categoryId: number; tenDanhMuc: string; soLuongSanPham: number }>
+    >("/admin/dashboard/categories"),
+
+  /**
+   * GET /admin/dashboard/stat - Get overall website statistics
+   */
+  getWebStats: () =>
+    api.get<{
+      usersCount: number;
+      userGrowth: number;
+      auctionsCount: number;
+      newAuctionsCount: number;
+      bidsCount: number;
+      newBidsCount: number;
+      revenue: number;
+      revenueGrowth: number;
+    }>("/admin/dashboard/stat"),
+
+  /**
+   * GET /admin/dashboard/top-auctions - Get top 3 auctions by price
+   */
+  getTopAuctions: () =>
+    api.get<
+      Array<{ tenSanPham: string; giaHienTai: number; soLuotRaGia: number }>
+    >("/admin/dashboard/top-auctions"),
 };

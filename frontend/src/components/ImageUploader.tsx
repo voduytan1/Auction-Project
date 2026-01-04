@@ -161,6 +161,7 @@ export function ImageUploader({
                   className="w-full h-full object-cover"
                 />
                 <button
+                  type="button"
                   onClick={() => handleRemoveImage(index)}
                   className="absolute top-2 right-2 p-1 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                 >

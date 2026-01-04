@@ -186,7 +186,7 @@ export function QASection({ productId, sellerId }: QASectionProps) {
                     {qa.diemDanhGiaNguoiHoi != null && (
                       <div className="flex items-center gap-1 text-xs text-accent">
                         <Star className="h-3 w-3 fill-current" />
-                        <span>{qa.diemDanhGiaNguoiHoi.toFixed(1)}</span>
+                        <span>{qa.diemDanhGiaNguoiHoi.toFixed(0)}%</span>
                       </div>
                     )}
                     <span className="text-xs text-slate-500">

@@ -89,8 +89,8 @@ services:
     container_name: logstash
     restart: on-failure
     environment:
-      - ES_USER=logstash_system
-      - ES_PWD=${LOGSTASH_SYSTEM_PASSWORD}
+      - ES_USER=elastic
+      - ES_PWD=${ELASTIC_PASSWORD}
       - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
     ports:
       - "5000:5000"

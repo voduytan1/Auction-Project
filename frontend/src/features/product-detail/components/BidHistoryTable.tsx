@@ -1,7 +1,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageLoader } from "@/components/PageLoader";
 import { Button } from "@/components/ui/button";
-import { History, Lock, ChevronLeft, ChevronRight } from "lucide-react";
+import { History, Lock, ChevronLeft, ChevronRight, Ban } from "lucide-react";
+import { useBidWebSocket } from "@/hooks/use-bid-websocket";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { productAPI } from "@/services/product.api";
 import type { BidHistory } from "../types";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
@@ -115,6 +128,15 @@ export function BidHistoryTable({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Block bidder states
+  const [blockDialogOpen, setBlockDialogOpen] = useState(false);
+  const [selectedBidder, setSelectedBidder] = useState<{
+    bidderId: string;
+    bidderName: string;
+  } | null>(null);
+  const [blockReason, setBlockReason] = useState("");
+  const [isBlocking, setIsBlocking] = useState(false);
+
   // Check if current user is the seller of this product
   const isOwner = useMemo(() => {
     if (!sellerId || !user?.userid) return false;
@@ -168,8 +190,65 @@ export function BidHistoryTable({
     fetchBidHistory();
   }, [isAuthenticated, fetchBidHistory]);
 
+  // WebSocket integration - update bid history directly from WebSocket data
+  useBidWebSocket({
+    productId,
+    onBidUpdate: useCallback(
+      (_message: unknown) => {
+        // When receiving bid update, refetch for owner (they see paginated data)
+        // For non-owners, onBidHistory will handle the update
+        if (isOwner) {
+          fetchBidHistory();
+        }
+      },
+      [isOwner, fetchBidHistory]
+    ),
+    onBidHistory: useCallback((messages: any[]) => {
+      // Directly update bid history from WebSocket (top N bids)
+      // This is sent to /topic/product/{id}/history
+      setBids(messages);
+      setTotal(messages.length);
+    }, []),
+    enabled: isAuthenticated,
+  });
+
   const totalPages = total > 0 ? Math.ceil(total / size) : 1;
   const shouldShowPagination = total > size;
+
+  const handleBlockBidder = (bidderId: string, bidderName: string) => {
+    setSelectedBidder({ bidderId, bidderName });
+    setBlockReason("");
+    setBlockDialogOpen(true);
+  };
+
+  const confirmBlockBidder = async () => {
+    if (!selectedBidder) return;
+
+    try {
+      setIsBlocking(true);
+      await productAPI.blockBidder({
+        productid: productId,
+        bidderid: selectedBidder.bidderId,
+        lyDo: blockReason.trim() || undefined,
+      });
+
+      toast.success(`Đã từ chối lượt ra giá của ${selectedBidder.bidderName}`);
+      setBlockDialogOpen(false);
+      setSelectedBidder(null);
+      setBlockReason("");
+
+      // Refresh bid history
+      fetchBidHistory();
+    } catch (error) {
+      console.error("Error blocking bidder:", error);
+      const axiosError = error as AxiosError<ApiErrorResponse>;
+      toast.error(
+        axiosError.response?.data?.message || "Không thể từ chối lượt ra giá"
+      );
+    } finally {
+      setIsBlocking(false);
+    }
+  };
 
   return (
     <Card className="relative">
@@ -199,6 +278,11 @@ export function BidHistoryTable({
                     <th className="pr-4 sm:pr-0 pb-3 text-right text-xs sm:text-sm font-semibold text-slate-600">
                       Giá
                     </th>
+                    {isOwner && user?.vaitro === "SELLER" && (
+                      <th className="pr-4 sm:pr-0 pb-3 text-right text-xs sm:text-sm font-semibold text-slate-600">
+                        Hành động
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -217,7 +301,7 @@ export function BidHistoryTable({
                       </td>
                       <td className="py-3 max-w-25 truncate sm:max-w-none">
                         <span className="font-mono text-xs sm:text-sm font-semibold">
-                          {bid.bidderName}
+                          {bid.tenBidder || bid.bidderName}
                         </span>
                         {index === 0 && (
                           <span className="hidden sm:inline-block ml-2 rounded-full bg-accent px-2 py-0.5 text-xs text-white">
@@ -234,6 +318,25 @@ export function BidHistoryTable({
                           {formatCurrency(bid.giaDat)}
                         </span>
                       </td>
+                      {isOwner && user?.vaitro === "SELLER" && (
+                        <td className="pr-4 sm:pr-0 py-3 text-right">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() =>
+                              handleBlockBidder(
+                                bid.bidderId ?? "",
+                                bid.tenBidder ?? ""
+                              )
+                            }
+                            disabled={!bid.bidderId}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            <Ban className="h-4 w-4 mr-1" />
+                            Từ chối
+                          </Button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -262,6 +365,53 @@ export function BidHistoryTable({
       {!isAuthenticated && (
         <LoginOverlay onLogin={() => navigate("/auth/login")} />
       )}
+
+      <Dialog open={blockDialogOpen} onOpenChange={setBlockDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Từ chối lượt ra giá</DialogTitle>
+            <DialogDescription>
+              Bạn có chắc muốn từ chối lượt ra giá của{" "}
+              <span className="font-semibold">
+                {selectedBidder?.bidderName}
+              </span>
+              ?
+              <br />
+              <span className="text-destructive font-medium">
+                Người này sẽ không thể đấu giá sản phẩm này nữa.
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <Label htmlFor="reason">Lý do từ chối (tùy chọn)</Label>
+            <Textarea
+              id="reason"
+              placeholder="Nhập lý do từ chối..."
+              value={blockReason}
+              onChange={(e) => setBlockReason(e.target.value)}
+              rows={4}
+            />
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setBlockDialogOpen(false)}
+              disabled={isBlocking}
+            >
+              Hủy
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmBlockBidder}
+              disabled={isBlocking}
+            >
+              {isBlocking ? "Đang xử lý..." : "Xác nhận từ chối"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

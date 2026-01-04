@@ -97,7 +97,7 @@ export function RateUserDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-125">
         <DialogHeader>
           <DialogTitle>Đánh giá {targetRole}</DialogTitle>
           <DialogDescription>
@@ -165,7 +165,7 @@ export function RateUserDialog({
               <MessageSquare className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Textarea
                 id="comment"
-                className="pl-10 min-h-[120px]"
+                className="pl-10 min-h-30"
                 {...register("comment", {
                   required: "Vui lòng nhập nhận xét",
                   minLength: {

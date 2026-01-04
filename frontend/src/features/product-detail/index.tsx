@@ -1,7 +1,8 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { productAPI, type ProductResponse } from "@/services/product.api";
-import { BidNotification } from "@/components/BidNotification";
+import { useBidWebSocket } from "@/hooks/use-bid-websocket";
+import type { BidUpdateMessage, ProductStatusMessage } from "@/types/websocket";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +34,7 @@ const ProductDetail = () => {
   const [showWinnerDialog, setShowWinnerDialog] = useState(false);
   const [showSellerDialog, setShowSellerDialog] = useState(false);
   const [isProcessingPayment] = useState(false);
+  const [isUserActionInProgress, setIsUserActionInProgress] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -61,7 +63,8 @@ const ProductDetail = () => {
       !product ||
       !isAuthenticated ||
       !user ||
-      product.trangThai !== "COMPLETED"
+      product.trangThai !== "COMPLETED" ||
+      isUserActionInProgress // Don't auto-show dialog if user just performed buy now action
     ) {
       return;
     }
@@ -75,7 +78,7 @@ const ProductDetail = () => {
     } else if (isSeller) {
       setShowSellerDialog(true);
     }
-  }, [product, user, isAuthenticated]);
+  }, [product, user, isAuthenticated, isUserActionInProgress]);
 
   const handlePayNow = () => {
     if (!product?.transactionId) {
@@ -87,6 +90,56 @@ const ProductDetail = () => {
     navigate(`/transactions/${product.transactionId}/detail`);
     setShowWinnerDialog(false);
   };
+
+  const handleRefreshProduct = async () => {
+    if (!id) return;
+    try {
+      const response = await productAPI.getById(id);
+      setProduct(response.data);
+    } catch (err) {
+      console.error("Error refetching product:", err);
+      toast.error("Không thể cập nhật thông tin sản phẩm");
+    }
+  };
+
+  // WebSocket integration - update product data directly
+  useBidWebSocket({
+    productId: product?.productid,
+    onBidUpdate: useCallback(
+      (message: BidUpdateMessage) => {
+        // Update current price from WebSocket message
+        if (product && message.giaHienTai !== undefined) {
+          setProduct((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              giaHienTai: message.giaHienTai,
+              soLuotRaGia: message.soLuotRaGia || prev.soLuotRaGia,
+            };
+          });
+        }
+      },
+      [product]
+    ),
+    onProductStatus: useCallback(
+      (message: ProductStatusMessage) => {
+        // Update product status, winner info
+        if (product) {
+          setProduct((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              trangThai: message.status as ProductResponse["trangThai"],
+              bidderId: message.winnerId || prev.bidderId,
+              tenBidder: message.winnerName || prev.tenBidder,
+            };
+          });
+        }
+      },
+      [product]
+    ),
+    enabled: isAuthenticated && !!product,
+  });
 
   if (loading) {
     return <PageLoader message="Đang tải sản phẩm..." />;
@@ -105,15 +158,6 @@ const ProductDetail = () => {
 
   return (
     <div className="lg:px-20">
-      {/* Bid Real-time Notification - Only for seller */}
-      {id &&
-        isAuthenticated &&
-        user &&
-        product &&
-        String(product.sellerId) === String(user.userid) && (
-          <BidNotification productId={Number(id)} />
-        )}
-
       {/* Winner Dialog */}
       <Dialog open={showWinnerDialog} onOpenChange={setShowWinnerDialog}>
         <DialogContent className="sm:max-w-sm">
@@ -196,12 +240,26 @@ const ProductDetail = () => {
               . Hãy chờ người mua thanh toán và hoàn tất giao dịch.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4">
             <Button
+              variant="outline"
               onClick={() => setShowSellerDialog(false)}
-              className="w-full"
+              className="flex-1"
             >
-              Đã hiểu
+              Để sau
+            </Button>
+            <Button
+              onClick={() => {
+                if (!product?.transactionId) {
+                  toast.error("Không tìm thấy thông tin giao dịch");
+                  return;
+                }
+                navigate(`/transactions/${product.transactionId}/detail`);
+                setShowSellerDialog(false);
+              }}
+              className="flex-1"
+            >
+              Xem chi tiết
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -266,7 +324,22 @@ const ProductDetail = () => {
           */}
           <div className="order-2 mt-6 lg:mt-0 lg:col-span-5 lg:row-span-2">
             <div className="lg:sticky lg:top-20 space-y-4">
-              <ProductInfo product={product} />
+              <ProductInfo
+                product={product}
+                onRefreshProduct={handleRefreshProduct}
+                onProductUpdate={(updates) => {
+                  setProduct((prev) => {
+                    if (!prev) return prev;
+                    return { ...prev, ...updates };
+                  });
+                  // Set flag to prevent auto winner dialog when user performs buy now
+                  if (updates.trangThai === "COMPLETED") {
+                    setIsUserActionInProgress(true);
+                    // Reset flag after a short delay to allow dialog to be controlled manually
+                    setTimeout(() => setIsUserActionInProgress(false), 2000);
+                  }
+                }}
+              />
             </div>
           </div>
 

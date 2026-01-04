@@ -28,7 +28,7 @@ export function RelatedProducts({
         });
         // Filter out current product and limit to 5
         // Response is already unwrapped by interceptor to ProductResponse[]
-        const data = Array.isArray(response) ? response : [];
+        const data = Array.isArray(response.data) ? response.data : [];
         const filtered = data
           .filter((p: ProductResponse) => p.productid !== currentProductId)
           .slice(0, 5);

@@ -26,6 +26,10 @@ api.interceptors.request.use(
     const store = window.__REDUX_STORE__;
     const accessToken = store?.getState()?.auth?.accessToken;
 
+    console.log("🔑 Access Token:", accessToken);
+    console.log("📡 Request URL:", config.url);
+    console.log("📝 Request Method:", config.method?.toUpperCase());
+
     if (accessToken && config.headers) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
@@ -74,7 +78,7 @@ api.interceptors.response.use(
       try {
         // Refresh token - BE sẽ đọc refresh_token từ cookie
         const response = await axios.post(
-          `${API_BASE_URL}/auth/refresh`,
+          `${env.API_URL}/auth/refresh`,
           {},
           {
             withCredentials: true, // Gửi cookie

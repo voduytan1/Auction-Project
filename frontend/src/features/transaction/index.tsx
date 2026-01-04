@@ -1,7 +1,6 @@
-﻿import { useState } from "react";
+﻿import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import { PageWrapper } from "@/components/PageWrapper";
-import { TransactionNotification } from "@/components/TransactionNotification";
 import { TransactionStepper } from "./components/TransactionStepper";
 import { HorizontalStepper } from "./components/HorizontalStepper";
 import { TransactionSummary } from "./components/TransactionSummary";
@@ -16,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageLoader } from "@/components/PageLoader";
 import { useAppSelector } from "@/hooks/use-redux";
 import { useFetch } from "@/hooks/use-fetch";
+import { useTransactionWebSocket } from "@/hooks/use-transaction-websocket";
 import { transactionAPI } from "@/services/transaction.api";
 import { ratingAPI } from "@/services/rating.api";
 import { ArrowLeft, AlertCircle, Star } from "lucide-react";
@@ -38,22 +38,66 @@ export default function TransactionDetailPage() {
     data: transaction,
     loading,
     error,
-    refetch,
   } = useFetch(() =>
     transactionAPI
       .getTransactionById(Number(transactionId))
       .then((res) => res.data)
   );
 
-  // Redirect if not authenticated
-  if (!isAuthenticated || !user) {
-    navigate("/auth/login");
-    return null;
-  }
-
   // Use local state if available, otherwise use fetched data
   const currentTransaction: Transaction | null =
     localTransaction || transaction;
+
+  // Check if current user is involved in this transaction
+  const isUserInvolved =
+    user?.userid === currentTransaction?.buyerId ||
+    user?.userid === currentTransaction?.sellerId;
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      navigate("/auth/login");
+    }
+  }, [isAuthenticated, user, navigate]);
+
+  // WebSocket integration for real-time transaction updates
+  const handleTransactionStatusChange = (message: TransactionStatusMessage) => {
+    // Update transaction directly from WebSocket message (no refetch needed)
+    if (currentTransaction) {
+      setLocalTransaction({
+        ...currentTransaction,
+        transactionId: message.transactionId,
+        productId: message.productId,
+        tenSanPham: message.tenSanPham,
+        anhDaiDienSanPham: message.anhDaiDienSanPham,
+        buyerId: message.buyerId,
+        tenNguoiMua: message.tenNguoiMua,
+        sellerId: message.sellerId,
+        tenNguoiBan: message.tenNguoiBan,
+        gia: message.gia,
+        trangThai: message.trangThai as Transaction["trangThai"],
+        diaChiGiaoHang: message.diaChiGiaoHang,
+        maVanDon: message.maVanDon,
+        phuongThucThanhToan: message.phuongThucThanhToan,
+        thoiGianThanhToan: message.thoiGianThanhToan,
+        thoiGianGiaoHang: message.thoiGianGiaoHang,
+        thoiGianNhanHang: message.thoiGianNhanHang,
+      });
+    }
+  };
+
+  useTransactionWebSocket({
+    transactionId: Number(transactionId),
+    onStatusChange: handleTransactionStatusChange,
+    enabled: isAuthenticated && isUserInvolved,
+  });
+
+  // Sync localTransaction with fetched transaction when it changes
+  useEffect(() => {
+    if (transaction) {
+      setLocalTransaction(transaction);
+    }
+  }, [transaction]);
 
   if (loading) {
     return (
@@ -70,7 +114,9 @@ export default function TransactionDetailPage() {
 
   if (error || !currentTransaction) {
     const backRoute =
-      user?.vaitro === "SELLER" ? "/seller/my-sales" : "/bidder/purchases";
+      user?.vaitro === "SELLER"
+        ? "/seller/profile?tab=sold-products"
+        : "/bidder/profile?tab=won-auctions";
     return (
       <PageWrapper title="Lỗi">
         <div className="container mx-auto px-4 py-4 sm:py-8">
@@ -100,11 +146,6 @@ export default function TransactionDetailPage() {
       ? "buyer"
       : "seller";
 
-  // Check if current user is involved in this transaction
-  const isUserInvolved =
-    user?.userid === currentTransaction?.buyerId ||
-    user?.userid === currentTransaction?.sellerId;
-
   const currentStep = getStepFromStatus(
     (currentTransaction as Transaction)?.trangThai
   );
@@ -113,8 +154,7 @@ export default function TransactionDetailPage() {
 
   // Action handlers
   const handlePaymentComplete = () => {
-    // Reload transaction after payment
-    refetch();
+    // WebSocket will update transaction status automatically
     toast.success("Thanh toán thành công");
   };
 
@@ -172,8 +212,7 @@ export default function TransactionDetailPage() {
       });
 
       toast.success(`Đã đánh giá ${rating === 1 ? "+1" : "-1"} điểm`);
-      // Reload transaction để cập nhật trạng thái
-      refetch();
+      // WebSocket will update transaction status automatically
     } catch (error) {
       toast.error((error as Error).message || "Lỗi khi đánh giá");
     }
@@ -191,29 +230,8 @@ export default function TransactionDetailPage() {
     }
   };
 
-  // Handle transaction status change from WebSocket
-  const handleTransactionStatusChange = (message: TransactionStatusMessage) => {
-    // Update local transaction with new status
-    if (currentTransaction) {
-      setLocalTransaction({
-        ...currentTransaction,
-        trangThai: message.trangThai as any,
-      });
-      // Refetch to get full updated data
-      refetch();
-    }
-  };
-
   return (
     <PageWrapper title={`Giao dịch #${transactionId}`}>
-      {/* Transaction Status Update Notification - Only for buyer/seller */}
-      {transactionId && isUserInvolved && (
-        <TransactionNotification
-          transactionId={Number(transactionId)}
-          onStatusChange={handleTransactionStatusChange}
-        />
-      )}
-
       <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
         <div className="mb-4 flex gap-2 items-center">
           <Button
@@ -221,8 +239,8 @@ export default function TransactionDetailPage() {
             onClick={() =>
               navigate(
                 currentUserRole === "seller"
-                  ? "/seller/my-sales"
-                  : "/bidder/purchases"
+                  ? "/seller/profile?tab=sold-products"
+                  : "/bidder/profile?tab=won-auctions"
               )
             }
             size="sm"
