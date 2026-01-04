@@ -61,13 +61,16 @@ public class User {
     LocalDate ngaySinh;
 
     @Column(name = "diem_danh_gia")
-    Double diemDanhGia = Double.NaN;
+    Double diemDanhGia = 0.0;
 
     @Column(name = "so_luong_danh_gia")
     Integer soLuongDanhGia = 0;
 
     @Column(name = "anh_dai_dien", length = 255)
     String anhDaiDien;
+
+    @Enumerated(EnumType.STRING)
+    AuthProvider provider =  AuthProvider.LOCAL;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

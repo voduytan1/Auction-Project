@@ -49,4 +49,5 @@ public interface UserRepository extends JpaRepository<@NotNull User, @NotNull UU
 
     Long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 
+    Optional<User> findByEmail(String email);
 }

@@ -1,13 +1,19 @@
 package com.example.backend.service;
 
 import com.example.backend.dto.auth.*;
+import com.example.backend.entity.AuthProvider;
 import com.example.backend.entity.JWTToken;
 import com.example.backend.entity.User;
+import com.example.backend.exception.ForbiddenException;
 import com.example.backend.exception.JwtAuthenticationException;
 import com.example.backend.mapper.JWTTokenMapper;
 import com.example.backend.repository.RedisRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.utils.AuthUtils;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -20,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -44,11 +51,16 @@ public class AuthService {
     @Value("${jwt.refreshToken.expirationTime}")
     private int refreshTokenExpirationTime;
 
+    @Value("${google.client-id}")
+    private String googleClientId;
+
 
 
     public LoginResponseWithRefreshToken login(LoginRequest loginRequest) {
         User user = userService.fineOne(loginRequest.getUsername()).orElseThrow(() -> new RuntimeException("Username không tồn tại"));
-
+        if(user.getProvider().equals(AuthProvider.GOOGLE)){
+            throw new ForbiddenException("Tài khoản này phải đăng nhập thông qua google login");
+        }
         if (passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             String userId = user.getUserid().toString();
 
@@ -160,5 +172,78 @@ public class AuthService {
 
         return login(loginRequest);
 
+    }
+
+    public LoginResponseWithRefreshToken loginWithGoogle(String idTokenString) {
+        try {
+            // 1. Cấu hình bộ verify của Google
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
+                    .setAudience(Collections.singletonList(googleClientId))
+                    .build();
+
+            // 2. Xác thực token gửi lên
+            GoogleIdToken idToken = verifier.verify(idTokenString);
+            if (idToken == null) {
+                throw new RuntimeException("Token Google không hợp lệ!");
+            }
+
+            // 3. Lấy thông tin user từ Google
+            GoogleIdToken.Payload payload = idToken.getPayload();
+            String email = payload.getEmail();
+            String name = (String) payload.get("name");
+            String pictureUrl = (String) payload.get("picture");
+
+            // 4. Kiểm tra xem user đã tồn tại trong DB chưa
+            User user = userRepository.findByEmail(email).orElse(null);
+
+            if (user == null) {
+                user = new User();
+                user.setEmail(email);
+                user.setHoVaTen(name);
+                user.setUsername(email);
+                user.setPassword("");
+                user.setAnhDaiDien(pictureUrl);
+                user.setProvider(AuthProvider.GOOGLE); // Nên thêm field này để phân biệt
+
+                user = userRepository.save(user);
+            }else{
+                if (user.getProvider() == null) {
+                    user.setProvider(AuthProvider.GOOGLE);
+                    userRepository.save(user);
+                }
+            }
+
+            String userId = user.getUserid().toString();
+
+            JWTToken deleteToken = redisService.findByUserId(userId).orElse(null);
+            //Xóa refreshToken cũ nếu đã tồn tại
+            if(deleteToken != null){
+                redisRepository.deleteById(deleteToken.getJti());
+            }
+            // Sinh ra cặp token mới
+            TokenPair tokenPair = authUtils.generateTokenPair(user);
+
+            redisService.createAndSaveJwtToken(tokenPair, userId, jwtTokenMapper, redisRepository);
+
+            return LoginResponseWithRefreshToken.builder()
+                    .accessToken(tokenPair.getAccessToken())
+                    .refreshToken(tokenPair.getRefreshToken())
+                    .userid(String.valueOf(user.getUserid()))
+                    .username(user.getUsername())
+                    .vaitro(user.getVaitro())
+                    .thoiHanBanHang(user.getThoiHanBanHang())
+                    .diaChi(user.getDiaChi())
+                    .hoVaTen(user.getHoVaTen())
+                    .ngaySinh(user.getNgaySinh())
+                    .soDienThoai(user.getSoDienThoai())
+                    .anhDaiDien(user.getAnhDaiDien())
+                    .diemDanhGia(user.getDiemDanhGia())
+                    .soLuongDanhGia(user.getSoLuongDanhGia())
+                    .email(user.getEmail())
+                    .build();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi xác thực Google: " + e.getMessage());
+        }
     }
 }

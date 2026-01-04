@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -45,6 +46,17 @@ public class AuthController {
         cookieUtils.setRefreshTokenCookie(response, fullResponse.getRefreshToken());
 
         return ApiResponse.success(authMapper.toLoginResponse(fullResponse));
+    }
+
+    @PostMapping("/google")
+    public ApiResponse<LoginResponse> googleLogin(@RequestBody GoogleLoginRequest googleLoginRequest, HttpServletRequest request, HttpServletResponse response) {
+        LoginResponseWithRefreshToken fullResponse = authService.loginWithGoogle(googleLoginRequest.getToken());
+
+
+        cookieUtils.setRefreshTokenCookie(response, fullResponse.getRefreshToken());
+
+        return ApiResponse.success(authMapper.toLoginResponse(fullResponse));
+
     }
 
     @PostMapping("/refresh")
