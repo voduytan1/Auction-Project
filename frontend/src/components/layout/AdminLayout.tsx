@@ -38,7 +38,7 @@ const AdminLayout = () => {
   ];
 
   return (
-    <div className="min-h-screen flex bg-muted/30">
+    <div className="h-screen flex bg-muted/30 overflow-hidden">
       {/* Mobile Overlay */}
       {mobileSidebarOpen && (
         <div
@@ -50,7 +50,7 @@ const AdminLayout = () => {
       {/* Sidebar */}
       <aside
         className={cn(
-          "bg-card border-r shadow-sm transition-all duration-300 flex flex-col fixed lg:relative inset-y-0 left-0 z-50",
+          "bg-card border-r shadow-sm transition-all duration-300 flex flex-col fixed lg:relative inset-y-0 left-0 z-50 h-full",
           "lg:translate-x-0",
           mobileSidebarOpen ? "translate-x-0" : "-translate-x-full",
           sidebarOpen ? "w-64" : "w-20"
@@ -172,9 +172,9 @@ const AdminLayout = () => {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Header */}
-        <header className="h-14 sm:h-16 bg-card border-b flex items-center px-3 sm:px-4 md:px-6 shadow-sm">
+        <header className="h-14 sm:h-16 bg-card border-b flex items-center px-3 sm:px-4 md:px-6 shadow-sm flex-shrink-0">
           <div className="flex items-center justify-between w-full gap-2 sm:gap-4">
             {/* Mobile Menu Button */}
             <Button
@@ -189,7 +189,10 @@ const AdminLayout = () => {
             <div className="flex-1 min-w-0">
               <h1 className="text-base sm:text-lg md:text-xl font-semibold truncate">
                 {navItems.find((item) => item.to === location.pathname)
-                  ?.label || "Admin Panel"}
+                  ?.label ||
+                  (location.pathname === "/admin/settings"
+                    ? "Cài đặt"
+                    : "Admin Panel")}
               </h1>
             </div>
             {user && <UserDropdown user={user} />}
@@ -197,7 +200,7 @@ const AdminLayout = () => {
         </header>
 
         {/* Content */}
-        <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto">
+        <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-y-auto">
           <Outlet />
         </main>
       </div>

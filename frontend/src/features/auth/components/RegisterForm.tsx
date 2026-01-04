@@ -4,10 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { toast } from "sonner";
 import { useState, useEffect, useCallback } from "react";
-import { FcGoogle } from "react-icons/fc";
-import { FaFacebook, FaGithub } from "react-icons/fa";
-import { FaXTwitter } from "react-icons/fa6";
 import { Eye, EyeOff } from "lucide-react";
+import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
 import {
   Card,
   CardContent,
@@ -304,60 +302,8 @@ export function RegisterForm() {
           </div>
 
           {/* OAuth Buttons */}
-          <div className="grid grid-cols-2 gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                // TODO: Implement Google OAuth
-                console.log("Google register");
-              }}
-              disabled={isLoading}
-            >
-              <FcGoogle className="mr-2 h-5 w-5" />
-              Google
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                // TODO: Implement Facebook OAuth
-                console.log("Facebook register");
-              }}
-              disabled={isLoading}
-            >
-              <FaFacebook className="mr-2 h-5 w-5 text-[#1877F2]" />
-              Facebook
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                // TODO: Implement GitHub OAuth
-                console.log("GitHub register");
-              }}
-              disabled={isLoading}
-            >
-              <FaGithub className="mr-2 h-5 w-5" />
-              GitHub
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                // TODO: Implement Twitter OAuth
-                console.log("Twitter register");
-              }}
-              disabled={isLoading}
-            >
-              <FaXTwitter className="mr-2 h-5 w-5" />
-              Twitter
-            </Button>
+          <div className="flex justify-center">
+            <GoogleLoginButton disabled={isLoading} />
           </div>
           <div className="text-center text-sm mt-4">
             Đã có tài khoản?{" "}

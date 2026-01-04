@@ -14,7 +14,7 @@ export interface User {
   updatedAt?: string;
   // Computed fields for UI
   soLuongDanhGia?: number; // Number of ratings received (computed)
-  tyLeDanhGiaTot?: number; // Percentage of positive ratings 0-100 (computed)
+  tyLeDanhGiaTot?: number; 
 }
 
 export interface LoginRequest {
