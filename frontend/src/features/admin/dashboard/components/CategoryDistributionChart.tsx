@@ -42,7 +42,7 @@ export function CategoryDistributionChart() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Phân bố theo danh mục</CardTitle>
+          <CardTitle>PHÂN BỐ THEO DANH MỤC</CardTitle>
         </CardHeader>
         <CardContent className="flex items-center justify-center h-75">
           <p className="text-muted-foreground">Đang tải...</p>
@@ -73,14 +73,14 @@ export function CategoryDistributionChart() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Phân bố theo danh mục</CardTitle>
+        <CardTitle>PHÂN BỐ THEO DANH MỤC</CardTitle>
         <p className="text-sm text-muted-foreground">
           Tổng số: {totalProducts} sản phẩm
         </p>
       </CardHeader>
       <CardContent>
         {chartData.length === 0 ? (
-          <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+          <div className="flex items-center justify-center h-75 text-muted-foreground">
             <p>Chưa có sản phẩm nào</p>
           </div>
         ) : (

@@ -1,6 +1,7 @@
 import axios, { AxiosError } from "axios";
 import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
 import type { AppStore } from "@/store";
+import type { RefreshTokenResponse } from "@/features/auth/types";
 import { env } from "@/config/env";
 
 // Declare window.__REDUX_STORE__ type
@@ -25,10 +26,6 @@ api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const store = window.__REDUX_STORE__;
     const accessToken = store?.getState()?.auth?.accessToken;
-
-    console.log("🔑 Access Token:", accessToken);
-    console.log("📡 Request URL:", config.url);
-    console.log("📝 Request Method:", config.method?.toUpperCase());
 
     if (accessToken && config.headers) {
       config.headers.Authorization = `Bearer ${accessToken}`;
@@ -77,7 +74,7 @@ api.interceptors.response.use(
 
       try {
         // Refresh token - BE sẽ đọc refresh_token từ cookie
-        const response = await axios.post(
+        const response = await axios.post<{ data: RefreshTokenResponse }>(
           `${env.API_URL}/auth/refresh`,
           {},
           {
@@ -86,24 +83,11 @@ api.interceptors.response.use(
         );
 
         const refreshData = response.data.data;
-        const { accessToken } = refreshData;
+        const { accessToken, ...userData } = refreshData;
 
-        // Transform to User object
-        const user = {
-          userid: refreshData.userid,
-          username: refreshData.username,
-          email: refreshData.email,
-          vaitro: refreshData.vaitro,
-          thoiHanBanHang: refreshData.thoiHanBanHang,
-          hoVaTen: refreshData.hoVaTen,
-          diaChi: refreshData.diaChi,
-          soDienThoai: refreshData.soDienThoai,
-          ngaySinh: refreshData.ngaySinh,
-          diemDanhGia: refreshData.diemDanhGia,
-          soLuotDanhGia: refreshData.soLuongDanhGia,
-          anhDaiDien: refreshData.anhDaiDien,
-          tyLeDanhGiaTot: 85, // Default
-        };
+        // RefreshTokenResponse already matches User interface
+        // No need to transform field names
+        const user = userData;
 
         // Dispatch action to update token + user in Redux
         const store = window.__REDUX_STORE__;

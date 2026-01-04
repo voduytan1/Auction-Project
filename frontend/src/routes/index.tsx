@@ -239,20 +239,11 @@ export const router = createBrowserRouter([
       {
         path: "users",
         element: (
-          <PageWrapper title="Quản lý Users - Admin">
+          <PageWrapper title="Quản lý Người dùng - Admin">
             <UsersPage />
           </PageWrapper>
         ),
       },
-      // Note: Admin does NOT manage auctions (per requirements)
-      // {
-      //   path: "auctions",
-      //   element: (
-      //     <PageWrapper title="Quản lý Auctions - Admin">
-      //       <AuctionsPage />
-      //     </PageWrapper>
-      //   ),
-      // },
       {
         path: "categories",
         element: (

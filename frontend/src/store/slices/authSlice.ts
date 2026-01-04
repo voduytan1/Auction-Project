@@ -206,6 +206,26 @@ const authSlice = createSlice({
         state.isInitializing = false;
       });
 
+    // Google Login - xử lý giống hệt loginUser
+    builder
+      .addCase(loginWithGoogle.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+        state.isInitializing = true;
+      })
+      .addCase(loginWithGoogle.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload.user;
+        state.accessToken = action.payload.accessToken;
+        state.isAuthenticated = true;
+        state.isInitializing = false;
+      })
+      .addCase(loginWithGoogle.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+        state.isInitializing = false;
+      });
+
     // Logout
     builder.addCase(logoutUser.fulfilled, (state) => {
       state.user = null;

@@ -84,7 +84,7 @@ export function UpgradeRequestChart() {
       <CardHeader>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <CardTitle>Yêu cầu nâng cấp Seller</CardTitle>
+            <CardTitle>YÊU CẦU NÂNG CẤP SELLER</CardTitle>
             <p className="text-sm text-muted-foreground">
               Tổng số: {data.total} yêu cầu
             </p>
@@ -127,7 +127,7 @@ export function UpgradeRequestChart() {
       </CardHeader>
       <CardContent>
         {data.total === 0 ? (
-          <div className="flex flex-col items-center justify-center h-75 text-muted-foreground">
+          <div className="flex flex-col items-center justify-center h-62.5 text-muted-foreground">
             <p className="text-lg font-medium">
               {period === "today"
                 ? "Hôm nay chưa có yêu cầu"
@@ -159,7 +159,7 @@ export function UpgradeRequestChart() {
               </Pie>
               <Tooltip />
               <Legend
-                payload={chartData.map((item, _index) => ({
+                payload={chartData.map((item) => ({
                   value: `${item.name}: ${item.value}`,
                   type: "circle",
                   color: item.color,

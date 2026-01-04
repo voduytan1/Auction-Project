@@ -13,11 +13,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
-import type { ChangePasswordData } from "../../types";
+import type { ChangePasswordData } from "@/features/profile/types";
 
 const passwordSchema = z
   .object({
-    currentPassword: z.string().min(1, "Vui lòng nhập mật khẩu hiện tại"),
+    oldPassword: z.string().min(1, "Vui lòng nhập mật khẩu hiện tại"),
     newPassword: z.string().min(6, "Mật khẩu mới phải có ít nhất 6 ký tự"),
     confirmPassword: z.string().min(1, "Vui lòng xác nhận mật khẩu mới"),
   })
@@ -42,7 +42,7 @@ export function ChangePasswordForm({
   const form = useForm<z.infer<typeof passwordSchema>>({
     resolver: zodResolver(passwordSchema),
     defaultValues: {
-      currentPassword: "",
+      oldPassword: "",
       newPassword: "",
       confirmPassword: "",
     },
@@ -58,7 +58,7 @@ export function ChangePasswordForm({
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <FormField
           control={form.control}
-          name="currentPassword"
+          name="oldPassword"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Mật khẩu hiện tại</FormLabel>

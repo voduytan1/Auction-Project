@@ -1,4 +1,4 @@
-import { CategoriesTable } from "@/features/admin";
+import { CategoriesTable } from "@/features/admin/categories";
 
 const CategoriesPage = () => {
   return (

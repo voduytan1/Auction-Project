@@ -25,7 +25,7 @@ import type {
   UserProfile,
   UpdateProfileData,
   ChangePasswordData,
-} from "../types";
+} from "@/features/profile/types";
 
 export default function AdminProfilePage() {
   const { user } = useAppSelector((state) => state.auth);
@@ -83,11 +83,7 @@ export default function AdminProfilePage() {
 
     setIsLoading(true);
     try {
-      await profileAPI.changePassword(profileData.userid, {
-        oldPassword: data.currentPassword,
-        newPassword: data.newPassword,
-        confirmPassword: data.confirmPassword,
-      });
+      await profileAPI.changePassword(profileData.userid, data);
       toast.success("Đổi mật khẩu thành công!");
     } catch (error) {
       const err = error as { response?: { data?: { message?: string } } };

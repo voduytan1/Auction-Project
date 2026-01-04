@@ -6,11 +6,12 @@ interface PaginationParams {
   page?: number;
   search?: string;
   sortBy?: string;
+  sortOrder?: "asc" | "desc";
 }
 
 interface PaginatedResponse<T> {
   data: T[];
-  pagination: {
+  metadata: {
     page: number;
     size: number;
     totalElements: number;

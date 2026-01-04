@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
-import type { UserProfile, UpdateProfileData } from "../../types";
+import type { UserProfile, UpdateProfileData } from "@/features/profile/types";
 
 const profileSchema = z.object({
   hoVaTen: z.string().min(1, "Họ tên không được để trống"),

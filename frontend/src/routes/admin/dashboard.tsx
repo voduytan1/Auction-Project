@@ -1,4 +1,6 @@
-import { StatsGrid, TopAuctions } from "@/features/admin";
+import { StatsGrid } from "@/features/admin/dashboard/components/StatsGrid";
+import { TopAuctions } from "@/features/admin/dashboard/components/TopAuctions";
+
 
 const DashboardPage = () => {
   return (
