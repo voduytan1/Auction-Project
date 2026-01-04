@@ -33,7 +33,7 @@ export function TopAuctions() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Top 3 Đấu giá cao nhất</CardTitle>
+        <CardTitle>TOP 3 ĐẤU GIÁ CAO NHẤT</CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -47,7 +47,7 @@ export function TopAuctions() {
           </div>
         ) : topAuctions.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Chưa có dữ liệu auctions
+            Hiện tại không có đấu giá nào.
           </p>
         ) : (
           <div className="space-y-4">

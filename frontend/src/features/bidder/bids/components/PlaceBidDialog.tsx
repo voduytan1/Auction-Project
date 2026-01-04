@@ -52,8 +52,8 @@ export function PlaceBidDialog({
 
   const minBidAmount = currentPrice + minBidStep;
 
-  // Rating validation
-  const userRating = currentUser?.tyLeDanhGiaTot ?? 0;
+  // Rating validation - Backend stores rating as 0-100 percentage
+  const userRating = currentUser?.diemDanhGia ?? 0;
   const MIN_REQUIRED_RATING = 80;
   const hasMinRating = userRating >= MIN_REQUIRED_RATING;
   const canBid = hasMinRating || sellerAllowsLowRating;

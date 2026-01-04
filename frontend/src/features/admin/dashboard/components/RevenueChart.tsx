@@ -62,14 +62,14 @@ export function RevenueChart() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Doanh thu</CardTitle>
+        <CardTitle>DOANH THU</CardTitle>
         <p className="text-sm text-muted-foreground">
           Doanh thu 12 tháng gần đây
         </p>
       </CardHeader>
       <CardContent className="px-2 sm:px-6">
         {chartData.length === 0 ? (
-          <div className="flex items-center justify-center h-[250px] text-muted-foreground">
+          <div className="flex items-center justify-center h-62.5 text-muted-foreground">
             <p>Chưa có dữ liệu doanh thu</p>
           </div>
         ) : (

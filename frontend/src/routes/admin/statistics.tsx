@@ -1,10 +1,8 @@
-import {
-  AuctionChart,
-  RevenueChart,
-  UserGrowthChart,
-  UpgradeRequestChart,
-  CategoryDistributionChart,
-} from "@/features/admin";
+import { AuctionChart } from "@/features/admin/dashboard/components/AuctionChart";
+import { CategoryDistributionChart } from "@/features/admin/dashboard/components/CategoryDistributionChart";
+import { RevenueChart } from "@/features/admin/dashboard/components/RevenueChart";
+import { UpgradeRequestChart } from "@/features/admin/dashboard/components/UpgradeRequestChart";
+import { UserGrowthChart } from "@/features/admin/dashboard/components/UserGrowthChart";
 
 const StatisticsPage = () => {
   return (

@@ -18,7 +18,7 @@ import { Progress } from "@/components/ui/progress";
 
 interface SellerStats {
   diemDanhGia: number;
-  soLuotDanhGia: number;
+  soLuongDanhGia: number; // Match backend field name
   soSanPhamDangBan: number;
   soSanPhamDaBan: number;
   doanhThu: number;
@@ -45,7 +45,7 @@ export function SellerOverview({ stats }: SellerOverviewProps) {
               {stats.diemDanhGia.toFixed(0)}%
             </div>
             <p className="text-xs text-muted-foreground">
-              {stats.soLuotDanhGia} lượt đánh giá
+              {stats.soLuongDanhGia} lượt đánh giá
             </p>
           </CardContent>
         </Card>

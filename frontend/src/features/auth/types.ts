@@ -9,12 +9,10 @@ export interface User {
   soDienThoai?: string;
   ngaySinh?: string; // LocalDate
   anhDaiDien?: string;
-  diemDanhGia?: number; // Rating score (Double)
+  diemDanhGia?: number; // Rating percentage (0-100)
+  soLuongDanhGia?: number; // Number of ratings received
   createdAt?: string;
   updatedAt?: string;
-  // Computed fields for UI
-  soLuongDanhGia?: number; // Number of ratings received (computed)
-  tyLeDanhGiaTot?: number; 
 }
 
 export interface LoginRequest {

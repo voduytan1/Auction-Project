@@ -1,4 +1,4 @@
-import { UpgradeRequestsTable } from "@/features/admin";
+import { UpgradeRequestsTable } from "@/features/admin/upgradeRequest";
 
 const UpgradeRequestsPage = () => {
   return (

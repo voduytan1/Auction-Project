@@ -55,7 +55,7 @@ export function StatsGrid() {
 
   const statCards = [
     {
-      title: "Tổng người dùng",
+      title: "TỔNG SỐ NGƯỜI DÙNG",
       value: formatNumber(stats.usersCount),
       change: `${stats.userGrowth > 0 ? "+" : ""}${stats.userGrowth}%`,
       icon: Users,
@@ -63,7 +63,7 @@ export function StatsGrid() {
       changeColor: stats.userGrowth >= 0 ? "text-green-600" : "text-red-600",
     },
     {
-      title: "Đấu giá đang diễn ra",
+      title: "SỐ ĐẤU GIÁ ĐANG DIỄN RA",
       value: formatNumber(stats.auctionsCount),
       change: `+${formatNumber(stats.newAuctionsCount)}`,
       icon: Gavel,
@@ -71,7 +71,7 @@ export function StatsGrid() {
       changeColor: "text-green-600",
     },
     {
-      title: "Tổng lượt đấu giá",
+      title: "TỔNG LƯỢT ĐẤU GIÁ",
       value: formatNumber(stats.bidsCount),
       change: `+${formatNumber(stats.newBidsCount)}`,
       icon: TrendingUp,
@@ -79,7 +79,7 @@ export function StatsGrid() {
       changeColor: "text-green-600",
     },
     {
-      title: "Doanh thu",
+      title: "DOANH THU",
       value: formatCurrency(stats.revenue),
       change: `${stats.revenueGrowth > 0 ? "+" : ""}${stats.revenueGrowth}%`,
       icon: DollarSign,
@@ -93,7 +93,7 @@ export function StatsGrid() {
       {statCards.map((stat) => (
         <Card key={stat.title}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+            <CardTitle>{stat.title}</CardTitle>
             <stat.icon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>

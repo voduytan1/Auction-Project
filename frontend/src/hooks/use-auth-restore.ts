@@ -27,7 +27,7 @@ export function useAuthRestore() {
       try {
         await dispatch(refreshAccessToken()).unwrap();
         // authSlice.refreshAccessToken.fulfilled đã set user + isAuthenticated + isInitializing = false
-      } catch {
+      } catch (error) {
         // authSlice.refreshAccessToken.rejected đã clear auth + set isInitializing = false
         // Hoặc có thể do không có refresh_token cookie → Backend trả 401
         dispatch(setInitializing(false));

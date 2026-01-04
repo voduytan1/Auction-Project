@@ -1,4 +1,4 @@
-import { ProductsTable } from "@/features/admin";
+import { ProductsTable } from "@/features/admin/products";
 
 const ProductsPage = () => {
   return (
