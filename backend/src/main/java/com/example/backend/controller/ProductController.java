@@ -72,6 +72,12 @@ public class ProductController {
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
+    @PostMapping("/cancel/{id}")
+    public ResponseEntity<@NotNull ApiResponse<ProductResponse>> cancelProduct(@PathVariable Long id) {
+        ProductResponse result = productService.cancelProduct(id);
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
     @PostMapping("/block")
     public ResponseEntity<@NotNull ApiResponse<BlockedBidderResponse>> blockBidder(@AuthenticationPrincipal Jwt jwt, @RequestBody @Valid CreateBlockedBidderRequest request) {
         String sub = jwt != null ? jwt.getSubject() : null;
