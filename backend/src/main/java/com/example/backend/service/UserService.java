@@ -6,6 +6,7 @@ import com.example.backend.dto.common.PaginationRequest;
 import com.example.backend.dto.user.CreateUserRequest;
 import com.example.backend.dto.user.UpdateUserRequest;
 import com.example.backend.dto.user.UserResponse;
+import com.example.backend.entity.AuthProvider;
 import com.example.backend.entity.Role;
 import com.example.backend.entity.User;
 import com.example.backend.mapper.UserMapper;
@@ -98,6 +99,7 @@ public class UserService extends BaseService<User, UUID, CreateUserRequest, Upda
         entity.setPassword(authUtils.encodePassword(dto.getPassword()));
         entity.setCreatedAt(LocalDateTime.now());
         entity.setUpdatedAt(LocalDateTime.now());
+        entity.setProvider(AuthProvider.LOCAL);
     }
 
     @Override

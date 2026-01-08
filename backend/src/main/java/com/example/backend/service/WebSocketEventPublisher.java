@@ -1,9 +1,8 @@
 package com.example.backend.service;
 
 import com.example.backend.dto.transaction.TransactionResponse;
-import com.example.backend.dto.websocket.BidHistoryItemMessage;
-import com.example.backend.dto.websocket.BidUpdateMessage;
-import com.example.backend.dto.websocket.ProductStatusMessage;
+import com.example.backend.dto.transaction.chat.ChatMessageResponse;
+import com.example.backend.dto.websocket.*;
 import com.example.backend.entity.BidHistory;
 import com.example.backend.entity.Product;
 import com.example.backend.repository.BidHistoryRepository;
@@ -16,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.example.backend.utils.MyStringUtils.maskBidderName;
@@ -165,8 +165,6 @@ public class WebSocketEventPublisher {
         }
     }
 
-
-
     /**
      * Build message dựa trên event type
      */
@@ -177,5 +175,79 @@ public class WebSocketEventPublisher {
             case "BUY_NOW" -> "Sản phẩm đã được mua ngay";
             default -> "Giá sản phẩm đã thay đổi";
         };
+    }
+
+    /**
+     * GỬI TIN NHẮN MỚI ĐẾN TẤT CẢ USERS TRONG TRANSACTION
+     */
+    public void sendMessageToTransaction(Long transactionid, ChatMessageResponse message) {
+        WebSocketChatMessage wsMessage = WebSocketChatMessage.builder()
+                .type("MESSAGE")
+                .transactionid(transactionid)
+                .messageid(message.getMessageid())
+                .senderid(message.getSenderid())
+                .senderName(message.getSenderName())
+                .messageContent(message.getMessageContent())
+                .messageType(message.getMessageType())
+                .attachmentUrl(message.getAttachmentUrl())
+                .timestamp(message.getCreatedAt())
+                .build();
+
+        // Gửi đến topic của transaction
+        messagingTemplate.convertAndSend(
+                "/topic/transaction/" + transactionid,
+                wsMessage
+        );
+
+        log.debug("Sent WebSocket message to transaction {}", transactionid);
+    }
+
+    /**
+     * THÔNG BÁO NGƯỜI DÙNG ĐANG TYPING
+     */
+    public void sendTypingIndicator(Long transactionid, TypingIndicator indicator) {
+        messagingTemplate.convertAndSend(
+                "/topic/transaction/" + transactionid + "/typing",
+                indicator
+        );
+    }
+
+    /**
+     * THÔNG BÁO TIN NHẮN ĐÃ ĐƯỢC ĐỌC
+     */
+    public void notifyMessagesRead(Long transactionid, UUID userid) {
+        WebSocketChatMessage wsMessage = WebSocketChatMessage.builder()
+                .type("READ")
+                .transactionid(transactionid)
+                .senderid(userid)
+                .build();
+
+        messagingTemplate.convertAndSend(
+                "/topic/transaction/" + transactionid,
+                wsMessage
+        );
+    }
+
+    /**
+     * THÔNG BÁO USER ONLINE/OFFLINE
+     */
+    public void notifyUserStatus(UUID userid, boolean online) {
+        WebSocketChatMessage wsMessage = WebSocketChatMessage.builder()
+                .type(online ? "ONLINE" : "OFFLINE")
+                .senderid(userid)
+                .build();
+
+        messagingTemplate.convertAndSend(
+                "/topic/user/" + userid + "/status",
+                wsMessage
+        );
+    }
+
+    public void sendToUser(UUID userid, Object payload) {
+        messagingTemplate.convertAndSendToUser(
+                userid.toString(),
+                "/queue/messages",
+                payload
+        );
     }
 }

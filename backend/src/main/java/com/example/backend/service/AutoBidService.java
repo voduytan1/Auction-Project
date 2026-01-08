@@ -388,6 +388,10 @@ public class AutoBidService {
             throw new ForbiddenException("Bạn đã bị từ chối đấu giá sản phẩm này");
         }
 
+        if(product.getGiaMuaNgay()==null){
+            throw new ForbiddenException("Sản phẩm này không cho phép mua ngay");
+        }
+
         // Cập nhật product về trạng thái COMPLETED
         product.setGiaHienTai(product.getGiaMuaNgay());
         product.setCurrentBidder(bidder);
