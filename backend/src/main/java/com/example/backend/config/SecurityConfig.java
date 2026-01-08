@@ -50,7 +50,7 @@ public class SecurityConfig {
                     HttpMethod.GET, new String[]{"/admin/**", "/config/**", "/admin/dashboard/**"},
                     HttpMethod.POST, new String[]{"/categories","/admin/**", "/config/**", "/products/cancel/{id}"},
                     HttpMethod.PATCH, new String[]{"/categories/{id}","/admin/**"},
-                    HttpMethod.DELETE, new String[]{"/users/{id}","/categories/{id}","/admin/**"}
+                    HttpMethod.DELETE, new String[]{"/users/{id}","/categories/{id}","/admin/**", "/chat/**"}
             ),
             "SELLER",Map.of(
                     HttpMethod.GET, new String[]{},
@@ -65,8 +65,8 @@ public class SecurityConfig {
                     HttpMethod.DELETE, new String[]{}
             ),
             "AUTHENTICATED",Map.of(
-                    HttpMethod.GET, new String[]{"/users/me", "/bids/**", "/bids/history/{productId}", "/transactions/buyer", "/transactions/seller","/transactions/{id}", "/theo-doi", "/rating/mine","/rating/{id}"},
-                    HttpMethod.POST, new String[]{"/users/request-seller", "/images/**","/image/**", "/bids/**", "/payment/create-checkout-session", "/transactions/{id}/dia-chi", "/transactions/{id}/hoan-thanh", "/theo-doi", "/questions", "/transactions/{id}/ma-van-don", "/transactions/{id}/huy", "/products/block"},
+                    HttpMethod.GET, new String[]{"/users/me", "/bids/**", "/bids/history/{productId}", "/transactions/buyer", "/transactions/seller","/transactions/{id}", "/theo-doi", "/rating/mine","/rating/{id}", "/chat/**"},
+                    HttpMethod.POST, new String[]{"/users/request-seller", "/images/**","/image/**", "/bids/**", "/payment/create-checkout-session", "/transactions/{id}/dia-chi", "/transactions/{id}/hoan-thanh", "/theo-doi", "/questions", "/transactions/{id}/ma-van-don", "/transactions/{id}/huy", "/products/block", "/chat/**"},
                     HttpMethod.PUT, new String[]{"/users/{id}"},
                     HttpMethod.PATCH, new String[]{"/products", "/questions/{id}"},
                     HttpMethod.DELETE, new String[]{"/theo-doi"}
@@ -102,6 +102,11 @@ public class SecurityConfig {
                     request.requestMatchers(method, endpoints).permitAll()
             );
 
+            //ADMIN endpoint
+            var adminEndpoints = ROLE_BASED_ENDPOINTS.get("ADMIN");
+            adminEndpoints.forEach((method, endpoints) ->
+                    request.requestMatchers(method, endpoints).hasRole("ADMIN")
+            );
 
             var authenticatedEndpoints = ROLE_BASED_ENDPOINTS.get("AUTHENTICATED");
             authenticatedEndpoints.forEach((method, endpoints) ->
@@ -118,13 +123,6 @@ public class SecurityConfig {
             var bidderEndpoints = ROLE_BASED_ENDPOINTS.get("BIDDER");
             bidderEndpoints.forEach((method, endpoints) ->
                     request.requestMatchers(method, endpoints).hasRole("BIDDER")
-            );
-
-
-            //ADMIN endpoint
-            var adminEndpoints = ROLE_BASED_ENDPOINTS.get("ADMIN");
-            adminEndpoints.forEach((method, endpoints) ->
-                    request.requestMatchers(method, endpoints).hasRole("ADMIN")
             );
             request.anyRequest().hasRole("ADMIN");
         });
