@@ -112,6 +112,17 @@ public class ProductService {
         return productPage.map(productMapper::toResponse);
     }
 
+
+    @Transactional
+    public ProductResponse cancelProduct(Long id){
+        Product product = productRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("Không tìm thấy product với id "+ id));
+        product.setTrangThai(ProductStatus.CANCELLED);
+
+        Product saved =  productRepository.save(product);
+        return productMapper.toResponse(saved);
+
+    }
+
     @Transactional
     public ProductResponse getProductById(Long id) {
          Product product = productRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("Không tìm thấy product với id "+ id));

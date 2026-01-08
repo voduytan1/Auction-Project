@@ -48,7 +48,7 @@ public class SecurityConfig {
             ),
             "ADMIN", Map.of(
                     HttpMethod.GET, new String[]{"/admin/**", "/config/**", "/admin/dashboard/**"},
-                    HttpMethod.POST, new String[]{"/categories","/admin/**", "/config/**"},
+                    HttpMethod.POST, new String[]{"/categories","/admin/**", "/config/**", "/products/cancel/{id}"},
                     HttpMethod.PATCH, new String[]{"/categories/{id}","/admin/**"},
                     HttpMethod.DELETE, new String[]{"/users/{id}","/categories/{id}","/admin/**"}
             ),
