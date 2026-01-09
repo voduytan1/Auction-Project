@@ -21,7 +21,8 @@ public class ProductSpecification {
                 .and(hasPriceGreaterThanOrEqualTo(criteria.getMinPrice()))
                 .and(hasPriceLessThanOrEqualTo(criteria.getMaxPrice()))
                 .and(hasStatus(criteria.getStatus()))
-                .and(hasSeller(criteria.getSellerId()));
+                .and(hasSeller(criteria.getSellerId()))
+                .and(notHasId(criteria.getExcludeId()));
     }
 
     private static Specification<Product> hasKeyword(String keyword) {
@@ -85,6 +86,15 @@ public class ProductSpecification {
                 return null;
             }
             return cb.equal(root.get(Product_.seller).get(User_.userid), sellerId);
+        };
+    }
+
+    private static Specification<@NotNull Product> notHasId(Long excludeId) {
+        return (root, query, cb) -> {
+            if (excludeId == null) {
+                return null;
+            }
+            return cb.notEqual(root.get(Product_.productid), excludeId);
         };
     }
 }
