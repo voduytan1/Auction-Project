@@ -3,7 +3,6 @@ import type {
   UserProfile,
   UpdateProfileData,
   ChangePasswordData,
-  UserRating,
 } from "@/features/profile/types";
 
 /**
@@ -35,17 +34,6 @@ export const profileAPI = {
       oldPassword: data.oldPassword,
       newPassword: data.newPassword,
     });
-    return response.data;
-  },
-
-  // /**
-  //  * Get user ratings
-  //  */
-  getMyRatings: async (userId: string) => {
-    const response = await api.get<{
-      ratings: UserRating[];
-      stats: { positive: number; negative: number; percentage: number };
-    }>(`/users/${userId}/ratings`);
     return response.data;
   },
 

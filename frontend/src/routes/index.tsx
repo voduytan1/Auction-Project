@@ -23,6 +23,7 @@ const CompleteOrderPage = lazy(() => import("./bidder/complete-order"));
 const CategoryProductsPage = lazy(() => import("./category-products"));
 const SearchPage = lazy(() => import("./search"));
 const ProfilePage = lazy(() => import("./profile"));
+const UserRatingsPage = lazy(() => import("./users/ratings"));
 
 // Auth Pages
 const LoginPage = lazy(() => import("./auth/login"));
@@ -41,7 +42,6 @@ const CategoriesPage = lazy(() => import("./admin/categories"));
 const ProductsPage = lazy(() => import("./admin/products"));
 const UpgradeRequestsPage = lazy(() => import("./admin/upgrade-requests"));
 const AdminSettingsPage = lazy(() => import("./admin/settings"));
-const AdminProfilePage = lazy(() => import("./admin/profile"));
 
 // Seller Pages
 const CreateProductPage = lazy(() => import("./seller/create-product"));
@@ -53,14 +53,14 @@ const AppendDescriptionPage = lazy(
 );
 
 // Bidder Pages
-const BidderProfilePage = lazy(() => import("./bidder/profile"));
 const UpgradeRequestPage = lazy(() => import("./bidder/upgrade-request"));
+const WatchlistPage = lazy(() => import("./bidder/watchlist"));
+const ActiveBidsPage = lazy(() => import("./bidder/active-bids"));
+const BuyerTransactionsPage = lazy(() => import("./bidder/transactions"));
 
 const TransactionDetailPage = lazy(() => import("./transaction/detail"));
 const PaymentSuccessPage = lazy(() => import("./order/payment-success"));
 const PaymentCancelPage = lazy(() => import("./order/payment-cancel"));
-
-const SellerProfilePage = lazy(() => import("./seller/profile"));
 
 /**
  * Router configuration với lazy loading và SEO
@@ -108,6 +108,14 @@ export const router = createBrowserRouter([
         element: (
           <PageWrapper title="Tìm kiếm sản phẩm">
             <SearchPage />
+          </PageWrapper>
+        ),
+      },
+      {
+        path: "users/:userId/ratings",
+        element: (
+          <PageWrapper title="Đánh giá người dùng">
+            <UserRatingsPage />
           </PageWrapper>
         ),
       },
@@ -278,11 +286,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "profile",
-        element: (
-          <PageWrapper title="Hồ sơ cá nhân - Admin">
-            <AdminProfilePage />
-          </PageWrapper>
-        ),
+        element: <Navigate to="/profile" replace />,
       },
       {
         index: true,
@@ -322,11 +326,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "profile",
-        element: (
-          <PageWrapper title="Hồ sơ Seller">
-            <SellerProfilePage />
-          </PageWrapper>
-        ),
+        element: <Navigate to="/profile" replace />,
       },
       {
         index: true,
@@ -345,10 +345,26 @@ export const router = createBrowserRouter([
     ),
     children: [
       {
-        path: "profile",
+        path: "watchlist",
         element: (
-          <PageWrapper title="Hồ sơ của tôi">
-            <BidderProfilePage />
+          <PageWrapper title="Danh sách yêu thích">
+            <WatchlistPage />
+          </PageWrapper>
+        ),
+      },
+      {
+        path: "active-bids",
+        element: (
+          <PageWrapper title="Đang đấu giá">
+            <ActiveBidsPage />
+          </PageWrapper>
+        ),
+      },
+      {
+        path: "transactions",
+        element: (
+          <PageWrapper title="Đấu giá thắng">
+            <BuyerTransactionsPage />
           </PageWrapper>
         ),
       },
@@ -361,8 +377,12 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "profile",
+        element: <Navigate to="/profile" replace />,
+      },
+      {
         index: true,
-        element: <Navigate to="/bidder/profile" replace />,
+        element: <Navigate to="/bidder/watchlist" replace />,
       },
     ],
   },
