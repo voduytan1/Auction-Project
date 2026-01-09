@@ -19,6 +19,7 @@ import com.example.backend.utils.PageUtils;
 import com.example.backend.utils.UserValidationUtils;
 import jakarta.persistence.EntityNotFoundException;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import tools.jackson.databind.json.JsonMapper;
@@ -52,10 +53,13 @@ public class UserService extends BaseService<User, UUID, CreateUserRequest, Upda
     private final UserValidationUtils userValidationUtils;
     private final RedisService redisService;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
+    @Value("${DEFAULT_PASSWORD}")
+    private String defaultPassword;
 
     public UserService(UserRepository userRepository, UserMapper userMapper,
-                       AuthUtils authUtils, CacheManager cacheManager, JsonMapper jsonMapper, UserValidationUtils userValidationUtils, RedisService redisService, PasswordEncoder passwordEncoder) {
+                       AuthUtils authUtils, CacheManager cacheManager, JsonMapper jsonMapper, UserValidationUtils userValidationUtils, RedisService redisService, PasswordEncoder passwordEncoder, EmailService emailService) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.authUtils = authUtils;
@@ -64,6 +68,7 @@ public class UserService extends BaseService<User, UUID, CreateUserRequest, Upda
         this.userValidationUtils = userValidationUtils;
         this.redisService = redisService;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     // Implementation of abstract methods
@@ -226,11 +231,12 @@ public class UserService extends BaseService<User, UUID, CreateUserRequest, Upda
         return userRepository.countByCreatedAtBetween(start, end);
     }
 
-    public UserResponse resetPassword(UUID id, ResetPasswordRequest dto) {
+    public UserResponse resetPassword(UUID id) {
         User user = userRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("Không tìm thấy user với id "+ id));
-        user.setPassword(authUtils.encodePassword(dto.getPassword()));
-        userRepository.save(user);
-        return userMapper.toResponse(user);
+        user.setPassword(authUtils.encodePassword(defaultPassword));
+        User saved = userRepository.save(user);
+        emailService.sendNewPasswordNotification(saved.getEmail(), saved.getUsername(), defaultPassword);
+        return userMapper.toResponse(saved);
     }
 
     private void setPasswordIfProvided(User entity, String rawPassword) {
