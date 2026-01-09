@@ -96,11 +96,12 @@ export function WatchlistSection() {
 
   if (products.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-muted-foreground bg-muted/30 rounded-lg border border-dashed">
-        <Heart className="h-16 w-16 mb-4 opacity-20" />
-        <p className="text-lg font-medium">Danh sách yêu thích trống</p>
-        <p className="text-sm mb-6">Hãy thêm sản phẩm bạn quan tâm vào đây</p>
-        <Button onClick={() => navigate("/")}>Khám phá ngay</Button>
+      <div className="text-center py-12 text-muted-foreground">
+        <Heart className="h-12 w-12 mx-auto mb-3 opacity-50" />
+        <p>Danh sách yêu thích trống</p>
+        <Button className="mt-4" onClick={() => navigate("/")}>
+          Khám phá sản phẩm
+        </Button>
       </div>
     );
   }
@@ -115,12 +116,12 @@ export function WatchlistSection() {
           >
             {/* Layout Logic:
                - Mobile: Flex Col (Ảnh trên, Text dưới)
-               - Desktop (sm): Flex Row (Ảnh trái, Text phải)
+               - Tablet+: Flex Row (Ảnh trái, Text phải)
             */}
             <div className="flex flex-col sm:flex-row h-full">
               {/* === PRODUCT IMAGE === */}
               <div
-                className="relative w-full sm:w-48 h-48 sm:h-auto shrink-0 bg-muted cursor-pointer group-hover:opacity-90 transition-opacity"
+                className="relative w-full sm:w-40 md:w-48 lg:w-56 xl:w-64 h-48 sm:h-40 md:h-48 lg:h-52 xl:h-56 shrink-0 bg-muted cursor-pointer group-hover:opacity-90 transition-opacity"
                 onClick={() => navigate(`/products/${product.productid}`)}
               >
                 {product.images && product.images.length > 0 ? (
@@ -153,20 +154,20 @@ export function WatchlistSection() {
               </div>
 
               {/* === PRODUCT DETAILS === */}
-              <div className="flex flex-1 flex-col p-4 gap-3">
+              <div className="flex flex-1 flex-col p-3 sm:p-4 md:p-5 lg:p-6 gap-2 sm:gap-3">
                 {/* Header: Title & Delete Button */}
-                <div className="flex justify-between items-start gap-3">
-                  <div className="space-y-1">
+                <div className="flex justify-between items-start gap-2 sm:gap-3">
+                  <div className="space-y-1 flex-1 min-w-0">
                     <h3
-                      className="font-semibold text-lg line-clamp-2 hover:text-primary cursor-pointer transition-colors"
+                      className="font-semibold text-base sm:text-lg md:text-xl line-clamp-2 hover:text-primary cursor-pointer transition-colors"
                       onClick={() => navigate(`/products/${product.productid}`)}
                     >
                       {product.tenSanPham}
                     </h3>
 
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <User className="h-3 w-3" />
-                      <span>{product.tenSeller}</span>
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
+                      <User className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      <span className="truncate">{product.tenSeller}</span>
                     </div>
                   </div>
 
@@ -174,7 +175,7 @@ export function WatchlistSection() {
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0 -mt-1 -mr-1"
+                    className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0 -mt-1 -mr-1"
                     onClick={() => setDeleteConfirmId(product.productid)}
                     title="Xóa khỏi danh sách"
                   >
@@ -187,42 +188,46 @@ export function WatchlistSection() {
 
                 {/* Footer: Stats & Action Button */}
                 {/* Use mt-auto to push this section to bottom on desktop */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 items-end mt-auto pt-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 items-end mt-auto pt-2">
                   {/* Column 1: Price */}
                   <div className="col-span-2 sm:col-span-1">
                     <p className="text-xs text-muted-foreground mb-0.5">
                       Giá hiện tại
                     </p>
-                    <p className="text-xl font-bold text-primary">
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-primary truncate">
                       {formatPrice(product.giaHienTai)}
                     </p>
                   </div>
 
                   {/* Column 2: Time & Bids */}
-                  <div className="col-span-2 sm:col-span-1 space-y-1.5">
+                  <div className="col-span-2 sm:col-span-1 lg:col-span-1 space-y-1 sm:space-y-1.5">
                     <div
-                      className={`flex items-center gap-2 text-sm font-medium ${
+                      className={`flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium ${
                         product.trangThai === "ACTIVE"
                           ? "text-orange-600"
                           : "text-muted-foreground"
                       }`}
                     >
-                      <Clock className="h-4 w-4" />
-                      <span>{formatTimeLeft(product.thoiGianKetThuc)}</span>
+                      <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <span className="truncate">
+                        {formatTimeLeft(product.thoiGianKetThuc)}
+                      </span>
                     </div>
 
                     {product.soLuotRaGia !== undefined && (
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-muted-foreground">
                         <TrendingUp className="h-3 w-3" />
-                        <span>{product.soLuotRaGia} lượt trả giá</span>
+                        <span className="truncate">
+                          {product.soLuotRaGia} lượt trả giá
+                        </span>
                       </div>
                     )}
                   </div>
 
                   {/* Column 3: Action Button */}
-                  <div className="col-span-2 sm:col-span-1 flex justify-end">
+                  <div className="col-span-2 sm:col-span-1 lg:col-span-2 flex justify-end">
                     <Button
-                      className="w-full sm:w-auto font-semibold"
+                      className="w-full sm:w-auto md:min-w-[140px] lg:min-w-[160px] font-semibold text-sm md:text-base"
                       onClick={() => navigate(`/products/${product.productid}`)}
                       disabled={product.trangThai !== "ACTIVE"}
                     >

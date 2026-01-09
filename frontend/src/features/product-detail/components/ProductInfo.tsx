@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Link } from "react-router-dom";
 // Import thêm Tooltip components
 import {
   Tooltip,
@@ -549,7 +550,7 @@ export function ProductInfo({
         <CardContent className="p-4">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3 min-w-0">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
                 {product.anhDaiDienSeller ? (
                   <img
                     src={product.anhDaiDienSeller}
@@ -561,11 +562,21 @@ export function ProductInfo({
                     <User className="h-5 w-5 text-primary" />
                   </div>
                 )}
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="text-xs text-slate-600">Người bán</div>
-                  <div className="font-semibold truncate">
-                    {product.tenSeller || "Người bán"}
-                  </div>
+                  {product.sellerId ? (
+                    <Link
+                      to={`/users/${product.sellerId}/ratings`}
+                      className="font-semibold truncate hover:text-primary transition-colors hover:underline"
+                      title="Xem chi tiết đánh giá"
+                    >
+                      {product.tenSeller || "Người bán"}
+                    </Link>
+                  ) : (
+                    <div className="font-semibold truncate">
+                      {product.tenSeller || "Người bán"}
+                    </div>
+                  )}
                 </div>
               </div>
               {product.diemDanhGiaSeller != null ? (
@@ -591,26 +602,38 @@ export function ProductInfo({
           <CardContent className="p-4">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className="rounded-full bg-green-100 p-2 md:p-3 shrink-0">
                     <TrendingUp className="h-5 w-5 text-green-600" />
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="text-xs text-slate-600">Đang dẫn đầu</div>
-                    <div className="font-semibold truncate">
-                      {product.tenBidder}
-                    </div>
+                    {product.bidderId ? (
+                      <Link
+                        to={`/users/${product.bidderId}/ratings`}
+                        className="font-semibold truncate hover:text-primary transition-colors hover:underline"
+                        title="Xem chi tiết đánh giá"
+                      >
+                        {product.tenBidder}
+                      </Link>
+                    ) : (
+                      <div className="font-semibold truncate">
+                        {product.tenBidder}
+                      </div>
+                    )}
                   </div>
                 </div>
                 {product.diemDanhGiaBidder != null ? (
-                  <div className="flex items-center gap-1 text-accent">
+                  <div className="flex items-center gap-1 text-accent shrink-0">
                     <Star className="h-4 w-4 fill-current" />
                     <span className="font-semibold text-sm">
                       {product.diemDanhGiaBidder.toFixed(0)}%
                     </span>
                   </div>
                 ) : (
-                  <div className="text-xs text-slate-500">Chưa có đánh giá</div>
+                  <div className="text-xs text-slate-500 shrink-0">
+                    Chưa có đánh giá
+                  </div>
                 )}
               </div>
             </div>

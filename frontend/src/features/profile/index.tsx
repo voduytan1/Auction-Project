@@ -7,12 +7,10 @@ import { ProfileHeader } from "./components/ProfileHeader";
 import { ProfileInfoForm } from "./components/ProfileInfoForm";
 import { ChangePasswordDialog } from "./components/ChangePasswordDialog";
 import { RatingStatsCard } from "./components/RatingStatsCard";
-import { RatingHistoryCard } from "./components/RatingHistoryCard";
 import type {
   UserProfile,
   UpdateProfileData,
   ChangePasswordData,
-  UserRating,
   RatingStats,
 } from "./types";
 import { PageLoader } from "@/components/PageLoader";
@@ -24,7 +22,6 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
-  const [ratings, setRatings] = useState<UserRating[]>([]);
   const [ratingStats, setRatingStats] = useState<RatingStats | null>(null);
 
   // Load user data
@@ -39,13 +36,21 @@ export default function ProfilePage() {
       console.log("User data from /users/me:", userData);
       setProfileData(userData);
 
-      // Fetch ratings only if we have a valid user ID
-      if (userData?.userid) {
-        const ratingsData = await profileAPI.getMyRatings(userData.userid);
-        setRatings(ratingsData.ratings);
+      // Calculate rating stats from userData
+      if (
+        userData?.diemDanhGia !== undefined &&
+        userData?.soLuongDanhGia !== undefined
+      ) {
+        const total = userData.soLuongDanhGia;
+        const percentage = userData.diemDanhGia;
+        const positive = Math.round((percentage / 100) * total);
+        const negative = total - positive;
+
         setRatingStats({
-          ...ratingsData.stats,
-          total: ratingsData.stats.positive + ratingsData.stats.negative,
+          positive,
+          negative,
+          percentage,
+          total,
         });
       }
     } catch (error) {
@@ -121,7 +126,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-5xl">
+    <div className="container mx-auto py-6 sm:py-8 px-4 max-w-6xl">
       {/* Header Card */}
       <ProfileHeader
         profileData={profileData}
@@ -144,7 +149,7 @@ export default function ProfilePage() {
         }}
       />
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         {/* Thông tin cá nhân */}
         <ProfileInfoForm
           profileData={profileData}
@@ -155,11 +160,6 @@ export default function ProfilePage() {
 
         {/* Điểm đánh giá */}
         <RatingStatsCard ratingStats={ratingStats} />
-      </div>
-
-      {/* Rating history */}
-      <div className="mt-6">
-        <RatingHistoryCard ratings={ratings} />
       </div>
 
       {/* Change Password Dialog */}

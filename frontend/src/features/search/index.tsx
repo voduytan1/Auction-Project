@@ -27,7 +27,7 @@ export default function SearchResults() {
     searchParams.get("category") || "all"
   );
   const [sortBy, setSortBy] = useState(
-    searchParams.get("sort") || "endTime-desc"
+    searchParams.get("sort") || "createdAt-desc"
   );
   const [currentPage, setCurrentPage] = useState(
     Number(searchParams.get("page")) || 1
@@ -56,7 +56,7 @@ export default function SearchResults() {
   useEffect(() => {
     const queryFromUrl = searchParams.get("q") || "";
     const categoryFromUrl = searchParams.get("category") || "all";
-    const sortFromUrl = searchParams.get("sort") || "endTime-desc";
+    const sortFromUrl = searchParams.get("sort") || "createdAt-desc";
     const pageFromUrl = Number(searchParams.get("page")) || 1;
 
     setSearchQuery(queryFromUrl);
@@ -66,18 +66,49 @@ export default function SearchResults() {
     setCurrentPage(pageFromUrl);
   }, [searchParams]);
 
-  // Update URL khi filters thay đổi (but keep timestamp for force reload)
+  // Update URL khi filters thay đổi
   useEffect(() => {
     const params = new URLSearchParams();
     if (submittedQuery) params.set("q", submittedQuery);
     if (categoryFilter !== "all") params.set("category", categoryFilter);
-    if (sortBy !== "endTime-desc") params.set("sort", sortBy);
+    if (sortBy !== "createdAt-desc") params.set("sort", sortBy);
     if (currentPage > 1) params.set("page", currentPage.toString());
-    // Preserve timestamp if it exists (for forced reload)
+
+    // Preserve timestamp from Header search (for force reload detection)
     const timestamp = searchParams.get("t");
-    if (timestamp) params.set("t", timestamp);
-    setSearchParams(params);
-  }, [submittedQuery, categoryFilter, sortBy, currentPage, setSearchParams]);
+    if (timestamp) {
+      params.set("t", timestamp);
+    }
+
+    setSearchParams(params, { replace: true });
+  }, [
+    submittedQuery,
+    categoryFilter,
+    sortBy,
+    currentPage,
+    searchParams,
+    setSearchParams,
+  ]);
+
+  // Parse sortBy value to backend format
+  const getSortParams = (sortValue: string) => {
+    switch (sortValue) {
+      case "createdAt-desc":
+        return { sortBy: "createdAt", sortOrder: "desc" };
+      case "endTime-desc":
+        return { sortBy: "thoiGianKetThuc", sortOrder: "desc" };
+      case "endTime-asc":
+        return { sortBy: "thoiGianKetThuc", sortOrder: "asc" };
+      case "price-asc":
+        return { sortBy: "giaHienTai", sortOrder: "asc" };
+      case "price-desc":
+        return { sortBy: "giaHienTai", sortOrder: "desc" };
+      case "bids-desc":
+        return { sortBy: "soLuotRaGia", sortOrder: "desc" };
+      default:
+        return { sortBy: "createdAt", sortOrder: "desc" };
+    }
+  };
 
   // Fetch products from backend API
   useEffect(() => {
@@ -85,12 +116,20 @@ export default function SearchResults() {
       setLoading(true);
       setError(null);
       try {
+        const sortParams = getSortParams(sortBy);
+
+        // Nếu sort theo thời gian kết thúc, chỉ lấy sản phẩm ACTIVE
+        const status = sortBy.startsWith("endTime") ? "ACTIVE" : undefined;
+
         const response = await productAPI.search({
           search: submittedQuery || undefined,
           categoryId:
             categoryFilter !== "all" ? Number(categoryFilter) : undefined,
           page: currentPage,
           size: ITEMS_PER_PAGE,
+          sortBy: sortParams.sortBy,
+          sortOrder: sortParams.sortOrder as "asc" | "desc",
+          status: status,
         });
 
         // Response interceptor đã extract data, metadata ở __raw__
@@ -110,40 +149,18 @@ export default function SearchResults() {
     };
 
     fetchProducts();
-  }, [submittedQuery, categoryFilter, currentPage]);
+  }, [submittedQuery, categoryFilter, currentPage, sortBy]);
 
-  // Sort products on frontend (backend doesn't support sorting yet)
-  const sortedProducts = Array.isArray(products)
-    ? [...products].sort((a, b) => {
-        switch (sortBy) {
-          case "endTime-desc":
-            return (
-              new Date(b.thoiGianKetThuc).getTime() -
-              new Date(a.thoiGianKetThuc).getTime()
-            );
-          case "endTime-asc":
-            return (
-              new Date(a.thoiGianKetThuc).getTime() -
-              new Date(b.thoiGianKetThuc).getTime()
-            );
-          case "price-asc":
-            return a.giaHienTai - b.giaHienTai;
-          case "price-desc":
-            return b.giaHienTai - a.giaHienTai;
-          default:
-            return 0;
-        }
-      })
-    : [];
+  // Products are already sorted by backend
+  const sortedProducts = products;
 
   // Get subcategories (level 2) from Redux store
   const categories: CategoryDisplay[] = allCategories
     ? allCategories.flatMap((parent) => parent.subcategories || [])
     : [];
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmittedQuery(searchQuery);
+  const handleSearch = (query: string) => {
+    setSubmittedQuery(query.trim());
     setCurrentPage(1);
   };
 
@@ -151,12 +168,12 @@ export default function SearchResults() {
     setSearchQuery("");
     setSubmittedQuery("");
     setCategoryFilter("all");
-    setSortBy("endTime-desc");
+    setSortBy("createdAt-desc");
     setCurrentPage(1);
   };
 
   const showClearButton = Boolean(
-    submittedQuery || categoryFilter !== "all" || sortBy !== "endTime-desc"
+    submittedQuery || categoryFilter !== "all" || sortBy !== "createdAt-desc"
   );
 
   // Show loading state only for initial load (no products yet)

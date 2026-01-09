@@ -41,14 +41,14 @@ const Home = () => {
         });
         setHighestPriceProducts((highestPrice?.data as any) || []);
 
-        // Fetch most recent products (5 items, sort by createdAt DESC)
-        const mostRecent = await productAPI.search({
+        // Fetch most bids products (5 items, sort by soLuotRaGia DESC)
+        const mostBids = await productAPI.search({
           size: 5,
-          sortBy: "createdAt",
+          sortBy: "soLuotRaGia",
           sortOrder: "desc",
           status: "ACTIVE",
         });
-        setMostBidsProducts((mostRecent?.data as any) || []);
+        setMostBidsProducts((mostBids?.data as any) || []);
       } catch (error) {
         console.error("Error fetching products:", error);
       } finally {

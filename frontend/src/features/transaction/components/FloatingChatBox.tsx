@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -15,6 +15,7 @@ import { useAppSelector } from "@/store/hooks";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useChatWebSocket } from "@/hooks";
 
 interface FloatingChatBoxProps {
   transactionId: number;
@@ -36,6 +37,35 @@ export function FloatingChatBox({
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const typingTimeoutRef = useRef<number | null>(null);
+
+  // WebSocket for real-time chat and typing indicator
+  const { isOtherUserTyping, startTyping, stopTyping } = useChatWebSocket({
+    transactionId,
+    enabled: isOpen && !isMinimized,
+    onNewMessage: (newMsg: ChatMessage) => {
+      // Add new message from WebSocket to state
+      setMessages((prev) => {
+        // Check if message already exists (avoid duplicates)
+        const exists = prev.some((m) => m.id === newMsg.id);
+        if (exists) return prev;
+        return [...prev, newMsg];
+      });
+    },
+  });
+
+  // Load messages function
+  const loadMessages = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await chatAPI.getMessages(transactionId);
+      setMessages(response.data || []);
+    } catch (error) {
+      console.error("Failed to load messages:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [transactionId]);
 
   // Load messages
   useEffect(() => {
@@ -46,7 +76,7 @@ export function FloatingChatBox({
         setTimeout(() => inputRef.current?.focus(), 100);
       }
     }
-  }, [isOpen, isMinimized, transactionId]);
+  }, [isOpen, isMinimized, loadMessages]);
 
   // Auto scroll
   useEffect(() => {
@@ -55,24 +85,13 @@ export function FloatingChatBox({
     }
   }, [messages, isOpen, isMinimized]);
 
-  const loadMessages = async () => {
-    try {
-      setLoading(true);
-      const response = await chatAPI.getMessages(transactionId);
-      setMessages(response.data || []);
-    } catch (error) {
-      console.error("Failed to load messages:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
     const tempMessage = newMessage;
     setNewMessage(""); // Optimistic clear
+    stopTyping(); // Stop typing indicator
 
     try {
       setSending(true);
@@ -80,7 +99,14 @@ export function FloatingChatBox({
         transactionId,
         message: tempMessage.trim(),
       });
-      setMessages((prev) => [...prev, response.data]);
+
+      // Add message to state (WebSocket will also broadcast it, but we add it immediately for better UX)
+      setMessages((prev) => {
+        // Check if already exists (from WebSocket)
+        const exists = prev.some((m) => m.id === response.data.id);
+        if (exists) return prev;
+        return [...prev, response.data];
+      });
     } catch (error) {
       console.error("Failed to send message:", error);
       toast.error("Gửi tin nhắn thất bại");
@@ -89,6 +115,40 @@ export function FloatingChatBox({
       setSending(false);
     }
   };
+
+  // Handle input change with typing indicator
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewMessage(value);
+
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    if (value.trim()) {
+      // Start typing
+      startTyping();
+
+      // Auto stop typing after 2 seconds of no input
+      typingTimeoutRef.current = setTimeout(() => {
+        stopTyping();
+      }, 2000);
+    } else {
+      // Stop typing if input is empty
+      stopTyping();
+    }
+  };
+
+  // Cleanup typing timeout
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      stopTyping();
+    };
+  }, [stopTyping]);
 
   // Helper để lấy avatar initials
   const getInitials = (name: string) => {
@@ -163,9 +223,11 @@ export function FloatingChatBox({
                 <span className="font-bold text-sm leading-tight">
                   {otherUserName}
                 </span>
-                <span className="text-[10px] text-primary-foreground/80 flex items-center gap-1">
-                  • Đang hoạt động
-                </span>
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] text-primary-foreground/80">
+                    • Đang hoạt động
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -280,6 +342,33 @@ export function FloatingChatBox({
                         </div>
                       );
                     })}
+
+                    {/* Typing Indicator */}
+                    {isOtherUserTyping && (
+                      <div className="flex w-full justify-start">
+                        <div className="flex max-w-[80%] gap-2">
+                          <Avatar className="h-6 w-6 mt-auto shrink-0">
+                            <AvatarImage src={otherUserAvatar} />
+                            <AvatarFallback className="text-[9px] bg-slate-200">
+                              {getInitials(otherUserName)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="px-4 py-2.5 bg-white border border-slate-100 rounded-2xl rounded-tl-sm">
+                            <div className="flex items-center gap-1.5">
+                              <div className="flex gap-1">
+                                <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                                <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                                <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></span>
+                              </div>
+                              <span className="text-xs text-slate-500 ml-1">
+                                đang gõ
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     <div ref={scrollRef} />
                   </div>
                 )}
@@ -294,9 +383,10 @@ export function FloatingChatBox({
                   <Input
                     ref={inputRef}
                     value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
+                    onChange={handleInputChange}
+                    onBlur={stopTyping}
                     placeholder="Nhập tin nhắn..."
-                    className="flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0 px-4 py-2 min-h-10  max-h-25"
+                    className="flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0 px-4 py-2 min-h-10 max-h-25 text-sm md:text-base"
                     autoComplete="off"
                     disabled={sending}
                   />
