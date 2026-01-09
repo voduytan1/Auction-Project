@@ -123,8 +123,8 @@ export function ProductsTable() {
     if (!removeDialog.product) return;
 
     try {
-      await productAPI.delete(removeDialog.product.productid);
-      toast.success("Sản phẩm đã được gỡ bỏ thành công");
+      await productAPI.cancel(removeDialog.product.productid);
+      toast.success("Sản phẩm đã được hủy thành công");
 
       // Refresh list
       if (products.length === 1 && currentPage > 1) {
@@ -133,8 +133,8 @@ export function ProductsTable() {
         await loadProducts();
       }
     } catch (error) {
-      console.error("Error removing product:", error);
-      toast.error("Không thể gỡ bỏ sản phẩm");
+      console.error("Error canceling product:", error);
+      toast.error("Không thể hủy sản phẩm");
       throw error;
     }
   };

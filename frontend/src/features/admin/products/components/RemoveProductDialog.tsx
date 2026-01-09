@@ -42,10 +42,10 @@ export function RemoveProductDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Xác nhận gỡ bỏ sản phẩm</DialogTitle>
+          <DialogTitle>Xác nhận hủy sản phẩm</DialogTitle>
           <DialogDescription>
-            Bạn có chắc chắn muốn gỡ bỏ sản phẩm "{product?.tenSanPham}"? Sản
-            phẩm sẽ không còn hiển thị trên hệ thống.
+            Bạn có chắc chắn muốn hủy sản phẩm "{product?.tenSanPham}"? Sản phẩm
+            sẽ chuyển sang trạng thái đã hủy.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -67,7 +67,7 @@ export function RemoveProductDialog({
                 Đang xử lý...
               </>
             ) : (
-              "Gỡ bỏ"
+              "Hủy sản phẩm"
             )}
           </Button>
         </DialogFooter>

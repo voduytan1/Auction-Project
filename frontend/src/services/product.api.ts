@@ -125,6 +125,13 @@ export const productAPI = {
     api.delete<{ message: string }>(`/products/${id}`),
 
   /**
+   * POST /products/cancel/{id} - Cancel product (seller or admin only)
+   * Changes product status to CANCELLED
+   */
+  cancel: (id: number | string) =>
+    api.post<ProductResponse>(`/products/cancel/${id}`),
+
+  /**
    * POST /products/block - Block bidder from product (seller only)
    * Removes all bid history and reassigns winner if needed
    */

@@ -85,8 +85,8 @@ export function RevenueChart() {
               <XAxis dataKey="month" fontSize={12} />
               <YAxis tickFormatter={formatRevenue} fontSize={12} />
               <Tooltip
-                formatter={(value: number) => [
-                  `${value} triệu VNĐ`,
+                formatter={(value: number | undefined) => [
+                  `${value || 0} triệu VNĐ`,
                   "Doanh thu",
                 ]}
               />

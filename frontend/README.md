@@ -1,143 +1,232 @@
 # Auction Project Frontend
 
-Ứng dụng frontend cho sàn đấu giá trực tuyến AuctionHub.
+Ứng dụng web frontend cho sàn đấu giá trực tuyến.
 
-## 🚀 Công nghệ sử dụng
+## Công nghệ sử dụng
 
-- **React 19** - Library UI
-- **TypeScript** - Type safety
-- **Vite 7** - Build tool & dev server
-- **React Router v7** - Routing
-- **Redux Toolkit** - State management
-- **Axios** - HTTP client
-- **Tailwind CSS v4** - Styling
-- **Radix UI** - Component primitives
-- **shadcn/ui** - UI components
-- **React Hook Form** - Form handling
-- **Zod** - Schema validation
-- **date-fns** - Date formatting
+### Core
 
-## 📁 Cấu trúc thư mục
+- **React 19** - Thư viện UI với các tính năng mới nhất
+- **TypeScript 5.7** - Kiểm tra kiểu tĩnh
+- **Vite 7.3** - Build tool và development server hiệu năng cao
+
+### Routing & State
+
+- **React Router v7** - Điều hướng client-side
+- **Redux Toolkit 2.5** - Quản lý state có thể dự đoán
+- **React Hook Form 7.54** - Xử lý form hiệu năng cao
+
+### UI & Styling
+
+- **Tailwind CSS v4** - Framework CSS utility-first
+- **Radix UI** - Component primitives không style, accessible
+- **shadcn/ui** - Bộ sưu tập component có thể tái sử dụng
+- **Lucide React** - Thư viện icon
+
+### Data & Validation
+
+- **Axios 1.7** - HTTP client dựa trên Promise
+- **Zod 3.24** - Schema validation ưu tiên TypeScript
+- **date-fns 4.1** - Thư viện xử lý date hiện đại
+
+### Real-time & Security
+
+- **WebSocket** - Cập nhật đấu giá theo thời gian thực
+- **reCAPTCHA v3** - Bảo vệ chống bot cho form đăng nhập
+- **Google OAuth** - Xác thực qua mạng xã hội
+
+## Cấu trúc dự án
 
 ```
-src/
-├── components/           # Reusable components
-│   ├── auth/            # Authentication components
-│   ├── layout/          # Layout components (Header, Footer, Sidebar)
-│   ├── product/         # Product-related components
-│   ├── theme/           # Theme provider
-│   └── ui/              # shadcn/ui components
-├── pages/               # Page components
-│   ├── admin/           # Admin pages
-│   ├── auth/            # Auth pages (Login, Register)
-│   ├── bidder/          # Bidder pages (Profile, WatchList)
-│   ├── guest/           # Public pages (Home, ProductList)
-│   └── seller/          # Seller pages (AddProduct, MyProducts)
-├── routes/              # Route configuration
-├── services/            # API services
-│   ├── api.ts           # Axios instance & interceptors
-│   ├── authService.ts   # Authentication APIs
-│   ├── productService.ts # Product APIs
-│   └── ...
-├── store/               # Redux store
-│   ├── index.ts         # Store configuration
-│   ├── hooks.ts         # Typed hooks
-│   └── slices/          # Redux slices
-└── App.tsx              # Root component
+frontend/
+├── public/                     # Tài nguyên tĩnh
+├── src/
+│   ├── components/            # Component UI tái sử dụng
+│   │   ├── auth/             # Component xác thực
+│   │   ├── layout/           # Component layout (Header, Footer, Sidebar)
+│   │   └── ui/               # Component cơ bản shadcn/ui
+│   ├── config/               # File cấu hình
+│   │   └── env.ts            # Export biến môi trường
+│   ├── contexts/             # React contexts
+│   │   └── WebSocketContext.tsx
+│   ├── features/             # Module theo tính năng
+│   │   ├── admin/           # Dashboard và quản lý admin
+│   │   ├── auth/            # Đăng nhập, đăng ký, đặt lại mật khẩu
+│   │   ├── bidder/          # Hồ sơ bidder, danh sách theo dõi
+│   │   ├── home/            # Component trang chủ
+│   │   ├── product-detail/  # Trang chi tiết sản phẩm
+│   │   ├── profile/         # Quản lý hồ sơ người dùng
+│   │   ├── search/          # Chức năng tìm kiếm
+│   │   ├── seller/          # Quản lý sản phẩm seller
+│   │   └── transaction/     # Đơn hàng và thanh toán
+│   ├── hooks/                # Custom React hooks
+│   ├── lib/                  # Hàm tiện ích và helper
+│   ├── routes/               # Định nghĩa route
+│   ├── services/             # Tầng service API
+│   │   ├── api.ts           # Axios instance và interceptors
+│   │   ├── auth.api.ts      # API xác thực
+│   │   ├── product.api.ts   # API sản phẩm
+│   │   └── ...              # Module API khác
+│   ├── store/                # Redux store
+│   │   ├── index.ts         # Cấu hình store
+│   │   ├── hooks.ts         # Typed Redux hooks
+│   │   └── slices/          # Redux slices
+│   ├── types/                # Định nghĩa kiểu TypeScript
+│   ├── App.tsx               # Component gốc
+│   └── main.tsx              # Entry point ứng dụng
+├── .env.example              # Template biến môi trường
+├── .env.local                # Biến môi trường local (gitignored)
+├── package.json              # Dependencies và scripts
+├── tsconfig.json             # Cấu hình TypeScript
+├── tailwind.config.js        # Cấu hình Tailwind CSS
+└── vite.config.ts            # Cấu hình Vite
 ```
 
-## ✨ Các tính năng
+## Bắt đầu
 
-### 1. Phân hệ Guest (Người dùng ẩn danh)
+### Yêu cầu
 
-- ✅ Trang chủ với Top 5 sản phẩm
-- ✅ Xem danh sách sản phẩm theo danh mục
-- ✅ Xem chi tiết sản phẩm
-- ✅ Tìm kiếm sản phẩm (Full-text search)
-- ✅ Menu danh mục 2 cấp
+- Node.js 18.x hoặc cao hơn
+- npm 9.x hoặc cao hơn
+- Backend API server đang chạy (mặc định: http://localhost:8080)
 
-### 2. Phân hệ Bidder (Người mua)
+### Cài đặt
 
-- ✅ Đăng nhập / Đăng ký
-- ✅ Quản lý hồ sơ cá nhân
-- ✅ Danh sách yêu thích (Watch List)
-- 🚧 Đặt giá sản phẩm
-- 🚧 Đấu giá tự động
+1. Clone repository và di chuyển vào thư mục frontend:
 
-### 3. Phân hệ Seller (Người bán)
+```bash
+cd frontend
+```
 
-- 🚧 Đăng sản phẩm
-- 🚧 Quản lý sản phẩm
-- 🚧 Trả lời câu hỏi
-
-### 4. Phân hệ Admin (Quản trị viên)
-
-- 🚧 Dashboard thống kê
-- 🚧 Quản lý danh mục
-- 🚧 Quản lý người dùng
-
-## 🛠️ Cài đặt
-
-1. Cài đặt dependencies:
+2. Cài đặt dependencies:
 
 ```bash
 npm install
 ```
 
-2. Tạo file `.env`:
+3. Tạo file cấu hình môi trường:
 
 ```bash
-cp .env.example .env
+cp .env.example .env.local
 ```
 
-3. Cấu hình API URL trong `.env`:
+4. Cấu hình biến môi trường trong `.env.local`:
 
-```
-VITE_API_URL=http://localhost:8080/api
+```env
+# Cấu hình Backend API
+VITE_API_URL=
+VITE_WS_URL=
+
+# Bảo mật & Xác thực
+VITE_RECAPTCHA_SITE_KEY=
+VITE_OAUTH_GOOGLE_CLIENT_ID=
 ```
 
-4. Chạy development server:
+**Biến môi trường bắt buộc:**
+
+- `VITE_API_URL` - URL gốc của Backend API
+- `VITE_WS_URL` - WebSocket endpoint cho cập nhật real-time
+- `VITE_RECAPTCHA_SITE_KEY` - Site key của Google reCAPTCHA v3 (lấy từ https://www.google.com/recaptcha/admin)
+- `VITE_OAUTH_GOOGLE_CLIENT_ID` - Client ID của Google OAuth (lấy từ https://console.cloud.google.com/apis/credentials)
+
+### Development
+
+Khởi chạy development server:
 
 ```bash
 npm run dev
 ```
 
-Ứng dụng sẽ chạy tại: http://localhost:5173/
+Ứng dụng sẽ chạy tại: http://localhost:5173
 
-5. Build production:
+### Build Production
+
+Tạo bản build production đã tối ưu:
 
 ```bash
 npm run build
 ```
 
-## 🔧 API Integration
+Output build sẽ nằm trong thư mục `dist/`.
 
-### Authentication
+Xem trước bản build production ở local:
 
-- JWT AccessToken & RefreshToken
-- Auto refresh token khi hết hạn
-- Interceptor xử lý 401 errors
+```bash
+npm run preview
+```
 
-### State Management
+### Kiểm tra chất lượng code
 
-- Redux Toolkit cho global state
-- LocalStorage cho persistent data
-- Optimistic updates
+Chạy TypeScript type checking:
 
-## 🎨 UI/UX
+```bash
+npm run type-check
+```
 
-### Theme
+Chạy linting:
 
-- Light / Dark mode support
-- Consistent design language
-- Responsive design (Mobile-first)
+```bash
+npm run lint
+```
 
-### Components
+## Tính năng chính
 
-- shadcn/ui components
-- Custom components với Radix UI
-- Accessible (ARIA, keyboard navigation)
+### Xác thực & Phân quyền
 
-## 📝 Tác giả
+- Xác thực dựa trên JWT với access token và refresh token
+- Tự động làm mới token khi hết hạn
+- Kiểm soát truy cập dựa trên vai trò (ADMIN, SELLER, BIDDER)
+- Tích hợp Google OAuth
+- Bảo vệ reCAPTCHA v3
 
-AuctionHub Team - WNC Final Project
+### Quản lý sản phẩm
+
+- Duyệt sản phẩm theo danh mục
+- Chức năng tìm kiếm full-text
+- Cập nhật sản phẩm real-time qua WebSocket
+- Theo dõi trạng thái sản phẩm (PENDING, ACTIVE, COMPLETED, CANCELLED)
+- Upload và quản lý hình ảnh
+
+### Hệ thống đấu giá
+
+- Cập nhật giá đấu real-time
+- Theo dõi lịch sử đấu giá
+- Xác thực giá đấu tự động
+- Đồng hồ đếm ngược
+- Chức năng danh sách theo dõi
+
+### Vai trò người dùng
+
+**Guest:**
+
+- Duyệt sản phẩm và danh mục
+- Xem chi tiết sản phẩm
+- Tìm kiếm sản phẩm
+
+**Bidder:**
+
+- Đặt giá đấu cho sản phẩm
+- Quản lý danh sách theo dõi
+- Xem lịch sử đấu giá
+- Yêu cầu nâng cấp lên seller
+- Quản lý giao dịch
+
+**Seller:**
+
+- Tạo và quản lý sản phẩm
+- Xem hoạt động đấu giá
+- Trả lời câu hỏi
+- Hủy sản phẩm
+- Bổ sung mô tả sản phẩm
+
+**Admin:**
+
+- Quản lý người dùng
+- Kiểm duyệt sản phẩm
+- Phê duyệt nâng cấp seller
+- Cấu hình hệ thống
+- Dashboard phân tích
+
+## License
+
+Dự án này là một phần của WNC Final Project.

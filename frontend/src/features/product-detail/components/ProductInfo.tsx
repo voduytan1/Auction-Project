@@ -77,6 +77,7 @@ export function ProductInfo({
 
   // Show completed card for ALL users when product is completed
   const isCompleted = product.trangThai === "COMPLETED";
+  const isCancelled = product.trangThai === "CANCELLED";
 
   const [buyDialogOpen, setBuyDialogOpen] = useState(false);
   const [buyLoading, setBuyLoading] = useState(false);
@@ -191,8 +192,26 @@ export function ProductInfo({
         </CardContent>
       </Card>
 
-      {/* Action Buttons OR Completed Card */}
-      {isCompleted ? (
+      {/* Action Buttons OR Completed/Cancelled Card */}
+      {isCancelled ? (
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-4 text-red-600">
+              <CheckCircle2 className="h-6 w-6" />
+              <h3 className="text-xl font-semibold">Sản phẩm đã bị hủy</h3>
+            </div>
+            <p className="text-slate-600 mb-4">
+              Sản phẩm này đã bị người bán hoặc quản trị viên hủy.
+            </p>
+            <div className="mt-4 p-3 bg-red-50 rounded-lg">
+              <p className="text-sm text-slate-600">
+                Phiên đấu giá không còn hoạt động. Vui lòng xem các sản phẩm
+                khác.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : isCompleted ? (
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-2 mb-4 text-amber-600">

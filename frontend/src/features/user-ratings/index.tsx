@@ -1,45 +1,65 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { ratingAPI, type RatingResponse } from "@/services/rating.api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { userAPI } from "@/services/user.api";
+import type { User } from "@/features/auth/types";
+import { Card, CardContent } from "@/components/ui/card";
 import { PageLoader } from "@/components/PageLoader";
-import { Star, ArrowLeft, User, MessageSquare } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
-import { vi } from "date-fns/locale";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserProfileHeader } from "./components/UserProfileHeader";
+import { RatingStatistics } from "./components/RatingStatistics";
+import { RatingsList } from "./components/RatingsList";
 
 export default function UserRatingsPage() {
   const { userId } = useParams<{ userId: string }>();
+  const navigate = useNavigate();
   const [ratings, setRatings] = useState<RatingResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [totalRatings, setTotalRatings] = useState(0);
   const [averageRating, setAverageRating] = useState(0);
+  const [positiveCount, setPositiveCount] = useState(0);
+  const [negativeCount, setNegativeCount] = useState(0);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const fetchRatings = async () => {
+    const fetchData = async () => {
       if (!userId) return;
 
       try {
         setLoading(true);
-        const response = await ratingAPI.getRatingsOfUser(userId, {
-          page: 1,
-          size: 100, // Get all ratings
-        });
 
+        // Fetch user info and ratings in parallel
+        const [userResponse, ratingsResponse] = await Promise.all([
+          userAPI.getById(userId),
+          ratingAPI.getRatingsOfUser(userId, {
+            page: 1,
+            size: 100,
+          }),
+        ]);
+
+        // Set user info
+        setUser(userResponse.data);
+
+        // Process ratings
+        const response = ratingsResponse;
+
+        // Response interceptor đã extract data, metadata ở __raw__
         const ratingsData = Array.isArray(response.data) ? response.data : [];
+        const metadata = (response as any).__raw__?.metadata;
 
         setRatings(ratingsData);
-        setTotalRatings(ratingsData.length);
+        setTotalRatings(metadata?.totalElements ?? ratingsData.length);
 
-        // Calculate average
+        // Calculate statistics
+        const positive = ratingsData.filter((r) => r.diem > 0).length;
+        const negative = ratingsData.filter((r) => r.diem < 0).length;
+        setPositiveCount(positive);
+        setNegativeCount(negative);
+
         if (ratingsData.length > 0) {
-          const total = ratingsData.reduce(
-            (sum, r) => sum + (r.isPositive ? 1 : 0),
-            0
-          );
-          setAverageRating((total / ratingsData.length) * 100);
+          setAverageRating((positive / ratingsData.length) * 100);
         }
 
         setError(null);
@@ -51,7 +71,7 @@ export default function UserRatingsPage() {
       }
     };
 
-    fetchRatings();
+    fetchData();
   }, [userId]);
 
   if (loading) {
@@ -64,8 +84,8 @@ export default function UserRatingsPage() {
         <Card>
           <CardContent className="p-6 text-center">
             <p className="text-red-600">{error}</p>
-            <Button asChild className="mt-4">
-              <Link to="/">Về trang chủ</Link>
+            <Button onClick={() => navigate(-1)} className="mt-4">
+              Quay lại
             </Button>
           </CardContent>
         </Card>
@@ -74,108 +94,25 @@ export default function UserRatingsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <Button asChild variant="ghost" className="mb-4">
-        <Link to="/" className="flex items-center gap-2">
-          <ArrowLeft className="h-4 w-4" />
-          Quay lại
-        </Link>
+    <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <Button variant="ghost" className="mb-4" onClick={() => navigate(-1)}>
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Quay lại
       </Button>
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Star className="h-6 w-6 text-yellow-500" />
-            Đánh giá người dùng
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-6">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-primary">
-                {averageRating.toFixed(0)}%
-              </div>
-              <div className="text-sm text-muted-foreground mt-1">
-                Tỷ lệ đánh giá tích cực
-              </div>
-            </div>
-            <div className="h-16 w-px bg-border" />
-            <div className="text-center">
-              <div className="text-4xl font-bold text-slate-700">
-                {totalRatings}
-              </div>
-              <div className="text-sm text-muted-foreground mt-1">
-                Tổng số đánh giá
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <UserProfileHeader
+        user={user}
+        averageRating={averageRating}
+        totalRatings={totalRatings}
+      />
 
-      {ratings.length === 0 ? (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <MessageSquare className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <p className="text-lg text-muted-foreground">
-              Người dùng này chưa có đánh giá nào
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {ratings.map((rating) => (
-            <Card key={rating.ratingid}>
-              <CardContent className="p-4">
-                <div className="flex items-start gap-4">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={rating.fromUserAvatar} />
-                    <AvatarFallback>
-                      <User className="h-5 w-5" />
-                    </AvatarFallback>
-                  </Avatar>
+      <RatingStatistics
+        averageRating={averageRating}
+        positiveCount={positiveCount}
+        negativeCount={negativeCount}
+      />
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <div className="font-semibold">
-                          {rating.fromUserName || "Người dùng"}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {format(
-                            new Date(rating.createdAt),
-                            "dd/MM/yyyy HH:mm",
-                            { locale: vi }
-                          )}
-                        </div>
-                      </div>
-                      <div
-                        className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
-                          rating.isPositive
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        <Star
-                          className={`h-4 w-4 ${
-                            rating.isPositive ? "fill-current" : ""
-                          }`}
-                        />
-                        {rating.isPositive ? "Tích cực" : "Tiêu cực"}
-                      </div>
-                    </div>
-
-                    {rating.comment && (
-                      <p className="text-slate-700 whitespace-pre-wrap break-words">
-                        {rating.comment}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+      <RatingsList ratings={ratings} totalRatings={totalRatings} />
     </div>
   );
 }

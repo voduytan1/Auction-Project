@@ -68,8 +68,6 @@ export function ImageUploader({
       setPreviewUrls((prev) => [...prev, ...newPreviewUrls]);
     }
 
-    const filesToUse = mode === "single" ? [validFiles[0]] : validFiles;
-
     // Auto-confirm if showConfirmButton is false
     if (!showConfirmButton) {
       if (mode === "single") {

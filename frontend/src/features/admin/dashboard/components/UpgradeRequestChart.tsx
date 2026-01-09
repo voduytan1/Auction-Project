@@ -144,8 +144,10 @@ export function UpgradeRequestChart() {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }) =>
-                  percent > 0 ? `${name} ${(percent * 100).toFixed(0)}%` : ""
+                label={({ name, percent }: any) =>
+                  percent && percent > 0
+                    ? `${name} ${(percent * 100).toFixed(0)}%`
+                    : ""
                 }
                 outerRadius={70}
                 fill="#8884d8"
@@ -158,13 +160,7 @@ export function UpgradeRequestChart() {
                   ))}
               </Pie>
               <Tooltip />
-              <Legend
-                payload={chartData.map((item) => ({
-                  value: `${item.name}: ${item.value}`,
-                  type: "circle",
-                  color: item.color,
-                }))}
-              />
+              <Legend />
             </PieChart>
           </ResponsiveContainer>
         )}

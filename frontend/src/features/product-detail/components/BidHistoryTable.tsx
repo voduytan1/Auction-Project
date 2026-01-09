@@ -19,7 +19,7 @@ import type { BidHistory } from "../types";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
 import { useAppSelector } from "@/hooks/use-redux";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { bidAPI } from "@/services/bid.api";
 import type { ApiErrorResponse } from "@/types/types";
@@ -300,9 +300,19 @@ export function BidHistoryTable({
                         })}
                       </td>
                       <td className="py-3 max-w-25 truncate sm:max-w-none">
-                        <span className="font-mono text-xs sm:text-sm font-semibold">
-                          {bid.tenBidder || bid.bidderName}
-                        </span>
+                        {bid.bidderId && isOwner ? (
+                          <Link
+                            to={`/users/${bid.bidderId}/ratings`}
+                            className="font-mono text-xs sm:text-sm font-semibold hover:text-primary hover:underline transition-colors"
+                            title="Xem chi tiết đánh giá"
+                          >
+                            {bid.tenBidder || bid.bidderName}
+                          </Link>
+                        ) : (
+                          <span className="font-mono text-xs sm:text-sm font-semibold">
+                            {bid.tenBidder || bid.bidderName}
+                          </span>
+                        )}
                         {index === 0 && (
                           <span className="hidden sm:inline-block ml-2 rounded-full bg-accent px-2 py-0.5 text-xs text-white">
                             Cao nhất

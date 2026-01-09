@@ -190,11 +190,11 @@ export function UpgradeRequestsTable() {
             placeholder="Tìm theo username..."
           />
 
-          {isLoading && <TableLoadingState colSpan={5} />}
+          {isLoading && <TableLoadingState colSpan={3} />}
 
           {!isLoading && requests.length === 0 && (
             <TableEmptyState
-              colSpan={5}
+              colSpan={3}
               message={
                 searchTerm
                   ? "Không tìm thấy yêu cầu nào"
@@ -216,22 +216,6 @@ export function UpgradeRequestsTable() {
                       onSort={handleSort}
                     />
                     <SortableTableHead
-                      field="lyDo"
-                      label="Lý do"
-                      sortBy={sortBy}
-                      sortOrder={sortOrder}
-                      onSort={handleSort}
-                      className="hidden md:table-cell"
-                    />
-                    <SortableTableHead
-                      field="ghiChuAdmin"
-                      label="Ghi chú Admin"
-                      sortBy={sortBy}
-                      sortOrder={sortOrder}
-                      onSort={handleSort}
-                      className="hidden lg:table-cell"
-                    />
-                    <SortableTableHead
                       field="trangThai"
                       label="Trạng thái"
                       sortBy={sortBy}
@@ -246,12 +230,6 @@ export function UpgradeRequestsTable() {
                     <TableRow key={request.requestid}>
                       <TableCell className="font-medium">
                         {request.username}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-sm">
-                        {request.lyDo || "Không có"}
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell text-sm">
-                        {request.ghiChuAdmin || "-"}
                       </TableCell>
                       <TableCell>
                         <Badge

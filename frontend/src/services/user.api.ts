@@ -75,6 +75,7 @@ export const userAPI = {
 
   /**
    * POST /users/{id}/reset-password - Reset user password (admin only)
+   * Backend will auto-generate password and send email
    */
   resetPassword: (id: string) => api.post<void>(`/users/${id}/reset-password`),
 

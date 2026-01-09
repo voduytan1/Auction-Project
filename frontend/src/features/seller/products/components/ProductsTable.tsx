@@ -116,14 +116,15 @@ export function ProductsTable({ status }: ProductsTableProps) {
     if (!selectedProduct) return;
 
     try {
-      // TODO: Call API to cancel product
-      // await productApi.cancelProduct(selectedProduct.productid);
+      await productAPI.cancel(selectedProduct.productid);
       toast.success("Đã hủy sản phẩm thành công!");
       setCancelDialogOpen(false);
       setSelectedProduct(null);
       fetchProducts(); // Refresh products list
-    } catch {
-      toast.error("Không thể hủy sản phẩm. Vui lòng thử lại!");
+    } catch (err) {
+      const errorMsg =
+        err instanceof Error ? err.message : "Không thể hủy sản phẩm";
+      toast.error(errorMsg);
     }
   };
 
