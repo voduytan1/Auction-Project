@@ -1,8 +1,10 @@
 package com.example.backend.config;
 
 
+import com.example.backend.config.filter.RateLimitFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,6 +25,8 @@ import org.springframework.security.web.SecurityFilterChain;
 
 import java.time.Duration;
 import java.util.Arrays;
+
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -39,6 +43,9 @@ import java.util.Map;
 @EnableWebSecurity
 @Slf4j
 public class SecurityConfig {
+    @Autowired
+    private RateLimitFilter rateLimitFilter;
+
     private static final Map<String, Map<HttpMethod, String[]>> ROLE_BASED_ENDPOINTS = Map.of(
             "PUBLIC", Map.of(
                     HttpMethod.GET, new String[]{"/auth/**", "/actuator/**", "/categories","/categories/{id}", "/categories/{id}/products", "/categories/{id}/sub-category", "/categories/{id}/products/parent-category","/products", "/products/{id}", "/bids/history/{productId}/get-top", "/questions", "/swagger-ui/**", "/v3/api-docs/**","/rating/{id}", "/users/{id}"},
@@ -48,7 +55,7 @@ public class SecurityConfig {
             ),
             "ADMIN", Map.of(
                     HttpMethod.GET, new String[]{"/admin/**", "/config/**", "/admin/dashboard/**"},
-                    HttpMethod.POST, new String[]{"/categories","/admin/**", "/config/**", "/users/{id}/reset-password"},
+                    HttpMethod.POST, new String[]{"/categories","/admin/**", "/config/**", "/users/{id}/reset-password", "/products/cancel/{id}"},
                     HttpMethod.PATCH, new String[]{"/categories/{id}","/admin/**"},
                     HttpMethod.DELETE, new String[]{"/users/{id}","/categories/{id}","/admin/**", "/chat/**"}
             ),
@@ -66,7 +73,7 @@ public class SecurityConfig {
             ),
             "AUTHENTICATED",Map.of(
                     HttpMethod.GET, new String[]{"/users/me", "/bids/**", "/bids/history/{productId}", "/transactions/buyer", "/transactions/seller","/transactions/{id}", "/theo-doi", "/rating/mine", "/chat/**"},
-                    HttpMethod.POST, new String[]{"/users/request-seller", "/images/**","/image/**", "/bids/**", "/payment/create-checkout-session", "/transactions/{id}/dia-chi", "/transactions/{id}/hoan-thanh", "/theo-doi", "/questions", "/transactions/{id}/ma-van-don", "/transactions/{id}/huy", "/products/block", "/chat/**", "/products/cancel/{id}"},
+                    HttpMethod.POST, new String[]{"/users/request-seller", "/images/**","/image/**", "/bids/**", "/payment/create-checkout-session", "/transactions/{id}/dia-chi", "/transactions/{id}/hoan-thanh", "/theo-doi", "/questions", "/transactions/{id}/ma-van-don", "/transactions/{id}/huy", "/products/block", "/chat/**"},
                     HttpMethod.PUT, new String[]{"/users/{id}"},
                     HttpMethod.PATCH, new String[]{"/products", "/questions/{id}"},
                     HttpMethod.DELETE, new String[]{"/theo-doi"}
@@ -91,6 +98,8 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.csrf(AbstractHttpConfigurer::disable);
         httpSecurity.cors(cors -> cors.configurationSource(corsConfigurationSource()));
+
+        httpSecurity.addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class);
 
         httpSecurity.authorizeHttpRequests(request -> {
             request.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll(); //Preflight

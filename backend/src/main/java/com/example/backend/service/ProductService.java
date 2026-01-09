@@ -115,14 +115,14 @@ public class ProductService {
 
 
     @Transactional
-    public ProductResponse cancelProduct(UUID userId, Long id){
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng với id "+ userId));
+    public ProductResponse cancelProduct(Long id){
+//        User user = userRepository.findById(userId)
+//                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng với id "+ userId));
 
         Product product = productRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("Không tìm thấy product với id "+ id));
-        if (!product.getSeller().equals(user) && user.getVaitro() != Role.ADMIN) {
-            throw new ForbiddenException("Bạn không có quyền gỡ bỏ sản phẩm này");
-        }
+//        if (!product.getSeller().equals(user) && user.getVaitro() != Role.ADMIN) {
+//            throw new ForbiddenException("Bạn không có quyền gỡ bỏ sản phẩm này");
+//        }
 
         if(product.getTrangThai()!=ProductStatus.COMPLETED){
             throw new ForbiddenException("Sản phẩm đã đấu giá thành công, không thể thu hồi");
