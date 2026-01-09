@@ -42,6 +42,13 @@ export function LoginForm() {
     resolver: zodResolver(loginSchema),
   });
 
+  // Redirect về home nếu đã đăng nhập (khi mount)
+  useEffect(() => {
+    if (isAuthenticated && !isLoginAttempted) {
+      navigate("/", { replace: true });
+    }
+  }, [isAuthenticated, isLoginAttempted, navigate]);
+
   // Redirect chỉ sau khi login thành công (không redirect khi mount với token cũ)
   useEffect(() => {
     if (isAuthenticated && isLoginAttempted) {

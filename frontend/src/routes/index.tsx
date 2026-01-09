@@ -45,6 +45,16 @@ const AdminSettingsPage = lazy(() => import("./admin/settings"));
 
 // Seller Pages
 const CreateProductPage = lazy(() => import("./seller/create-product"));
+const SellerProductsPage = lazy(() =>
+  import(
+    "../features/seller/products/components/SellerProductsManagement"
+  ).then((m) => ({ default: m.SellerProductsManagement }))
+);
+const SellerTransactionsPage = lazy(() =>
+  import("../features/seller/transactions/SellerTransactionsPage").then(
+    (m) => ({ default: m.SellerTransactionsPage })
+  )
+);
 const AppendDescriptionPage = lazy(
   () =>
     import(
@@ -304,19 +314,27 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      // {
-      //   path: "products",
-      //   element: (
-      //     <PageWrapper title="Sản phẩm của tôi">
-      //       <SellerProductsPage />
-      //     </PageWrapper>
-      //   ),
-      // },
+      {
+        path: "products",
+        element: (
+          <PageWrapper title="Sản phẩm của tôi">
+            <SellerProductsPage />
+          </PageWrapper>
+        ),
+      },
       {
         path: "products/create",
         element: (
           <PageWrapper title="Đăng sản phẩm mới">
             <CreateProductPage />
+          </PageWrapper>
+        ),
+      },
+      {
+        path: "transactions",
+        element: (
+          <PageWrapper title="Giao dịch của tôi">
+            <SellerTransactionsPage />
           </PageWrapper>
         ),
       },

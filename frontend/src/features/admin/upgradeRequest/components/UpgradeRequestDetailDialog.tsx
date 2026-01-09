@@ -64,20 +64,6 @@ export function UpgradeRequestDetailDialog({
           </div>
 
           <div>
-            <div className="text-sm font-medium">Lý do xin nâng cấp</div>
-            <div className="text-sm text-muted-foreground">
-              {request.lyDo || "Không có lý do"}
-            </div>
-          </div>
-
-          <div>
-            <div className="text-sm font-medium">Ghi chú của Admin</div>
-            <div className="text-sm text-muted-foreground">
-              {request.ghiChuAdmin || "Chưa có ghi chú"}
-            </div>
-          </div>
-
-          <div>
             <div className="text-sm font-medium">Trạng thái</div>
             <div className="mt-1">
               <Badge

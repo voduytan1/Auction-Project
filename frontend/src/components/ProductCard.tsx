@@ -87,7 +87,16 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <>
-      <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-full">
+      <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-full relative">
+        {/* CANCELLED Overlay */}
+        {product.trangThai === "CANCELLED" && (
+          <div className="absolute inset-0 bg-black/60 z-20 flex items-center justify-center">
+            <Badge variant="destructive" className="text-lg px-4 py-2">
+              ĐÃ HỦY
+            </Badge>
+          </div>
+        )}
+
         {/* Image - Clickable */}
         <Link to={`/products/${product.productid}`} className="block">
           <div className="aspect-square relative overflow-hidden bg-muted group">

@@ -7,9 +7,13 @@ const NotFoundPage = () => {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="text-center space-y-6 max-w-md">
         <div className="space-y-2">
-          <h1 className="text-9xl font-bold text-primary">404</h1>
-          <h2 className="text-3xl font-semibold">Không tìm thấy trang</h2>
-          <p className="text-muted-foreground">
+          <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold text-primary">
+            404
+          </h1>
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold">
+            Không tìm thấy trang
+          </h2>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Xin lỗi, trang bạn đang tìm kiếm không tồn tại hoặc đã bị di chuyển.
           </p>
         </div>
