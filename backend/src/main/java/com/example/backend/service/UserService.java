@@ -4,6 +4,7 @@ package com.example.backend.service;
 import com.example.backend.dto.admin.dashboard.NewUserDataPoint;
 import com.example.backend.dto.common.PaginationRequest;
 import com.example.backend.dto.user.CreateUserRequest;
+import com.example.backend.dto.user.ResetPasswordRequest;
 import com.example.backend.dto.user.UpdateUserRequest;
 import com.example.backend.dto.user.UserResponse;
 import com.example.backend.entity.AuthProvider;
@@ -224,6 +225,14 @@ public class UserService extends BaseService<User, UUID, CreateUserRequest, Upda
         LocalDateTime end = DateUtils.getEndOfSpecificMonth(month, year);
         return userRepository.countByCreatedAtBetween(start, end);
     }
+
+    public UserResponse resetPassword(UUID id, ResetPasswordRequest dto) {
+        User user = userRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("Không tìm thấy user với id "+ id));
+        user.setPassword(authUtils.encodePassword(dto.getPassword()));
+        userRepository.save(user);
+        return userMapper.toResponse(user);
+    }
+
     private void setPasswordIfProvided(User entity, String rawPassword) {
         if (rawPassword != null && !rawPassword.trim().isEmpty()) {
             entity.setPassword(authUtils.encodePassword(rawPassword));
