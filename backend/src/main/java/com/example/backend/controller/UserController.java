@@ -6,6 +6,7 @@ import com.example.backend.dto.common.ApiResponse;
 import com.example.backend.dto.common.PaginationInfo;
 import com.example.backend.dto.common.PaginationRequest;
 import com.example.backend.dto.user.CreateUserRequest;
+import com.example.backend.dto.user.ResetPasswordRequest;
 import com.example.backend.dto.user.UpdateUserRequest;
 import com.example.backend.dto.user.UserResponse;
 import com.example.backend.mapper.AuthMapper;
@@ -22,6 +23,7 @@ import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,6 +46,9 @@ public class UserController {
     private final AuthService authService;
     private final CookieUtils cookieUtils;
     private final AuthMapper authMapper;
+
+    @Value("${DEFAULT_PASSWORD}")
+    private String defaultPassword;
 
     @GetMapping
     public ResponseEntity<@NotNull ApiResponse<List<UserResponse>>> getAllUser(@Valid @ModelAttribute PaginationRequest request) {
@@ -90,6 +95,12 @@ public class UserController {
         UserResponse user = userService.createOne(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Tạo user thành công",  user));
+    }
+
+    @PostMapping("/{id}/reset-password")
+    public ResponseEntity<@NotNull ApiResponse<UserResponse>> resetPassword(@PathVariable UUID id, @RequestBody @Valid ResetPasswordRequest request) {
+        UserResponse response = userService.resetPassword(id, request);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @PostMapping("/request-seller")
