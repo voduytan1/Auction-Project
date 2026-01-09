@@ -48,7 +48,7 @@ public class SecurityConfig {
             ),
             "ADMIN", Map.of(
                     HttpMethod.GET, new String[]{"/admin/**", "/config/**", "/admin/dashboard/**"},
-                    HttpMethod.POST, new String[]{"/categories","/admin/**", "/config/**", "/products/cancel/{id}", "/users/{id}/reset-password"},
+                    HttpMethod.POST, new String[]{"/categories","/admin/**", "/config/**", "/users/{id}/reset-password"},
                     HttpMethod.PATCH, new String[]{"/categories/{id}","/admin/**"},
                     HttpMethod.DELETE, new String[]{"/users/{id}","/categories/{id}","/admin/**", "/chat/**"}
             ),
@@ -66,7 +66,7 @@ public class SecurityConfig {
             ),
             "AUTHENTICATED",Map.of(
                     HttpMethod.GET, new String[]{"/users/me", "/bids/**", "/bids/history/{productId}", "/transactions/buyer", "/transactions/seller","/transactions/{id}", "/theo-doi", "/rating/mine", "/chat/**"},
-                    HttpMethod.POST, new String[]{"/users/request-seller", "/images/**","/image/**", "/bids/**", "/payment/create-checkout-session", "/transactions/{id}/dia-chi", "/transactions/{id}/hoan-thanh", "/theo-doi", "/questions", "/transactions/{id}/ma-van-don", "/transactions/{id}/huy", "/products/block", "/chat/**"},
+                    HttpMethod.POST, new String[]{"/users/request-seller", "/images/**","/image/**", "/bids/**", "/payment/create-checkout-session", "/transactions/{id}/dia-chi", "/transactions/{id}/hoan-thanh", "/theo-doi", "/questions", "/transactions/{id}/ma-van-don", "/transactions/{id}/huy", "/products/block", "/chat/**", "/products/cancel/{id}"},
                     HttpMethod.PUT, new String[]{"/users/{id}"},
                     HttpMethod.PATCH, new String[]{"/products", "/questions/{id}"},
                     HttpMethod.DELETE, new String[]{"/theo-doi"}

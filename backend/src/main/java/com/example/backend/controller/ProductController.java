@@ -73,8 +73,12 @@ public class ProductController {
     }
 
     @PostMapping("/cancel/{id}")
-    public ResponseEntity<@NotNull ApiResponse<ProductResponse>> cancelProduct(@PathVariable Long id) {
-        ProductResponse result = productService.cancelProduct(id);
+    public ResponseEntity<@NotNull ApiResponse<ProductResponse>> cancelProduct(@PathVariable Long id, @AuthenticationPrincipal  Jwt jwt) {
+        String sub = jwt != null ? jwt.getSubject() : null;
+        if(sub == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Lỗi access token không hợp lệ"));
+        }
+        ProductResponse result = productService.cancelProduct(UUID.fromString(sub), id);
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
