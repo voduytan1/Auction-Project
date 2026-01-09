@@ -1,6 +1,7 @@
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAppSelector } from "../../store/hooks";
 import { PageLoader } from "../PageLoader";
+import { useEffect } from "react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,6 +13,14 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     (state) => state.auth
   );
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Lắng nghe khi session hết hạn (từ axios interceptor)
+  useEffect(() => {
+    if (!isInitializing && !isAuthenticated) {
+      navigate("/auth/login", { state: { from: location }, replace: true });
+    }
+  }, [isAuthenticated, isInitializing, navigate, location]);
 
   // Đợi auth restore hoàn tất trước khi check
   if (isInitializing) {

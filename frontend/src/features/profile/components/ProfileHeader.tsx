@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ShoppingBag,Star, Camera } from "lucide-react";
+import { ShoppingBag, Star, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -68,17 +68,17 @@ export function ProfileHeader({
   };
 
   return (
-    <Card className="mb-8">
-      <CardContent className="pt-6">
-        <div className="flex flex-col md:flex-row gap-6 items-start">
+    <Card className="mb-4 sm:mb-6 lg:mb-8">
+      <CardContent className="pt-4 sm:pt-6">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start">
           {/* Avatar Section */}
           <div className="relative">
-            <Avatar className="h-32 w-32">
+            <Avatar className="h-24 w-24 sm:h-28 sm:w-28 lg:h-32 lg:w-32">
               <AvatarImage
                 src={profileData.anhDaiDien}
                 alt={profileData.username}
               />
-              <AvatarFallback className="text-4xl">
+              <AvatarFallback className="text-3xl sm:text-4xl">
                 {profileData.username.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
@@ -91,9 +91,9 @@ export function ProfileHeader({
                 <Button
                   size="icon"
                   variant="secondary"
-                  className="absolute bottom-0 right-0 rounded-full h-10 w-10"
+                  className="absolute bottom-0 right-0 rounded-full h-8 w-8 sm:h-10 sm:w-10"
                 >
-                  <Camera className="h-5 w-5" />
+                  <Camera className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-md">
@@ -113,12 +113,14 @@ export function ProfileHeader({
           </div>
 
           {/* User Info */}
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold mb-2">{profileData.hoVaTen}</h1>
+          <div className="flex-1 text-center sm:text-left">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+              {profileData.hoVaTen}
+            </h1>
             <p className="text-muted-foreground mb-3">
               @{profileData.username}
             </p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
               <Badge variant="outline" className="capitalize">
                 {profileData.vaitro}
               </Badge>
@@ -137,9 +139,13 @@ export function ProfileHeader({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 w-full sm:w-auto">
             {profileData.vaitro === "BIDDER" && (
-              <Button onClick={onRequestUpgrade} variant="outline">
+              <Button
+                onClick={onRequestUpgrade}
+                variant="outline"
+                className="w-full sm:w-auto"
+              >
                 <ShoppingBag className="h-4 w-4 mr-2" />
                 Yêu cầu nâng cấp Seller
               </Button>

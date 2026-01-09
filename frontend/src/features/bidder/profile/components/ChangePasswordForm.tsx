@@ -51,7 +51,6 @@ export function ChangePasswordForm() {
       toast.success("Đổi mật khẩu thành công!");
       reset();
     } catch (error: any) {
-      console.error("Error changing password:", error);
       toast.error(
         error?.response?.data?.message ||
           "Không thể đổi mật khẩu. Vui lòng kiểm tra lại mật khẩu hiện tại!"
@@ -62,29 +61,32 @@ export function ChangePasswordForm() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <Card>
-        <CardContent className="pt-6">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <CardContent className="pt-4 sm:pt-6">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-3 sm:space-y-4"
+          >
             {/* Security Alert */}
             <Alert>
-              <Lock className="h-4 w-4" />
+              <Lock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <AlertDescription className="text-sm">
                 Mật khẩu phải có ít nhất 6 ký tự
               </AlertDescription>
             </Alert>
 
             {/* Current Password */}
-            <div className="space-y-2">
-              <Label htmlFor="currentPassword">
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="currentPassword" className="text-sm md:text-base">
                 Mật khẩu hiện tại <span className="text-destructive">*</span>
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Lock className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
                 <Input
                   id="currentPassword"
                   type={showCurrentPassword ? "text" : "password"}
-                  className="pl-10 pr-10"
+                  className="pl-8 sm:pl-10 pr-9 sm:pr-10 text-sm md:text-base"
                   {...register("currentPassword", {
                     required: "Vui lòng nhập mật khẩu hiện tại",
                   })}
@@ -110,16 +112,16 @@ export function ChangePasswordForm() {
             </div>
 
             {/* New Password */}
-            <div className="space-y-2">
-              <Label htmlFor="newPassword">
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="newPassword" className="text-sm md:text-base">
                 Mật khẩu mới <span className="text-destructive">*</span>
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Lock className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
                 <Input
                   id="newPassword"
                   type={showNewPassword ? "text" : "password"}
-                  className="pl-10 pr-10"
+                  className="pl-8 sm:pl-10 pr-9 sm:pr-10 text-sm md:text-base"
                   {...register("newPassword", {
                     required: "Vui lòng nhập mật khẩu mới",
                     minLength: {
@@ -149,17 +151,17 @@ export function ChangePasswordForm() {
             </div>
 
             {/* Confirm Password */}
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="confirmPassword" className="text-sm md:text-base">
                 Xác nhận mật khẩu mới{" "}
                 <span className="text-destructive">*</span>
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Lock className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
                 <Input
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
-                  className="pl-10 pr-10"
+                  className="pl-8 sm:pl-10 pr-9 sm:pr-10 text-sm md:text-base"
                   {...register("confirmPassword", {
                     required: "Vui lòng xác nhận mật khẩu mới",
                     validate: (value) =>
@@ -187,17 +189,22 @@ export function ChangePasswordForm() {
             </div>
 
             {/* Submit Button */}
-            <div className="flex justify-end gap-3 pt-4">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-3 sm:pt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => reset()}
                 disabled={isSubmitting}
+                className="text-sm md:text-base w-full sm:w-auto"
               >
                 Hủy
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                <Shield className="h-4 w-4 mr-2" />
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="text-sm md:text-base w-full sm:w-auto"
+              >
+                <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
                 {isSubmitting ? "Đang xử lý..." : "Đổi mật khẩu"}
               </Button>
             </div>

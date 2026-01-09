@@ -27,9 +27,8 @@ export function useAuthRestore() {
       try {
         await dispatch(refreshAccessToken()).unwrap();
         // authSlice.refreshAccessToken.fulfilled đã set user + isAuthenticated + isInitializing = false
-      } catch (error) {
-        // authSlice.refreshAccessToken.rejected đã clear auth + set isInitializing = false
-        // Hoặc có thể do không có refresh_token cookie → Backend trả 401
+      } catch {
+        // Refresh thất bại (401): Không có user
         dispatch(setInitializing(false));
       }
     };

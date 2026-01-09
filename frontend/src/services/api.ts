@@ -60,11 +60,12 @@ api.interceptors.response.use(
       _retry?: boolean;
     };
 
-    // Nếu là request login mà bị 401 thì trả lỗi về cho component xử lý, không redirect
-    if (
-      error.response?.status === 401 &&
-      originalRequest.url?.includes("/auth/login")
-    ) {
+    // Nếu là request login hoặc public endpoints (product detail) bị 401 thì trả lỗi về cho component xử lý, không redirect
+    const isPublicEndpoint =
+      originalRequest.url?.includes("/auth/login") ||
+      originalRequest.url?.match(/\/products\/\d+$/); // GET /products/{id}
+
+    if (error.response?.status === 401 && isPublicEndpoint) {
       return Promise.reject(error);
     }
 
@@ -110,10 +111,10 @@ api.interceptors.response.use(
           store.dispatch({ type: "auth/clearAuth" });
         }
 
-        if (window.location.pathname !== "/auth/login") {
-          window.location.href = "/auth/login";
-        }
-        return Promise.reject(refreshError);
+        // Reject với custom error để component tự navigate (tránh reload)
+        const authError = new Error("SESSION_EXPIRED") as AxiosError;
+        authError.response = error.response;
+        return Promise.reject(authError);
       }
     }
 

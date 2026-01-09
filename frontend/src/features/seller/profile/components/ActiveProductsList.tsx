@@ -60,52 +60,60 @@ export function ActiveProductsList({ sellerId }: ActiveProductsListProps) {
   return (
     <div>
       {isLoading ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <Package className="h-12 w-12 mx-auto mb-3 opacity-20 animate-pulse" />
-          <p>Đang tải danh sách sản phẩm...</p>
+        <div className="text-center py-8 sm:py-12 text-muted-foreground">
+          <Package className="h-10 w-10 sm:h-12 sm:w-12 md:h-16 md:w-16 mx-auto mb-3 opacity-20 animate-pulse" />
+          <p className="text-sm sm:text-base">Đang tải danh sách sản phẩm...</p>
         </div>
       ) : products.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <Package className="h-12 w-12 mx-auto mb-3 opacity-20" />
-          <p className="mb-4">Bạn chưa có sản phẩm nào đang bán</p>
-          <Button onClick={() => navigate("/seller/products/create")}>
+        <div className="text-center py-8 sm:py-12 text-muted-foreground">
+          <Package className="h-10 w-10 sm:h-12 sm:w-12 md:h-16 md:w-16 mx-auto mb-3 opacity-20" />
+          <p className="text-sm sm:text-base mb-3 sm:mb-4">
+            Bạn chưa có sản phẩm nào đang bán
+          </p>
+          <Button
+            onClick={() => navigate("/seller/products/create")}
+            className="text-sm md:text-base"
+          >
             Đăng sản phẩm mới
           </Button>
         </div>
       ) : (
         <>
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {products.map((product) => (
               <div
                 key={product.productid}
-                className="flex gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                className="flex flex-col sm:flex-row gap-3 sm:gap-4 md:gap-5 p-3 sm:p-4 md:p-5 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
                 onClick={() => navigate(`/products/${product.productid}`)}
               >
                 <img
                   src={product.images?.[0] || "/placeholder.png"}
                   alt={product.tenSanPham}
-                  className="w-24 h-24 object-cover rounded-lg"
+                  className="w-full sm:w-20 md:w-24 lg:w-28 h-40 sm:h-20 md:h-24 lg:h-28 object-cover rounded-lg shrink-0"
                 />
-                <div className="flex-1">
-                  <h3 className="font-semibold line-clamp-1">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-base sm:text-lg md:text-xl line-clamp-2">
                     {product.tenSanPham}
                   </h3>
-                  <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mt-2 text-xs sm:text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Clock className="h-4 w-4" />
                       Kết thúc: {formatDate(product.thoiGianKetThuc)}
                     </div>
                   </div>
-                  <div className="flex items-center justify-between mt-2">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 mt-2 sm:mt-3">
                     <div>
                       <p className="text-xs text-muted-foreground">
                         Giá hiện tại
                       </p>
-                      <p className="font-bold text-primary">
+                      <p className="font-bold text-lg sm:text-xl md:text-2xl text-primary truncate">
                         {formatCurrency(product.giaHienTai)}
                       </p>
                     </div>
-                    <Badge variant="secondary">
+                    <Badge
+                      variant="secondary"
+                      className="text-xs sm:text-sm shrink-0"
+                    >
                       {product.soLuotRaGia || 0} lượt đặt giá
                     </Badge>
                   </div>

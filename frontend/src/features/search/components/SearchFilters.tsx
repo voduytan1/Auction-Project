@@ -1,4 +1,5 @@
 import { useForm } from "react-hook-form";
+import { useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,7 @@ interface SearchFiltersProps {
   onSearchChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
   onSortChange: (value: string) => void;
-  onSearchSubmit: (e: React.FormEvent) => void;
+  onSearchSubmit: (query: string) => void;
   onClearFilters: () => void;
   showClearButton: boolean;
 }
@@ -37,14 +38,21 @@ export function SearchFilters({
   onClearFilters,
   showClearButton,
 }: SearchFiltersProps) {
-  const { register, handleSubmit } = useForm<{ searchQuery: string }>({
-    defaultValues: { searchQuery },
-  });
+  const { register, handleSubmit, setValue } = useForm<{ searchQuery: string }>(
+    {
+      defaultValues: { searchQuery },
+    }
+  );
+
+  // Sync form value with prop when searchQuery changes (e.g., from Header or URL)
+  useEffect(() => {
+    setValue("searchQuery", searchQuery);
+  }, [searchQuery, setValue]);
 
   return (
     <Card className="p-3 sm:p-4 md:p-6 mb-4 sm:mb-6 md:mb-8">
       <form
-        onSubmit={handleSubmit(() => onSearchSubmit({} as React.FormEvent))}
+        onSubmit={handleSubmit((data) => onSearchSubmit(data.searchQuery))}
         className="space-y-3 sm:space-y-4"
       >
         {/* Search input */}
@@ -90,8 +98,9 @@ export function SearchFilters({
               <SelectValue placeholder="Sắp xếp theo" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="createdAt-desc">Mới nhất</SelectItem>
               <SelectItem value="endTime-desc">Sắp kết thúc</SelectItem>
-              <SelectItem value="endTime-asc">Mới nhất</SelectItem>
+              <SelectItem value="endTime-asc">Còn nhiều thời gian</SelectItem>
               <SelectItem value="price-asc">Giá tăng dần</SelectItem>
               <SelectItem value="price-desc">Giá giảm dần</SelectItem>
               <SelectItem value="bids-desc">Nhiều lượt đấu giá</SelectItem>

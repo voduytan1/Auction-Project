@@ -32,60 +32,72 @@ export function SellerOverview({ stats }: SellerOverviewProps) {
   const navigate = useNavigate();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-5">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Điểm đánh giá</CardTitle>
-            <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-xs sm:text-sm md:text-base font-medium">
+              Điểm đánh giá
+            </CardTitle>
+            <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-yellow-500 fill-yellow-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="pt-2">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold">
               {stats.diemDanhGia.toFixed(0)}%
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               {stats.soLuongDanhGia} lượt đánh giá
             </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Đang bán</CardTitle>
-            <Package className="h-4 w-4 text-blue-500" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-xs sm:text-sm md:text-base font-medium">
+              Đang bán
+            </CardTitle>
+            <Package className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.soSanPhamDangBan}</div>
-            <p className="text-xs text-muted-foreground">Sản phẩm</p>
+          <CardContent className="pt-2">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold">
+              {stats.soSanPhamDangBan}
+            </div>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+              Sản phẩm
+            </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Đã bán</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-green-500" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-xs sm:text-sm md:text-base font-medium">
+              Đã bán
+            </CardTitle>
+            <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.soSanPhamDaBan}</div>
-            <p className="text-xs text-muted-foreground">
+          <CardContent className="pt-2">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold">
+              {stats.soSanPhamDaBan}
+            </div>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               Giao dịch thành công
             </p>
           </CardContent>
         </Card>
 
-        <Card className="md:col-span-2 lg:col-span-3">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="sm:col-span-2 lg:col-span-3">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-xs sm:text-sm md:text-base font-medium">
               Doanh thu ước tính
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-emerald-500" />
+            <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="pt-2">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold">
               {stats.doanhThu.toLocaleString("vi-VN")} ₫
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               Tổng giá trị đấu giá thành công
             </p>
           </CardContent>
@@ -94,9 +106,13 @@ export function SellerOverview({ stats }: SellerOverviewProps) {
 
       {/* Activity Progress */}
       <Card>
-        <CardHeader>
-          <CardTitle>Hoạt động gần đây</CardTitle>
-          <CardDescription>Theo dõi tiến độ bán hàng của bạn</CardDescription>
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-base sm:text-lg md:text-xl">
+            Hoạt động gần đây
+          </CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
+            Theo dõi tiến độ bán hàng của bạn
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>

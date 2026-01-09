@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Gavel, Clock, TrendingUp, User } from "lucide-react";
+import { Gavel, Clock, TrendingUp, User, Trophy } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,9 +8,11 @@ import { PageLoader } from "@/components/PageLoader";
 import { bidAPI } from "@/services/bid.api";
 import { productAPI, type ProductResponse } from "@/services/product.api";
 import { toast } from "sonner";
+import { useAppSelector } from "@/hooks/use-redux";
 
 export function ActiveBidsSection() {
   const navigate = useNavigate();
+  const { user } = useAppSelector((state) => state.auth);
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<ProductResponse[]>([]);
 
@@ -88,99 +90,138 @@ export function ActiveBidsSection() {
 
   return (
     <div className="grid grid-cols-1 gap-4">
-      {products.map((product) => (
-        <Card
-          key={product.productid}
-          className="group overflow-hidden hover:shadow-md transition-all duration-200 border-border/60"
-        >
-          {/* Layout Logic: Flex Col (Mobile) -> Flex Row (Desktop) */}
-          <div className="flex flex-col sm:flex-row h-full">
-            {/* === PRODUCT IMAGE === */}
-            <div
-              className="relative w-full sm:w-48 h-48 sm:h-auto shrink-0 bg-muted cursor-pointer group-hover:opacity-90 transition-opacity"
-              onClick={() => navigate(`/products/${product.productid}`)}
-            >
-              {product.images && product.images.length > 0 ? (
-                <img
-                  src={product.images[0]}
-                  alt={product.tenSanPham}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Gavel className="h-10 w-10 text-muted-foreground/30" />
-                </div>
-              )}
+      {products.map((product) => {
+        const isWinning =
+          product.bidderId && String(product.bidderId) === String(user?.userid);
 
-              {/* Status Badge */}
-              <div className="absolute top-2 left-2">
-                <Badge className="bg-blue-600 hover:bg-blue-700 shadow-sm">
-                  Đang tham gia
-                </Badge>
+        return (
+          <Card
+            key={product.productid}
+            className={`group overflow-hidden hover:shadow-md transition-all duration-200 ${
+              isWinning
+                ? "border-primary/50 border-2 shadow-primary/10 shadow-lg"
+                : "border-border/60"
+            }`}
+          >
+            {/* Layout Logic: Flex Col (Mobile) -> Flex Row (Tablet+) */}
+            <div className="flex flex-col sm:flex-row h-full">
+              {/* === PRODUCT IMAGE === */}
+              <div
+                className="relative w-full sm:w-40 md:w-48 lg:w-56 xl:w-64 h-48 sm:h-40 md:h-48 lg:h-52 xl:h-56 shrink-0 bg-muted cursor-pointer group-hover:opacity-90 transition-opacity"
+                onClick={() => navigate(`/products/${product.productid}`)}
+              >
+                {product.images && product.images.length > 0 ? (
+                  <img
+                    src={product.images[0]}
+                    alt={product.tenSanPham}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Gavel className="h-10 w-10 text-muted-foreground/30" />
+                  </div>
+                )}
+
+                {/* Status Badge */}
+                <div className="absolute top-2 left-2">
+                  <Badge
+                    className={
+                      isWinning
+                        ? "bg-primary hover:bg-primary/90 shadow-md"
+                        : "bg-blue-600 hover:bg-blue-700 shadow-sm"
+                    }
+                  >
+                    {isWinning ? (
+                      <span className="flex items-center gap-1">
+                        <Trophy className="h-3 w-3" />
+                        Đang giữ giá
+                      </span>
+                    ) : (
+                      "Đang tham gia"
+                    )}
+                  </Badge>
+                </div>
               </div>
-            </div>
 
-            {/* === PRODUCT DETAILS === */}
-            <div className="flex flex-1 flex-col p-4 gap-3">
-              {/* Header: Title */}
-              <div className="space-y-1">
-                <h3
-                  className="font-semibold text-lg line-clamp-2 hover:text-primary cursor-pointer transition-colors"
-                  onClick={() => navigate(`/products/${product.productid}`)}
-                >
-                  {product.tenSanPham}
-                </h3>
-
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <User className="h-3 w-3" />
-                  <span>Người bán: {product.tenSeller}</span>
-                </div>
-              </div>
-
-              {/* Mobile Divider */}
-              <div className="h-px bg-border sm:hidden" />
-
-              {/* Footer: Stats & Action Button */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 items-end mt-auto pt-2">
-                {/* Column 1: Price */}
-                <div className="col-span-2 sm:col-span-1">
-                  <p className="text-xs text-muted-foreground mb-0.5">
-                    Giá hiện tại
-                  </p>
-                  <p className="text-xl font-bold text-primary">
-                    {formatPrice(product.giaHienTai)}
-                  </p>
-                </div>
-
-                {/* Column 2: Time & Bids */}
-                <div className="col-span-2 sm:col-span-1 space-y-1.5">
-                  <div className="flex items-center gap-2 text-sm font-medium text-orange-600">
-                    <Clock className="h-4 w-4" />
-                    <span>{formatTimeLeft(product.thoiGianKetThuc)}</span>
+              {/* === PRODUCT DETAILS === */}
+              <div className="flex flex-1 flex-col p-3 sm:p-4 md:p-5 lg:p-6 gap-2 sm:gap-3">
+                {/* Header: Title */}
+                <div className="space-y-1">
+                  <div className="flex items-start gap-2">
+                    <h3
+                      className="font-semibold text-base sm:text-lg md:text-xl line-clamp-2 hover:text-primary cursor-pointer transition-colors flex-1"
+                      onClick={() => navigate(`/products/${product.productid}`)}
+                    >
+                      {product.tenSanPham}
+                    </h3>
+                    {isWinning && (
+                      <Badge
+                        variant="outline"
+                        className="shrink-0 border-primary text-primary"
+                      >
+                        <Trophy className="h-3 w-3 mr-1" />
+                        Đang thắng
+                      </Badge>
+                    )}
                   </div>
 
-                  {product.soLuotRaGia !== undefined && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <TrendingUp className="h-3 w-3" />
-                      <span>{product.soLuotRaGia} lượt trả giá</span>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
+                    <User className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                    <span className="truncate">
+                      Người bán: {product.tenSeller}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Column 3: Action Button */}
-                <div className="col-span-2 sm:col-span-1 flex justify-end">
-                  <Button
-                    className="w-full sm:w-auto font-semibold"
-                    onClick={() => navigate(`/products/${product.productid}`)}
-                  >
-                    Vào phòng đấu giá
-                  </Button>
+                {/* Mobile Divider */}
+                <div className="h-px bg-border sm:hidden" />
+
+                {/* Footer: Stats & Action Button */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 items-end mt-auto pt-2">
+                  {/* Column 1: Price */}
+                  <div className="col-span-2 sm:col-span-1">
+                    <p className="text-xs text-muted-foreground mb-0.5">
+                      Giá hiện tại
+                    </p>
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-primary truncate">
+                      {formatPrice(product.giaHienTai)}
+                    </p>
+                  </div>
+
+                  {/* Column 2: Time & Bids */}
+                  <div className="col-span-2 sm:col-span-1 lg:col-span-1 space-y-1 sm:space-y-1.5">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-orange-600">
+                      <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <span className="truncate">
+                        {formatTimeLeft(product.thoiGianKetThuc)}
+                      </span>
+                    </div>
+
+                    {product.soLuotRaGia !== undefined && (
+                      <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-muted-foreground">
+                        <TrendingUp className="h-3 w-3" />
+                        <span className="truncate">
+                          {product.soLuotRaGia} lượt trả giá
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Column 3: Action Button */}
+                  <div className="col-span-2 sm:col-span-1 lg:col-span-2 flex justify-end">
+                    <Button
+                      className="w-full sm:w-auto md:min-w-[140px] lg:min-w-[160px] font-semibold text-sm md:text-base"
+                      onClick={() => navigate(`/products/${product.productid}`)}
+                    >
+                      Vào phòng đấu giá
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </Card>
-      ))}
+          </Card>
+        );
+      })}
     </div>
   );
 }

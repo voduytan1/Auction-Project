@@ -166,11 +166,11 @@ export default function SellerProfileManagement() {
   };
 
   return (
-    <div className="container mx-auto py-6 px-4">
-      <div className="flex gap-6">
+    <div className="container mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4 md:px-6 lg:px-8">
+      <div className="flex flex-col md:flex-row gap-4 md:gap-6 lg:gap-8">
         {/* Sidebar */}
-        <aside className="w-64 shrink-0 hidden lg:block">
-          <Card>
+        <aside className="w-full md:w-56 lg:w-64 xl:w-72 shrink-0 hidden md:block">
+          <Card className="sticky top-4">
             <CardContent className="p-0">
               <nav className="space-y-1 py-2">
                 {menuItems.map((item) => (
@@ -178,15 +178,15 @@ export default function SellerProfileManagement() {
                     key={item.id}
                     onClick={() => handleMenuChange(item.id)}
                     className={cn(
-                      "w-full flex items-center justify-between px-4 py-3 text-sm font-medium transition-colors",
+                      "w-full flex items-center justify-between px-3 md:px-4 lg:px-5 py-2.5 md:py-3 text-xs sm:text-sm md:text-base font-medium transition-colors rounded-md md:rounded-none",
                       activeMenu === item.id
-                        ? "bg-primary/10 text-primary border-r-4 border-primary"
+                        ? "bg-primary/10 text-primary md:border-r-4 border-primary"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     )}
                   >
-                    <div className="flex items-center gap-3">
-                      {item.icon}
-                      <span>{item.label}</span>
+                    <div className="flex items-center gap-2 md:gap-3">
+                      <span className="shrink-0">{item.icon}</span>
+                      <span className="text-sm md:text-base">{item.label}</span>
                     </div>
                     {activeMenu === item.id && (
                       <ChevronRight className="h-4 w-4" />

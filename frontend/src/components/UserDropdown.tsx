@@ -4,6 +4,11 @@ import {
   User as UserIcon,
   TrendingUp,
   LayoutDashboard,
+  Heart,
+  Gavel,
+  Trophy,
+  Package,
+  DollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -101,6 +106,13 @@ export default function UserDropdown({ user }: UserDropdownProps) {
           </div>
         </DropdownMenuLabel>
 
+        {/* Common Profile Link */}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => navigate("/profile")}>
+          <UserIcon className="mr-2 h-4 w-4" />
+          Hồ sơ cá nhân
+        </DropdownMenuItem>
+
         {/* Role-specific items */}
         {user.vaitro === "ADMIN" && (
           <>
@@ -108,10 +120,6 @@ export default function UserDropdown({ user }: UserDropdownProps) {
             <DropdownMenuLabel className="text-xs text-muted-foreground">
               Quản trị
             </DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigate("/admin/profile")}>
-              <UserIcon className="mr-2 h-4 w-4" />
-              Hồ sơ của tôi
-            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate("/admin/dashboard")}>
               <LayoutDashboard className="mr-2 h-4 w-4" />
               Dashboard
@@ -125,15 +133,19 @@ export default function UserDropdown({ user }: UserDropdownProps) {
             <DropdownMenuLabel className="text-xs text-muted-foreground">
               Người bán
             </DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigate("/seller/profile")}>
-              <UserIcon className="mr-2 h-4 w-4" />
-              Hồ sơ của tôi
+            <DropdownMenuItem onClick={() => navigate("/seller/products")}>
+              <Package className="mr-2 h-4 w-4" />
+              Sản phẩm của tôi
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => navigate("/seller/products/create")}
             >
               <TrendingUp className="mr-2 h-4 w-4" />
               Đăng sản phẩm
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/seller/transactions")}>
+              <DollarSign className="mr-2 h-4 w-4" />
+              Giao dịch bán hàng
             </DropdownMenuItem>
           </>
         )}
@@ -144,9 +156,17 @@ export default function UserDropdown({ user }: UserDropdownProps) {
             <DropdownMenuLabel className="text-xs text-muted-foreground">
               Người mua
             </DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigate("/bidder/profile")}>
-              <UserIcon className="mr-2 h-4 w-4" />
-              Hồ sơ của tôi
+            <DropdownMenuItem onClick={() => navigate("/bidder/watchlist")}>
+              <Heart className="mr-2 h-4 w-4" />
+              Danh sách yêu thích
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/bidder/active-bids")}>
+              <Gavel className="mr-2 h-4 w-4" />
+              Đang đấu giá
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/bidder/transactions")}>
+              <Trophy className="mr-2 h-4 w-4" />
+              Đấu giá thắng
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => navigate("/bidder/upgrade-request")}

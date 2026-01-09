@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { PageLoader } from "@/components/PageLoader";
-import { UserPlus, Edit, Trash2 } from "lucide-react";
+import { UserPlus, Edit, Trash2, KeyRound } from "lucide-react";
 import { userAPI } from "@/services/user.api";
 import type { User } from "@/features/auth/types";
 import type { CreateUserRequest, UpdateUserRequest } from "@/types/types";
@@ -33,6 +33,7 @@ import {
 } from "@/features/admin/_shared/components";
 import { UserFormDialog } from "./components/UserFormDialog";
 import { DeleteUserDialog } from "./components/DeleteUserDialog";
+import { ResetPasswordDialog } from "./components/ResetPasswordDialog";
 
 export function UsersTable() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -64,6 +65,10 @@ export function UsersTable() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    user: User | null;
+  }>({ open: false, user: null });
+  const [resetPasswordDialog, setResetPasswordDialog] = useState<{
     open: boolean;
     user: User | null;
   }>({ open: false, user: null });
@@ -126,6 +131,10 @@ export function UsersTable() {
 
   const handleDelete = (user: User) => {
     setDeleteDialog({ open: true, user });
+  };
+
+  const handleResetPassword = (user: User) => {
+    setResetPasswordDialog({ open: true, user });
   };
 
   const handleSort = (field: string) => {
@@ -198,6 +207,21 @@ export function UsersTable() {
     } catch (error) {
       console.error("Error deleting user:", error);
       toast.error("Không thể xóa user. Vui lòng thử lại!");
+    }
+  };
+
+  const confirmResetPassword = async () => {
+    if (!resetPasswordDialog.user) return;
+
+    try {
+      await userAPI.resetPassword(resetPasswordDialog.user.userid);
+      toast.success(
+        `Đã reset mật khẩu và gửi email đến ${resetPasswordDialog.user.email}!`
+      );
+      setResetPasswordDialog({ open: false, user: null });
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      toast.error("Không thể reset mật khẩu. Vui lòng thử lại!");
     }
   };
 
@@ -311,13 +335,23 @@ export function UsersTable() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleEdit(user)}
+                          title="Chỉnh sửa"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
+                          onClick={() => handleResetPassword(user)}
+                          title="Reset mật khẩu"
+                        >
+                          <KeyRound className="h-4 w-4 text-orange-600" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => handleDelete(user)}
+                          title="Xóa người dùng"
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
@@ -355,6 +389,15 @@ export function UsersTable() {
         }
         user={deleteDialog.user}
         onConfirm={confirmDelete}
+      />
+
+      <ResetPasswordDialog
+        open={resetPasswordDialog.open}
+        onOpenChange={(open) =>
+          setResetPasswordDialog({ open, user: resetPasswordDialog.user })
+        }
+        user={resetPasswordDialog.user}
+        onConfirm={confirmResetPassword}
       />
     </>
   );

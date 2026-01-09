@@ -168,13 +168,16 @@ export function EditProfileForm() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <Card>
-        <CardContent className="pt-6">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <CardContent className="pt-4 sm:pt-6">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-3 sm:space-y-4"
+          >
             {/* Avatar Upload */}
-            <div className="flex flex-col items-center gap-4 pb-4 border-b">
-              <Avatar className="h-24 w-24 ring-4 ring-primary/10">
+            <div className="flex flex-col items-center gap-3 sm:gap-4 pb-3 sm:pb-4 border-b">
+              <Avatar className="h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28 ring-2 sm:ring-4 ring-primary/10">
                 <AvatarImage
                   src={avatarPreview || currentUser?.anhDaiDien}
                   alt={currentUser?.username}
@@ -186,10 +189,13 @@ export function EditProfileForm() {
               <div className="text-center">
                 <Label
                   htmlFor="avatar-upload"
-                  className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                  className="cursor-pointer inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 text-sm md:text-base bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
                 >
-                  <Camera className="h-4 w-4" />
-                  Thay đổi ảnh đại diện
+                  <Camera className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">
+                    Thay đổi ảnh đại diện
+                  </span>
+                  <span className="sm:hidden">Đổi ảnh</span>
                 </Label>
                 <Input
                   id="avatar-upload"
@@ -199,7 +205,7 @@ export function EditProfileForm() {
                   onChange={handleAvatarChange}
                 />
                 {avatarFile && (
-                  <p className="text-xs text-muted-foreground mt-2">
+                  <p className="text-xs text-muted-foreground mt-1.5 sm:mt-2 truncate max-w-[250px] sm:max-w-full mx-auto">
                     Đã chọn: {avatarFile.name}
                   </p>
                 )}
@@ -207,15 +213,15 @@ export function EditProfileForm() {
             </div>
 
             {/* Full Name */}
-            <div className="space-y-2">
-              <Label htmlFor="hoVaTen">
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="hoVaTen" className="text-sm md:text-base">
                 Họ và tên <span className="text-destructive">*</span>
               </Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <User className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
                 <Input
                   id="hoVaTen"
-                  className="pl-10"
+                  className="pl-8 sm:pl-10 text-sm md:text-base"
                   {...register("hoVaTen", {
                     required: "Vui lòng nhập họ và tên",
                     minLength: {
@@ -234,16 +240,16 @@ export function EditProfileForm() {
             </div>
 
             {/* Email */}
-            <div className="space-y-2">
-              <Label htmlFor="email">
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="email" className="text-sm md:text-base">
                 Email <span className="text-destructive">*</span>
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Mail className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
-                  className="pl-10"
+                  className="pl-8 sm:pl-10 text-sm md:text-base"
                   {...register("email", {
                     required: "Vui lòng nhập email",
                     pattern: {
@@ -262,14 +268,16 @@ export function EditProfileForm() {
             </div>
 
             {/* Phone */}
-            <div className="space-y-2">
-              <Label htmlFor="soDienThoai">Số điện thoại</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="soDienThoai" className="text-sm md:text-base">
+                Số điện thoại
+              </Label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Phone className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
                 <Input
                   id="soDienThoai"
                   type="tel"
-                  className="pl-10"
+                  className="pl-8 sm:pl-10 text-sm md:text-base"
                   {...register("soDienThoai", {
                     pattern: {
                       value: /^[0-9]{10,11}$/,
@@ -287,27 +295,31 @@ export function EditProfileForm() {
             </div>
 
             {/* Birth Date */}
-            <div className="space-y-2">
-              <Label htmlFor="ngaySinh">Ngày sinh</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="ngaySinh" className="text-sm md:text-base">
+                Ngày sinh
+              </Label>
               <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Calendar className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
                 <Input
                   id="ngaySinh"
                   type="date"
-                  className="pl-10"
+                  className="pl-8 sm:pl-10 text-sm md:text-base"
                   {...register("ngaySinh")}
                 />
               </div>
             </div>
 
             {/* Address */}
-            <div className="space-y-2">
-              <Label htmlFor="diaChi">Địa chỉ</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="diaChi" className="text-sm md:text-base">
+                Địa chỉ
+              </Label>
               <div className="relative">
-                <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <MapPin className="absolute left-2.5 sm:left-3 top-3 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
                 <Textarea
                   id="diaChi"
-                  className="pl-10 min-h-25"
+                  className="pl-8 sm:pl-10 min-h-20 sm:min-h-25 text-sm md:text-base"
                   {...register("diaChi")}
                   placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"
                 />
@@ -315,9 +327,13 @@ export function EditProfileForm() {
             </div>
 
             {/* Submit Button */}
-            <div className="flex justify-end gap-3 pt-4">
-              <Button type="submit" disabled={isSubmitting}>
-                <Save className="h-4 w-4 mr-2" />
+            <div className="flex justify-end gap-2 sm:gap-3 pt-3 sm:pt-4">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="text-sm md:text-base"
+              >
+                <Save className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
                 {isSubmitting ? "Đang lưu..." : "Lưu thay đổi"}
               </Button>
             </div>

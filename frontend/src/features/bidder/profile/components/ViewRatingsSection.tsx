@@ -100,46 +100,52 @@ export function ViewRatingsSection() {
     }
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {ratings.map((rating) => (
           <Card
             key={rating.ratingid}
-            className="border-l-4 border-l-primary/20"
+            className="border-l-2 sm:border-l-4 border-l-primary/20"
           >
-            <CardContent>
-              <div className="flex items-start gap-4">
+            <CardContent className="p-3 sm:p-4 md:p-6">
+              <div className="flex items-start gap-3 sm:gap-4">
                 <Avatar>
                   <AvatarFallback>
                     <User className="h-4 w-4" />
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1 space-y-2">
+                <div className="flex-1 space-y-1.5 sm:space-y-2 min-w-0">
                   {/* Header */}
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="font-semibold">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm sm:text-base truncate">
                         {isReceived ? rating.tenRater : rating.tenRatee}
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">
                         Sản phẩm: {rating.tenSanPham}
                       </p>
                     </div>
                     <Badge
                       variant={rating.diem > 0 ? "default" : "destructive"}
+                      className="text-xs shrink-0"
                     >
                       {rating.diem > 0 ? (
-                        <ThumbsUp className="h-3 w-3 mr-1" />
+                        <ThumbsUp className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
                       ) : (
-                        <ThumbsDown className="h-3 w-3 mr-1" />
+                        <ThumbsDown className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
                       )}
-                      {rating.diem > 0 ? "Tích cực" : "Tiêu cực"}
+                      <span className="hidden sm:inline">
+                        {rating.diem > 0 ? "Tích cực" : "Tiêu cực"}
+                      </span>
+                      <span className="sm:hidden">
+                        {rating.diem > 0 ? "+" : "-"}
+                      </span>
                     </Badge>
                   </div>
 
                   {/* Comment */}
                   {rating.nhanXet && (
-                    <div className="flex items-start gap-2 text-sm">
-                      <MessageSquare className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                    <div className="flex items-start gap-1.5 sm:gap-2 text-xs sm:text-sm">
+                      <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4 mt-0.5 text-muted-foreground shrink-0" />
                       <p className="text-foreground">{rating.nhanXet}</p>
                     </div>
                   )}
@@ -161,34 +167,50 @@ export function ViewRatingsSection() {
   return (
     <Tabs defaultValue="received" className="w-full">
       <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="received">Nhận được ({totalReceived})</TabsTrigger>
-        <TabsTrigger value="given">Đã cho ({givenRatings.length})</TabsTrigger>
+        <TabsTrigger
+          value="received"
+          className="text-xs sm:text-sm md:text-base"
+        >
+          Nhận được ({totalReceived})
+        </TabsTrigger>
+        <TabsTrigger value="given" className="text-xs sm:text-sm md:text-base">
+          Đã cho ({givenRatings.length})
+        </TabsTrigger>
       </TabsList>
 
       {/* Received Ratings Tab */}
-      <TabsContent value="received" className="space-y-4 mt-4">
+      <TabsContent
+        value="received"
+        className="space-y-3 sm:space-y-4 mt-3 sm:mt-4"
+      >
         {/* Rating Summary */}
-        <div className="rounded-lg border p-4 space-y-3">
-          <div className="flex items-center justify-between">
+        <div className="rounded-lg border p-3 sm:p-4 md:p-6 space-y-2 sm:space-y-3">
+          <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm text-muted-foreground">Tổng đánh giá</p>
-              <p className="text-3xl font-bold">{totalReceived}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Tổng đánh giá
+              </p>
+              <p className="text-2xl sm:text-3xl md:text-4xl font-bold">
+                {totalReceived}
+              </p>
             </div>
             <div className="text-right">
-              <p className="text-sm text-muted-foreground">Tỷ lệ tích cực</p>
-              <p className="text-3xl font-bold text-green-600">
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Tỷ lệ tích cực
+              </p>
+              <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-green-600">
                 {positivePercentage}%
               </p>
             </div>
           </div>
           <Separator />
-          <div className="flex justify-between text-sm">
-            <div className="flex items-center gap-2 text-green-600">
-              <ThumbsUp className="h-4 w-4" />
+          <div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-4 text-xs sm:text-sm">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-green-600">
+              <ThumbsUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span>Tích cực: {positiveReceived.length}</span>
             </div>
-            <div className="flex items-center gap-2 text-red-600">
-              <ThumbsDown className="h-4 w-4" />
+            <div className="flex items-center gap-1.5 sm:gap-2 text-red-600">
+              <ThumbsDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span>Tiêu cực: {negativeReceived.length}</span>
             </div>
           </div>
@@ -203,16 +225,19 @@ export function ViewRatingsSection() {
       </TabsContent>
 
       {/* Given Ratings Tab */}
-      <TabsContent value="given" className="space-y-4 mt-4">
+      <TabsContent
+        value="given"
+        className="space-y-3 sm:space-y-4 mt-3 sm:mt-4"
+      >
         {/* Summary */}
-        <div className="rounded-lg border p-4 space-y-3">
-          <div className="flex justify-between text-sm">
-            <div className="flex items-center gap-2 text-green-600">
-              <ThumbsUp className="h-4 w-4" />
+        <div className="rounded-lg border p-3 sm:p-4 md:p-6 space-y-2 sm:space-y-3">
+          <div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-4 text-xs sm:text-sm">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-green-600">
+              <ThumbsUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span>Tích cực: {positiveGiven.length}</span>
             </div>
-            <div className="flex items-center gap-2 text-red-600">
-              <ThumbsDown className="h-4 w-4" />
+            <div className="flex items-center gap-1.5 sm:gap-2 text-red-600">
+              <ThumbsDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span>Tiêu cực: {negativeGiven.length}</span>
             </div>
           </div>

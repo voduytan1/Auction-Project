@@ -141,7 +141,7 @@ export function ProfileInfoForm({
             <Input id="ngaySinh" type="date" {...register("ngaySinh")} />
           </div>
 
-          <div className="flex gap-2 pt-4">
+          <div className="flex flex-col sm:flex-row gap-2 pt-4">
             <Button type="submit" disabled={isLoading} className="flex-1">
               {isLoading ? "Đang lưu..." : "Cập nhật thông tin"}
             </Button>
@@ -150,9 +150,11 @@ export function ProfileInfoForm({
               variant="outline"
               type="button"
               onClick={onOpenPasswordDialog}
+              className="sm:w-auto"
             >
               <Lock className="h-4 w-4 mr-2" />
-              Đổi mật khẩu
+              <span className="hidden sm:inline">Đổi mật khẩu</span>
+              <span className="sm:hidden">Mật khẩu</span>
             </Button>
           </div>
         </form>

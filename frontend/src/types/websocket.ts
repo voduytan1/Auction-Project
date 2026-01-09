@@ -62,3 +62,26 @@ export type WebSocketEventType =
   | "NEW_WINNER_FOUND"
   | "HISTORY_REMOVED"
   | "NO_BIDDER_LEFT";
+
+/**
+ * Chat WebSocket message types
+ */
+export interface ChatMessageWS {
+  type: string; // "MESSAGE", "TYPING", "READ", "ONLINE", "OFFLINE"
+  transactionid: number;
+  messageid?: number;
+  senderid: string;
+  senderName: string;
+  messageContent?: string;
+  timestamp?: string;
+}
+
+export interface TypingIndicator {
+  transactionid: number;
+  userid: string;
+  username: string;
+  isTyping: boolean;
+}
+
+export type ChatMessageCallback = (message: ChatMessageWS) => void;
+export type TypingIndicatorCallback = (indicator: TypingIndicator) => void;

@@ -8,6 +8,8 @@ export interface UserProfile {
   soDienThoai?: string;
   ngaySinh?: string;
   anhDaiDien?: string;
+  diemDanhGia?: number; // Rating score (percentage)
+  soLuongDanhGia?: number; // Total number of ratings
   createdAt: string;
   updatedAt: string;
 }
