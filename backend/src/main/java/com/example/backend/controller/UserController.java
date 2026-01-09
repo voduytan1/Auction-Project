@@ -47,8 +47,6 @@ public class UserController {
     private final CookieUtils cookieUtils;
     private final AuthMapper authMapper;
 
-    @Value("${DEFAULT_PASSWORD}")
-    private String defaultPassword;
 
     @GetMapping
     public ResponseEntity<@NotNull ApiResponse<List<UserResponse>>> getAllUser(@Valid @ModelAttribute PaginationRequest request) {
@@ -98,8 +96,8 @@ public class UserController {
     }
 
     @PostMapping("/{id}/reset-password")
-    public ResponseEntity<@NotNull ApiResponse<UserResponse>> resetPassword(@PathVariable UUID id, @RequestBody @Valid ResetPasswordRequest request) {
-        UserResponse response = userService.resetPassword(id, request);
+    public ResponseEntity<@NotNull ApiResponse<UserResponse>> resetPassword(@PathVariable UUID id) {
+        UserResponse response = userService.resetPassword(id);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

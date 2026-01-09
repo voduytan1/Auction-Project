@@ -26,7 +26,6 @@ public class EmailService {
     public void sendOtpEmail(String toEmail, String otpCode) {
         SimpleMailMessage message = new SimpleMailMessage();
         redisService.saveOtp(toEmail, otpCode);
-        message.setFrom("email_cua_ban@gmail.com");
         message.setTo(toEmail);
         message.setSubject("Mã xác thực OTP của bạn");
         message.setText("Mã OTP của bạn là: " + otpCode + ". Mã này có hiệu lực trong 5 phút.");
@@ -40,8 +39,6 @@ public class EmailService {
         MimeMessage message = javaMailSender.createMimeMessage();
         try {
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom("email_cua_ban@gmail.com");
 
             // Mẹo: Set "To" là chính email của bạn hoặc email noreply
             // Để người nhận thấy: "To: noreply@system.com" thay vì trống trơn
@@ -346,5 +343,57 @@ public class EmailService {
             """.formatted(sellerName, productName, productUrl);
 
         sendEmailToMultipleRecipients(new String[]{sellerEmail}, subject, content);
+    }
+
+    @Async
+    public void sendNewPasswordNotification(String toEmail, String userName, String newPassword) {
+        // Link đến trang đăng nhập
+        String loginUrl = DOMAIN + "/auth/login";
+
+        String subject = "🔐 Thông báo: Mật khẩu tài khoản đã được thay đổi";
+
+        String content = """
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 20px;">
+                <h2 style="color: #1976d2; text-align: center;">Cấp lại mật khẩu thành công</h2>
+                
+                <p>Xin chào <b>%s</b>,</p>
+                <p>Hệ thống đã thực hiện reset mật khẩu cho tài khoản của bạn theo yêu cầu.</p>
+                <p>Dưới đây là mật khẩu mới của bạn:</p>
+                
+                <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0; text-align: center; border: 2px dashed #999;">
+                    <span style="font-size: 24px; font-weight: bold; color: #333; letter-spacing: 2px;">%s</span>
+                </div>
+                
+                <div style="background-color: #fff3e0; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 5px solid #ff9800;">
+                    <p style="margin: 0; color: #e65100; font-size: 14px;">
+                        ⚠️ <b>Lưu ý quan trọng:</b> Vì lý do bảo mật, vui lòng đăng nhập và đổi lại mật khẩu của riêng bạn ngay lập tức.
+                    </p>
+                </div>
+                
+                <div style="text-align: center; margin-top: 25px;">
+                    <a href="%s" style="background-color: #1976d2; color: white; padding: 12px 30px; text-decoration: none; border-radius: 4px; font-weight: bold;">
+                        Đăng nhập ngay
+                    </a>
+                </div>
+            </div>
+            """.formatted(userName, newPassword, loginUrl);
+
+        try {
+            MimeMessage message = javaMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            // Gửi trực tiếp cho 1 người (TO)
+            helper.setTo(toEmail);
+
+            helper.setSubject(subject);
+            helper.setText(content, true);
+
+            javaMailSender.send(message);
+            System.out.println("Đã gửi mail mật khẩu mới cho: " + toEmail);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Lỗi gửi mail mật khẩu mới: " + e.getMessage());
+        }
     }
 }
