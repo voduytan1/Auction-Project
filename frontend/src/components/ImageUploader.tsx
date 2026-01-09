@@ -42,30 +42,48 @@ export function ImageUploader({
 
     if (validFiles.length === 0) return;
 
-    // Validate number of files for multiple mode
-    if (mode === "multiple" && validFiles.length > maxFiles) {
-      toast.error(`Chỉ được chọn tối đa ${maxFiles} ảnh`);
-      return;
+    // For single mode, only take the first file
+    if (mode === "single") {
+      const file = validFiles[0];
+      const previewUrl = URL.createObjectURL(file);
+      setSelectedFiles([file]);
+      setPreviewUrls([previewUrl]);
+    } else {
+      // Multiple mode: append to existing files
+      const totalFiles = selectedFiles.length + validFiles.length;
+
+      if (totalFiles > maxFiles) {
+        toast.error(
+          `Chỉ được chọn tối đa ${maxFiles} ảnh. Hiện có ${selectedFiles.length} ảnh, bạn đang thêm ${validFiles.length} ảnh.`
+        );
+        return;
+      }
+
+      // Append new files to existing ones
+      const newPreviewUrls = validFiles.map((file) =>
+        URL.createObjectURL(file)
+      );
+
+      setSelectedFiles((prev) => [...prev, ...validFiles]);
+      setPreviewUrls((prev) => [...prev, ...newPreviewUrls]);
     }
 
-    // For single mode, only take the first file
     const filesToUse = mode === "single" ? [validFiles[0]] : validFiles;
-
-    // Create preview URLs
-    const newPreviewUrls = filesToUse.map((file) => URL.createObjectURL(file));
-
-    setSelectedFiles(filesToUse);
-    setPreviewUrls(newPreviewUrls);
 
     // Auto-confirm if showConfirmButton is false
     if (!showConfirmButton) {
       if (mode === "single") {
-        onUploadComplete(filesToUse[0]);
+        onUploadComplete(validFiles[0]);
       } else {
-        onUploadComplete(filesToUse);
+        // Pass all selected files (old + new)
+        const allFiles =
+          mode === "multiple" ? [...selectedFiles, ...validFiles] : validFiles;
+        onUploadComplete(allFiles);
       }
+      const totalCount =
+        mode === "multiple" ? selectedFiles.length + validFiles.length : 1;
       toast.success(
-        `Đã chọn ${filesToUse.length} ảnh. Nhấn "Đăng sản phẩm" để upload.`
+        `Đã chọn ${totalCount} ảnh. Nhấn "Đăng sản phẩm" để upload.`
       );
     }
   };
