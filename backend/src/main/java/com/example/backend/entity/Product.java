@@ -102,7 +102,7 @@ public class Product {
     @PreUpdate  // Chạy trước khi UPDATE
     public void generateSearchText() {
         // Gom tất cả các thuộc tính muốn search vào đây (Tên + Mô tả + ...)
-        String rawText = this.tenSanPham + " " + (this.moTa != null ? this.moTa : "");
+        String rawText = this.tenSanPham + " " + this.category.getTenDanhMuc() + " " + (this.category.getParentCategory()!=null ? this.category.getParentCategory().getTenDanhMuc() : "");
 
         // Gọi hàm bỏ dấu và lưu vào cột search_text
         this.searchText = MyStringUtils.removeAccents(rawText);
