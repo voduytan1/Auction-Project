@@ -24,15 +24,12 @@ export function RelatedProducts({
         setLoading(true);
         const response = await productAPI.search({
           categoryId,
-          size: 6, // Lấy 6 để filter ra current product
+          size: 5,
+          excludeId: currentProductId, // Backend tự loại trừ sản phẩm hiện tại
         });
-        // Filter out current product and limit to 5
         // Response is already unwrapped by interceptor to ProductResponse[]
         const data = Array.isArray(response.data) ? response.data : [];
-        const filtered = data
-          .filter((p: ProductResponse) => p.productid !== currentProductId)
-          .slice(0, 5);
-        setProducts(filtered);
+        setProducts(data);
       } catch (error) {
         console.error("❌ Error fetching related products:", error);
       } finally {
