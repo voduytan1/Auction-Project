@@ -93,7 +93,9 @@ public class AutoBidService {
         // Chuyển List thành Array
         String[] emails = emailList.toArray(new String[0]);
 
-        emailService.sendPlaceBidMail(emails,productResult.getTenSanPham(),productResult.getProductid(), productResult.getGiaHienTai(), productResult.getCurrentBidder().getHoVaTen());
+        Product productFinal = productResult != null ? productResult : product;
+
+        emailService.sendPlaceBidMail(emails,productFinal.getTenSanPham(),productFinal.getProductid(), productFinal.getGiaHienTai(), productFinal.getCurrentBidder().getHoVaTen());
         // 9. TẠO RESPONSE
         return createResponse(autoBid, product);
     }

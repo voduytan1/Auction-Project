@@ -11,4 +11,5 @@ import java.util.List;
 @Repository
 public interface ProductDescriptionHistoryRepository extends JpaRepository<@NotNull ProductDescriptionHistory, @NotNull Long> {
     List<ProductDescriptionHistory> findByProduct_Productid(Long  productId);
+    List<ProductDescriptionHistory> findByProductProductidOrderByThoiGianThemAsc(Long productId);
 }

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.List;
 
 @Repository
 public interface BidHistoryRepository extends JpaRepository<@NotNull BidHistory, @NotNull Long> {
@@ -29,4 +30,6 @@ public interface BidHistoryRepository extends JpaRepository<@NotNull BidHistory,
     boolean existsByProductAndCreatedAtBetween(
             Product product, LocalDateTime start, LocalDateTime end
     );
+
+    List<BidHistory> findByProductProductid(Long productid);
 }
