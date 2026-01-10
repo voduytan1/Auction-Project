@@ -15,6 +15,7 @@ import java.util.UUID;
 public class ProductFilterRequest {
     String keyword;
     Long categoryId;
+    Long excludeId;
     BigDecimal minPrice;
     BigDecimal maxPrice;
     ProductStatus status;
