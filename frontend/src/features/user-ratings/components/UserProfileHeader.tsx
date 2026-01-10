@@ -40,6 +40,9 @@ export function UserProfileHeader({
           {/* User Info */}
           <div className="flex-1 text-center sm:text-left">
             <h1 className="text-2xl sm:text-3xl font-bold mb-2">{userName}</h1>
+            {user?.username && (
+              <p className="text-muted-foreground mb-2">@{user.username}</p>
+            )}
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-sm text-muted-foreground mb-3">
               <div className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />

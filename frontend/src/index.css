@@ -221,3 +221,89 @@
 .animate-fade-in {
   animation: fade-in 0.3s ease-in;
 }
+
+/* Fix prose list styling - ensure ul/ol are visible */
+.prose ul,
+.prose ol {
+  list-style: revert;
+  padding-left: 1.5rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.prose ul {
+  list-style-type: disc;
+}
+
+.prose ol {
+  list-style-type: decimal;
+}
+
+.prose li {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.prose ul ul {
+  list-style-type: circle;
+}
+
+.prose ul ul ul {
+  list-style-type: square;
+}
+
+.prose ul ul,
+.prose ol ol,
+.prose ul ol,
+.prose ol ul {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* CKEditor list styles support - cho editor */
+.ck-content ul,
+.ck-content ol {
+  margin-left: 1.5rem;
+  padding-left: 1.5rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  list-style: revert;
+}
+
+.ck-content ul {
+  list-style-type: disc;
+}
+
+.ck-content ol {
+  list-style-type: decimal;
+}
+
+.ck-content li {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Nested lists */
+.ck-content ul ul {
+  list-style-type: circle;
+}
+
+.ck-content ul ul ul {
+  list-style-type: square;
+}
+
+.ck-content ol[style*="list-style-type: lower-alpha"] {
+  list-style-type: lower-alpha !important;
+}
+
+.ck-content ol[style*="list-style-type: lower-roman"] {
+  list-style-type: lower-roman !important;
+}
+
+.ck-content ol[style*="list-style-type: upper-alpha"] {
+  list-style-type: upper-alpha !important;
+}
+
+.ck-content ol[style*="list-style-type: upper-roman"] {
+  list-style-type: upper-roman !important;
+}

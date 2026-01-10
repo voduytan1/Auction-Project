@@ -2,46 +2,29 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Eye,
-  Ban,
-  Star,
-  MoreHorizontal,
   FileText,
-  UserX,
-  XCircle,
   ChevronLeft,
   ChevronRight,
+  MoreVertical,
+  Clock,
+  Gavel,
+  Tag,
+  Box,
 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
 import { productAPI, type ProductResponse } from "@/services/product.api";
 import { PageLoader } from "@/components/PageLoader";
 import { useAppSelector } from "@/hooks/use-redux";
-import { RejectBidderDialog } from "./RejectBidderDialog";
-import { CancelTransactionDialog } from "./CancelTransactionDialog";
+import { format } from "date-fns";
+import { vi } from "date-fns/locale";
 
 interface ProductsTableProps {
   status: "ACTIVE" | "COMPLETED" | "CANCELLED";
@@ -58,18 +41,8 @@ export function ProductsTable({ status }: ProductsTableProps) {
   const [totalPages, setTotalPages] = useState(0);
   const size = 10;
 
-  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] =
-    useState<ProductResponse | null>(null);
-
-  // Dialog states for new seller features
-  const [rejectBidderOpen, setRejectBidderOpen] = useState(false);
-  const [cancelTransactionOpen, setCancelTransactionOpen] = useState(false);
-
-  // Fetch products from API based on status and seller
   const fetchProducts = useCallback(async () => {
     if (!user?.userid) return;
-
     try {
       setLoading(true);
       setError(null);
@@ -79,11 +52,8 @@ export function ProductsTable({ status }: ProductsTableProps) {
         page,
         size,
       });
-
-      // Response interceptor extracts data, metadata is in __raw__
       const data = Array.isArray(response.data) ? response.data : [];
       const metadata = (response as any).__raw__?.metadata;
-
       setProducts(data);
       setTotalPages(metadata?.totalPages || 0);
     } catch (err) {
@@ -97,345 +67,223 @@ export function ProductsTable({ status }: ProductsTableProps) {
     fetchProducts();
   }, [fetchProducts]);
 
-  const handleViewDetails = (productId: number) => {
-    // Navigate to product details page
+  const handleViewDetails = (productId: number) =>
     navigate(`/products/${productId}`);
-  };
-
-  // const handleEdit = (productId: number) => {
-  //   // Navigate to edit page
-  //   navigate(`/seller/products/edit/${productId}`);
-  // };
-
-  const handleCancelProduct = (product: ProductResponse) => {
-    setSelectedProduct(product);
-    setCancelDialogOpen(true);
-  };
-
-  const confirmCancel = async () => {
-    if (!selectedProduct) return;
-
-    try {
-      await productAPI.cancel(selectedProduct.productid);
-      toast.success("Đã hủy sản phẩm thành công!");
-      setCancelDialogOpen(false);
-      setSelectedProduct(null);
-      fetchProducts(); // Refresh products list
-    } catch (err) {
-      const errorMsg =
-        err instanceof Error ? err.message : "Không thể hủy sản phẩm";
-      toast.error(errorMsg);
-    }
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleRateBuyer = (_productId: number) => {
-    // Open rating dialog
-    // TODO: Implement rating functionality with productId
-    toast.info("Tính năng đánh giá đang được phát triển");
-  };
-
-  const handleAppendDescription = (productId: number) => {
+  const handleAppendDescription = (productId: number) =>
     navigate(`/seller/products/${productId}/append-description`);
-  };
 
-  const handleRejectBidder = (product: ProductResponse) => {
-    setSelectedProduct(product);
-    setRejectBidderOpen(true);
-  };
-
-  const handleCancelTransaction = (product: ProductResponse) => {
-    setSelectedProduct(product);
-    setCancelTransactionOpen(true);
-  };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("vi-VN", {
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",
     }).format(price);
+
+  const renderStatusBadge = () => {
+    switch (status) {
+      case "ACTIVE":
+        return (
+          <Badge className="bg-green-50 text-green-700 border-green-200 text-[10px] px-1.5 py-0 h-5">
+            Đang diễn ra
+          </Badge>
+        );
+      case "COMPLETED":
+        return (
+          <Badge className="bg-blue-50 text-blue-700 border-blue-200 text-[10px] px-1.5 py-0 h-5">
+            Đã kết thúc
+          </Badge>
+        );
+      case "CANCELLED":
+        return (
+          <Badge variant="destructive" className="text-[10px] px-1.5 py-0 h-5">
+            Đã hủy
+          </Badge>
+        );
+      default:
+        return null;
+    }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString("vi-VN");
-  };
-
-  if (loading) {
-    return <PageLoader message="Đang tải sản phẩm..." />;
-  }
-
-  if (error) {
+  if (loading)
+    return <PageLoader message="Đang tải..." className="min-h-[200px]" />;
+  if (error)
     return (
-      <div className="text-center py-12 text-destructive">
-        <p className="text-lg font-medium">Lỗi: {error.message}</p>
+      <div className="text-center py-8 text-destructive text-sm">
+        Lỗi: {error.message}
       </div>
     );
-  }
 
   if (products.length === 0) {
     return (
-      <div className="text-center py-12 text-muted-foreground">
-        <p className="text-lg font-medium">Chưa có sản phẩm nào</p>
-        <p className="text-sm mt-2">
-          {status === "ACTIVE"
-            ? "Bạn chưa có sản phẩm đang đấu giá"
-            : status === "COMPLETED"
-            ? "Bạn chưa có sản phẩm nào hoàn thành"
-            : "Bạn chưa có sản phẩm nào bị hủy"}
-        </p>
+      <div className="flex flex-col items-center justify-center py-12 border border-dashed rounded-lg bg-slate-50">
+        <Box className="h-8 w-8 text-slate-300 mb-2" />
+        <p className="text-sm text-slate-500">Danh sách trống</p>
       </div>
     );
   }
 
   return (
     <>
-      <div className="overflow-x-auto -mx-4 sm:mx-0">
-        <div className="inline-block min-w-full align-middle">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="min-w-37.5 sm:min-w-0">
-                  Tên sản phẩm
-                </TableHead>
-                <TableHead className="text-right hidden sm:table-cell">
-                  Giá khởi điểm
-                </TableHead>
-                <TableHead className="text-right">Giá hiện tại</TableHead>
-                <TableHead className="text-center hidden md:table-cell">
-                  Số lượt đấu
-                </TableHead>
-                <TableHead className="hidden lg:table-cell">
-                  Thời gian kết thúc
-                </TableHead>
-                {status === "COMPLETED" && (
-                  <TableHead className="hidden xl:table-cell">
-                    Người thắng
-                  </TableHead>
+      <div className="grid gap-3">
+        {products.map((product) => (
+          <Card
+            key={product.productid}
+            className="group overflow-hidden border border-slate-200 shadow-sm hover:shadow bg-white transition-all"
+          >
+            {/* Flex container: Mobile = Cột, Tablet+ = Hàng */}
+            <div className="flex flex-col sm:flex-row">
+              {/* 1. Image Section */}
+              {/* Mobile: Full width, height nhỏ (128px) */}
+              {/* Tablet/Desktop: Fixed width nhỏ gọn (140px), height auto */}
+              <div className="relative w-full h-32 sm:w-36 sm:h-auto md:w-44 shrink-0 bg-slate-100 border-b sm:border-b-0 sm:border-r border-slate-100">
+                {product.images && product.images.length > 0 ? (
+                  <img
+                    src={product.images[0]}
+                    alt={product.tenSanPham}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-slate-400">
+                    <Box className="h-8 w-8" />
+                  </div>
                 )}
-                <TableHead className="text-right">Hành động</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {products.map((product) => (
-                <TableRow key={product.productid}>
-                  <TableCell className="font-medium">
-                    <div className="max-w-50 sm:max-w-none truncate">
-                      {product.tenSanPham}
+
+                {/* Badge trạng thái đè lên ảnh ở Mobile để tiết kiệm chỗ */}
+                <div className="absolute top-2 left-2 sm:hidden shadow-sm">
+                  {renderStatusBadge()}
+                </div>
+              </div>
+
+              {/* 2. Content Section */}
+              <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between gap-1.5 sm:gap-2">
+                {/* Top Row: Title & Menu */}
+                <div className="flex justify-between items-start gap-2">
+                  <div className="space-y-1 min-w-0">
+                    {/* Badge cho Desktop (nằm trên title) */}
+                    <div className="hidden sm:block mb-1">
+                      {renderStatusBadge()}
                     </div>
-                  </TableCell>
-                  <TableCell className="text-right hidden sm:table-cell">
-                    <span className="whitespace-nowrap">
-                      {formatPrice(product.giaKhoiDiem)}
+
+                    <h3 className="font-semibold text-sm sm:text-base text-slate-900 line-clamp-2 leading-tight group-hover:text-primary transition-colors">
+                      {product.tenSanPham}
+                    </h3>
+
+                    {/* Ẩn danh mục ở mobile để đỡ rối */}
+                    <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500">
+                      <Tag className="h-3 w-3" />
+                      <span className="truncate max-w-[150px]">
+                        {product.tenDanhMuc || "Khác"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Menu Button */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 sm:h-8 sm:w-8 -mr-1 text-slate-400 hover:text-slate-700 shrink-0"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={() => handleViewDetails(product.productid)}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Chi tiết
+                      </DropdownMenuItem>
+                      {status === "ACTIVE" && (
+                        <DropdownMenuItem
+                          onClick={() =>
+                            handleAppendDescription(product.productid)
+                          }
+                        >
+                          <FileText className="h-4 w-4 mr-2" />
+                          Bổ sung mô tả
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                {/* Footer Info: Grid layout thông minh */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-y-1 gap-x-3 pt-1.5 border-t border-slate-100">
+                  {/* Giá: Luôn hiển thị to nhất */}
+                  <div className="flex flex-col col-span-2 md:col-span-1">
+                    <span className="text-[10px] text-slate-400 uppercase font-medium">
+                      Giá hiện tại
                     </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <span className="whitespace-nowrap">
+                    <span className="font-bold text-sm sm:text-base text-primary truncate">
                       {formatPrice(product.giaHienTai)}
                     </span>
-                  </TableCell>
-                  <TableCell className="text-center hidden md:table-cell">
-                    {product.soLuotRaGia || 0}
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    <span className="whitespace-nowrap">
-                      {formatDate(product.thoiGianKetThuc)}
+                  </div>
+
+                  {/* Lượt đấu */}
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-slate-400 uppercase font-medium flex items-center gap-1">
+                      <Gavel className="h-3 w-3 hidden sm:inline" /> Lượt đấu
                     </span>
-                  </TableCell>
-                  {status === "COMPLETED" && (
-                    <TableCell className="hidden xl:table-cell">
-                      {product.tenBidder ? (
-                        <div>
-                          <p className="font-medium">{product.tenBidder}</p>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">
-                          Chưa có người thắng
-                        </span>
-                      )}
-                    </TableCell>
-                  )}
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => handleViewDetails(product.productid)}
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          Xem chi tiết
-                        </DropdownMenuItem>
-                        {status === "ACTIVE" && (
-                          <>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleAppendDescription(product.productid)
-                              }
-                            >
-                              <FileText className="h-4 w-4 mr-2" />
-                              Bổ sung mô tả
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleRejectBidder(product)}
-                              className="text-orange-600"
-                            >
-                              <UserX className="h-4 w-4 mr-2" />
-                              Từ chối người đấu giá
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleCancelProduct(product)}
-                              className="text-destructive"
-                            >
-                              <Ban className="h-4 w-4 mr-2" />
-                              Hủy sản phẩm
-                            </DropdownMenuItem>
-                          </>
+                    <span className="font-medium text-xs sm:text-sm text-slate-700">
+                      {product.soLuotRaGia || 0}
+                    </span>
+                  </div>
+
+                  {/* Thời gian: Mobile thu gọn format */}
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-slate-400 uppercase font-medium flex items-center gap-1">
+                      <Clock className="h-3 w-3 hidden sm:inline" /> Kết thúc
+                    </span>
+                    <span className="font-medium text-xs sm:text-sm text-slate-700 truncate">
+                      {/* Mobile: Chỉ hiện giờ hoặc ngày rút gọn. Desktop: Full */}
+                      <span className="md:hidden">
+                        {format(new Date(product.thoiGianKetThuc), "dd/MM", {
+                          locale: vi,
+                        })}
+                      </span>
+                      <span className="hidden md:inline">
+                        {format(
+                          new Date(product.thoiGianKetThuc),
+                          "HH:mm dd/MM/yy",
+                          { locale: vi }
                         )}
-                        {status === "COMPLETED" && product.tenBidder && (
-                          <>
-                            <DropdownMenuItem
-                              onClick={() => handleRateBuyer(product.productid)}
-                            >
-                              <Star className="h-4 w-4 mr-2" />
-                              Đánh giá người mua
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleCancelTransaction(product)}
-                              className="text-destructive"
-                            >
-                              <XCircle className="h-4 w-4 mr-2" />
-                              Hủy giao dịch
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+                      </span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        ))}
       </div>
 
-      {/* Pagination */}
+      {/* Pagination - Compact */}
       {totalPages > 1 && (
-        <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2 mt-4 sm:mt-6 px-2">
+        <div className="flex items-center justify-center gap-2 mt-6">
           <Button
             variant="outline"
             size="icon"
+            className="h-8 w-8"
             onClick={() => setPage(page - 1)}
             disabled={page === 1}
-            className="h-8 w-8 sm:h-9 sm:w-9"
           >
-            <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+            <ChevronLeft className="h-4 w-4" />
           </Button>
-
-          <div className="flex flex-wrap gap-1 justify-center">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-              (pageNum) => {
-                if (
-                  pageNum === 1 ||
-                  pageNum === totalPages ||
-                  (pageNum >= page - 1 && pageNum <= page + 1)
-                ) {
-                  return (
-                    <Button
-                      key={pageNum}
-                      variant={page === pageNum ? "default" : "outline"}
-                      size="icon"
-                      onClick={() => setPage(pageNum)}
-                      className="h-8 w-8 sm:h-9 sm:w-9 text-xs sm:text-sm"
-                    >
-                      {pageNum}
-                    </Button>
-                  );
-                } else if (pageNum === page - 2 || pageNum === page + 2) {
-                  return (
-                    <span
-                      key={pageNum}
-                      className="flex items-center px-1 sm:px-2 text-xs sm:text-sm"
-                    >
-                      ...
-                    </span>
-                  );
-                }
-                return null;
-              }
-            )}
-          </div>
-
+          <span className="text-xs font-medium text-slate-600">
+            {page}/{totalPages}
+          </span>
           <Button
             variant="outline"
             size="icon"
+            className="h-8 w-8"
             onClick={() => setPage(page + 1)}
             disabled={page === totalPages}
-            className="h-8 w-8 sm:h-9 sm:w-9"
           >
-            <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
+            <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       )}
-
-      {/* Cancel Confirmation Dialog */}
-      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận hủy sản phẩm</AlertDialogTitle>
-            <AlertDialogDescription>
-              Bạn có chắc chắn muốn hủy sản phẩm "{selectedProduct?.tenSanPham}
-              "? Hành động này không thể hoàn tác.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Hủy bỏ</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmCancel}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Xác nhận hủy
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Reject Bidder Dialog */}
-      {selectedProduct && selectedProduct.bidderId && (
-        <RejectBidderDialog
-          open={rejectBidderOpen}
-          onOpenChange={setRejectBidderOpen}
-          productId={selectedProduct.productid.toString()}
-          productName={selectedProduct.tenSanPham}
-          currentBidder={{
-            userId: selectedProduct.bidderId,
-            username: selectedProduct.tenBidder || selectedProduct.bidderId,
-            currentBid: selectedProduct.giaHienTai,
-          }}
-          secondHighestBidder={{
-            userId: "user456",
-            username: "trusted_bidder",
-            bidAmount: selectedProduct.giaHienTai - 500000,
-          }}
-        />
-      )}
-
-      {/* Cancel Transaction Dialog */}
-      {selectedProduct &&
-        selectedProduct.bidderId &&
-        selectedProduct.tenBidder && (
-          <CancelTransactionDialog
-            open={cancelTransactionOpen}
-            onOpenChange={setCancelTransactionOpen}
-            productId={selectedProduct.productid.toString()}
-            productName={selectedProduct.tenSanPham}
-            winnerId={selectedProduct.bidderId}
-            winnerName={selectedProduct.tenBidder}
-            finalBid={selectedProduct.giaHienTai}
-          />
-        )}
     </>
   );
 }

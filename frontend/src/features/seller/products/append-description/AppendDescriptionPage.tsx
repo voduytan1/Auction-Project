@@ -128,7 +128,7 @@ export default function AppendDescriptionPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="rounded-lg border bg-muted/50 p-4 max-h-[300px] overflow-y-auto">
+              <div className="rounded-lg border bg-muted/50 p-4 max-h-[600px] overflow-y-auto">
                 <div
                   className="prose prose-sm max-w-none dark:prose-invert"
                   dangerouslySetInnerHTML={{ __html: product.moTa }}

@@ -124,7 +124,7 @@ export function ProfileHeader({
               <Badge variant="outline" className="capitalize">
                 {profileData.vaitro}
               </Badge>
-              {ratingStats && (
+              {ratingStats && ratingStats.percentage !== null && (
                 <Badge
                   variant={
                     ratingStats.percentage >= 80 ? "default" : "destructive"
