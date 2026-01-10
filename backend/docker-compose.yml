@@ -25,13 +25,17 @@ services:
     container_name: my-mysql-container
     environment:
       MYSQL_ROOT_PASSWORD: your_root_password
-      MYSQL_DATABASE: database
+      MYSQL_DATABASE: auction_db
       MYSQL_USER: your_app_user
       MYSQL_PASSWORD: your_app_password
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      # Mount schema và seeding files vào /docker-entrypoint-initdb.d/
+      # MySQL sẽ tự động chạy các file theo thứ tự alphabet khi khởi tạo lần đầu
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./seeding.sql:/docker-entrypoint-initdb.d/02-seeding.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
       timeout: 20s

@@ -65,6 +65,9 @@ public class Transaction {
     @Column(name = "thoi_gian_giao_hang")
     LocalDateTime thoiGianGiaoHang;
 
+    @Column(name = "anh_van_don",length = 255)
+    String anhVanDon;
+
     @Column(name = "thoi_gian_nhan_hang")
     LocalDateTime thoiGianNhanHang;
 

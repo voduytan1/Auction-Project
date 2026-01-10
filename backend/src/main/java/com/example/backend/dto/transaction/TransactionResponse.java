@@ -33,6 +33,7 @@ public class TransactionResponse {
     String diaChiGiaoHang;
 
     String maVanDon;
+    String anhVanDon;
 
     String phuongThucThanhToan;
 
