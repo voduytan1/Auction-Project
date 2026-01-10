@@ -167,7 +167,7 @@ export function RatingStatsCard({ ratingStats }: RatingStatsCardProps) {
         <CardTitle>Điểm đánh giá</CardTitle>
       </CardHeader>
       <CardContent>
-        {ratingStats ? (
+        {ratingStats && ratingStats.percentage !== null ? (
           <div className="space-y-4 sm:space-y-6">
             {/* Stats Summary */}
             <div className="space-y-3 sm:space-y-4">

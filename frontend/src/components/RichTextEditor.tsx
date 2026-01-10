@@ -26,6 +26,8 @@ import {
   HorizontalLine,
   Link,
   List,
+  ListProperties,
+  TodoList,
   Paragraph,
   // Tables
   Table,
@@ -151,6 +153,8 @@ export function RichTextEditor({
               HorizontalLine,
               Link,
               List,
+              ListProperties,
+              TodoList,
               Paragraph,
               SourceEditing,
               // Media
@@ -194,6 +198,14 @@ export function RichTextEditor({
             // Cấu hình Link
             link: {
               addTargetToExternalLinks: true, // Tự động mở link tab mới
+            },
+            // Cấu hình List
+            list: {
+              properties: {
+                styles: true,
+                startIndex: true,
+                reversed: true,
+              },
             },
           }}
           data={data}

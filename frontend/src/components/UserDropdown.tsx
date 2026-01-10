@@ -67,7 +67,8 @@ export default function UserDropdown({ user }: UserDropdownProps) {
 
   const handleLogout = async () => {
     await dispatch(logoutUser()).unwrap();
-    navigate("/auth/login", { replace: true });
+    // Đưa về trang chủ thay vì login - router sẽ tự redirect nếu cần auth
+    navigate("/", { replace: true });
   };
 
   return (
@@ -135,7 +136,7 @@ export default function UserDropdown({ user }: UserDropdownProps) {
             </DropdownMenuLabel>
             <DropdownMenuItem onClick={() => navigate("/seller/products")}>
               <Package className="mr-2 h-4 w-4" />
-              Sản phẩm của tôi
+              Sản phẩm đang bán
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => navigate("/seller/products/create")}
