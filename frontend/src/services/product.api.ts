@@ -96,11 +96,12 @@ export const productAPI = {
 
   /**
    * GET /products - Search products with filters
-   * Query params: search, size, page, categoryId, minPrice, maxPrice, sortBy, sortOrder, status, sellerId
+   * Query params: search, size, page, categoryId, minPrice, maxPrice, sortBy, sortOrder, status, sellerId, excludeId
    * sortBy: 'thoiGianKetThuc' | 'giaHienTai' | 'createdAt' | any other entity field
    * sortOrder: 'asc' | 'desc'
    * status: 'PENDING' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED'
    * sellerId: UUID string to filter by seller
+   * excludeId: Product ID to exclude from results (useful for related products)
    * Backend handles Vietnamese full-text search automatically
    * Response: ApiResponse<ProductResponse[]> with metadata field
    */
@@ -115,6 +116,7 @@ export const productAPI = {
     sortOrder?: "asc" | "desc";
     status?: "PENDING" | "ACTIVE" | "COMPLETED" | "CANCELLED";
     sellerId?: string;
+    excludeId?: number;
   }) => api.get<ApiResponse<ProductResponse[]>>("/products", { params }),
 
   /**
