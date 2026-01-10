@@ -154,8 +154,9 @@ INSERT INTO products (productid, ten_san_pham, mo_ta, gia_khoi_diem, buoc_gia, g
 
 (19, 'Máy tính bảng Samsung Galaxy Tab A11 4G 4GB/64GB', '<ul><li>Màn hình: TFT LCD, 8.7 inch, 90 Hz</li><li>Độ phân giải: 800 x 1340 Pixels</li><li>RAM: 4 GB</li><li>Dung lượng lưu trữ: 64 GB (Khả dụng 44.9 GB)</li><li>Thẻ nhớ: Micro SD, hỗ trợ tối đa 2 TB</li><li>Kết nối: 4G</li></ul>', 4500000, 100000, 5300000, 6040000, 8, 15, 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b22', 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 'ACTIVE', DATE_ADD(NOW(), INTERVAL 4 DAY), 'may tinh bang samsung galaxy tab a11 4g 4gb/64gb tft lcd', NOW()),
 
-(20, 'Máy tính bảng Samsung Galaxy Tab A11+ 5G 6GB/128GB', '<ul><li>Màn hình: TFT LCD, 11 inch, 90 Hz</li><li>Độ phân giải: 1200 x 1920 Pixels</li><li>Hệ điều hành: Android 16</li><li>CPU: MediaTek Dimensity 7300 8 nhân</li><li>GPU: Mali-G615 MP2</li><li>RAM/ROM: 6GB/128GB</li></ul>', 7000000, 150000, 8200000, 8590000, 8, 15, 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b22', 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 'ACTIVE', DATE_ADD(NOW(), INTERVAL 5 DAY), 'may tinh bang samsung galaxy tab a11+ 5g 6gb/128gb dimensity 7300', NOW());
+(20, 'Máy tính bảng Samsung Galaxy Tab A11+ 5G 6GB/128GB', '<ul><li>Màn hình: TFT LCD, 11 inch, 90 Hz</li><li>Độ phân giải: 1200 x 1920 Pixels</li><li>Hệ điều hành: Android 16</li><li>CPU: MediaTek Dimensity 7300 8 nhân</li><li>GPU: Mali-G615 MP2</li><li>RAM/ROM: 6GB/128GB</li></ul>', 7000000, 150000, 8200000, 8590000, 8, 15, 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b22', 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 'ACTIVE', DATE_ADD(NOW(), INTERVAL 5 DAY), 'may tinh bang samsung galaxy tab a11+ 5g 6gb/128gb dimensity 7300', NOW()),
 
+(21, 'iPad Pro M4 13 inch Wifi 256GB', '<ul><li>Màn hình: 13 inch Ultra Retina XDR, 120Hz ProMotion, 1000 nits</li><li>Chip: Apple M4 (9 lõi CPU)</li><li>RAM/ROM: 8GB/256GB</li><li>Camera: Sau 12MP, Trước 12MP Ultra Wide</li><li>Hệ điều hành: iPadOS 17</li><li>Tương thích: Apple Pencil Pro, Magic Keyboard M4</li></ul>', 31000000, 500000, 34500000, 36290000, 7, 14, 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b22', 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 'ACTIVE', DATE_ADD(NOW(), INTERVAL 4 DAY), 'ipad pro m4 13 inch wifi 256gb ultra retina xdr apple m4', NOW());
 -- ======================================================================================
 -- 4. SEED DATA PRODUCT IMAGES (4 ảnh mỗi sản phẩm)
 -- ======================================================================================
@@ -279,8 +280,12 @@ INSERT INTO product_images (productid, url_anh, thu_tu) VALUES
 (20, 'https://cdn.tgdd.vn/Products/Images/522/359089/Slider/samsung-galaxy-tab-a11-plus-tong-quan-1020x570.jpg', 1),
 (20, 'https://cdn.tgdd.vn/Products/Images/522/359089/Slider/samsung-galaxy-tab-a11-plus-5g-6gb-128gb639035482461379637.jpg', 2),
 (20, 'https://cdnv2.tgdd.vn/mwg-static/tgdd/Products/Images/522/359089/samsung-galaxy-tab-a11-plus-5g-xam-4-639027061820273937-750x500.jpg', 3),
-(20, 'https://cdnv2.tgdd.vn/mwg-static/tgdd/Products/Images/522/359089/samsung-galaxy-tab-a11-plus-5g-xam-5-639027061813477313-750x500.jpg', 4);
+(20, 'https://cdnv2.tgdd.vn/mwg-static/tgdd/Products/Images/522/359089/samsung-galaxy-tab-a11-plus-5g-xam-5-639027061813477313-750x500.jpg', 4),
 
+(21, 'https://cdn2.cellphones.com.vn/insecure/rs:fill:0:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/f/r/frame_100_1_2__2.png', 1),
+(21, 'https://cdn2.cellphones.com.vn/insecure/rs:fill:0:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/i/p/ipad-pro-m4-13-inch_4_.png', 2),
+(21, 'https://cdn2.cellphones.com.vn/insecure/rs:fill:0:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/i/p/ipad-pro-m4-13-inch_5_.png', 3),
+(21, 'https://cdn2.cellphones.com.vn/insecure/rs:fill:0:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/i/p/ipad-pro-m4-13-inch_6_.png', 4);
 -- ======================================================================================
 -- 5. SEED DATA CONFIGURATIONS (Cấu hình hệ thống)
 -- ======================================================================================

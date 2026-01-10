@@ -1,6 +1,7 @@
 package com.example.backend.service;
 
 import com.example.backend.utils.MyStringUtils;
+import com.example.backend.entity.ProductDescriptionHistory;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
@@ -8,10 +9,14 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import com.example.backend.entity.ProductDescriptionHistory;
 
+import java.time.LocalDateTime;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.Locale;
+import java.util.List;
+import java.time.format.DateTimeFormatter;
 
 @Service
 public class EmailService {
@@ -42,7 +47,7 @@ public class EmailService {
 
             // Mẹo: Set "To" là chính email của bạn hoặc email noreply
             // Để người nhận thấy: "To: noreply@system.com" thay vì trống trơn
-            helper.setTo("email_cua_ban@gmail.com");
+            // helper.setTo("noreply@system.com");
 
             // QUAN TRỌNG: Đưa danh sách người nhận vào BCC
             helper.setBcc(recipients);
@@ -395,5 +400,63 @@ public class EmailService {
             e.printStackTrace();
             System.err.println("Lỗi gửi mail mật khẩu mới: " + e.getMessage());
         }
+    }
+
+    @Async
+    public void sendDescriptionUpdateNotification(String[] recipients, String productName, String oldDescription, List<ProductDescriptionHistory> historyList, Long productId) {
+        String productUrl = DOMAIN + "/products/" + productId;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy"); // Thêm giờ phút cho chi tiết
+
+        // 1. Xử lý mô tả gốc
+        String safeOldDesc = oldDescription != null ? oldDescription.replace("\n", "<br>") : "(Chưa có mô tả ban đầu)";
+
+        // 2. Xử lý danh sách lịch sử mô tả (Dùng StringBuilder để nối chuỗi)
+        StringBuilder historyHtml = new StringBuilder();
+
+        if (historyList != null && !historyList.isEmpty()) {
+            for (ProductDescriptionHistory item : historyList) {
+                String dateStr = item.getThoiGianThem().format(formatter);
+                String content = item.getNoiDungThem().replace("\n", "<br>");
+
+                // Tạo block HTML cho từng lần cập nhật
+                historyHtml.append("""
+                    <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #ccc;">
+                        <div style="font-weight: bold; color: #d84315; font-size: 13px;">
+                            --- Cập nhật: %s ---
+                        </div>
+                        <div style="margin-top: 5px;">%s</div>
+                    </div>
+                """.formatted(dateStr, content));
+            }
+        }
+
+        String subject = "📢 Cập nhật thông tin sản phẩm: " + productName;
+
+        String content = """
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 20px;">
+                <h2 style="color: #0277bd; text-align: center;">Thông tin sản phẩm đã được cập nhật</h2>
+                
+                <p>Xin chào,</p>
+                <p>Sản phẩm <b>%s</b> vừa được bổ sung thêm thông tin.</p>
+                
+                <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                    <p style="margin-top: 0; color: #555; text-decoration: underline;"><b>Thông tin chi tiết:</b></p>
+                    
+                    <div style="color: #333; line-height: 1.6;">
+                        <div>%s</div>
+                        
+                        %s
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 25px;">
+                    <a href="%s" style="background-color: #0277bd; color: white; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold;">
+                        Xem chi tiết sản phẩm
+                    </a>
+                </div>
+            </div>
+            """.formatted(productName, safeOldDesc, historyHtml.toString(), productUrl);
+
+        sendEmailToMultipleRecipients(recipients, subject, content);
     }
 }
