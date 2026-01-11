@@ -681,7 +681,6 @@ export function ProductInfo({
         </Card>
       )}
 
-      {/* Payment decision modal shown after buyNow response */}
     </div>
   );
 }

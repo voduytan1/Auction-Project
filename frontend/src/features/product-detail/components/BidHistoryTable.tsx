@@ -21,7 +21,7 @@ import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
 import { useAppSelector } from "@/hooks/use-redux";
 import { Link, useNavigate } from "react-router";
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { bidAPI } from "@/services/bid.api";
 import type { ApiErrorResponse } from "@/types/types";
 import type { AxiosError } from "axios";
@@ -103,58 +103,100 @@ export function BidHistoryTable({
 
   // Fetch bid history based on user role
   const fetchBidHistory = useCallback(async () => {
+    console.log(
+      "[BidHistory] fetchBidHistory called, page:",
+      page,
+      "isOwner:",
+      isOwner
+    );
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch paginated history for all users
-      // API expects 0-based page, but we use 1-based internally
-      const response = await bidAPI.getBidHistory(productId, {
-        page,
-        size,
-      });
+      // Seller of product: fetch paginated history
+      // Other users: fetch top N only (masked names)
+      if (isOwner) {
+        // API expects 0-based page, but we use 1-based internally
+        const response = await bidAPI.getBidHistory(productId, {
+          page,
+          size,
+        });
 
-      const bidsData = Array.isArray(response.data) ? response.data : [];
-      setBids(bidsData);
+        const bidsData = Array.isArray(response.data) ? response.data : [];
+        console.log(
+          "[BidHistory] Owner received",
+          bidsData.length,
+          "bids, setting state..."
+        );
+        setBids(bidsData);
 
-      // Extract total from metadata (__raw__?.metadata or __metadata__)
-      const metadata =
-        (response as any).__raw__?.metadata || (response as any).__metadata__;
-      const totalCount = metadata?.totalElements || bidsData.length;
-      setTotal(totalCount);
+        // Extract total from metadata (__raw__?.metadata or __metadata__)
+        const metadata =
+          (response as any).__raw__?.metadata || (response as any).__metadata__;
+        const totalCount = metadata?.totalElements || bidsData.length;
+        setTotal(totalCount);
+      } else {
+        // Non-owner: fetch top N bids only
+        const response = await bidAPI.getBidHistoryTop(productId, size);
+        const bidsData = Array.isArray(response.data) ? response.data : [];
+        console.log(
+          "[BidHistory] Non-owner received",
+          bidsData.length,
+          "bids, setting state..."
+        );
+        setBids(bidsData);
+        setTotal(bidsData.length);
+      }
     } catch (error) {
       console.error("Fetch bid history failed", error);
       setError(extractErrorMessage(error));
     } finally {
       setLoading(false);
     }
-  }, [productId, page, size]);
+  }, [productId, page, size, isOwner]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
     fetchBidHistory();
   }, [isAuthenticated, fetchBidHistory]);
 
+  // Use ref to always have the latest fetchBidHistory function and isOwner flag
+  const fetchBidHistoryRef = useRef(fetchBidHistory);
+  const isOwnerRef = useRef(isOwner);
+
+  useEffect(() => {
+    fetchBidHistoryRef.current = fetchBidHistory;
+    isOwnerRef.current = isOwner;
+  }, [fetchBidHistory, isOwner]);
+
   // WebSocket integration - update bid history directly from WebSocket data
   useBidWebSocket({
     productId,
-    onBidUpdate: useCallback(
-      (_message: unknown) => {
-        // When receiving bid update, refetch for owner (they see paginated data)
-        // For non-owners, onBidHistory will handle the update
-        if (isOwner) {
-          fetchBidHistory();
-        }
-      },
-      [isOwner, fetchBidHistory]
-    ),
-    onBidHistory: useCallback((messages: any[]) => {
-      // Directly update bid history from WebSocket (top N bids)
-      // This is sent to /topic/product/{id}/history
-      setBids(messages);
-      setTotal(messages.length);
+    onBidUpdate: useCallback((_message: unknown) => {
+      console.log("[WS] BidHistoryTable: onBidUpdate received");
+      // Only owner (seller) needs to refetch API for full paginated history
+      // Non-owner gets updates via onBidHistory WebSocket
+      if (isOwnerRef.current) {
+        console.log("[WS] Owner detected, refetching full history...");
+        fetchBidHistoryRef.current();
+      }
     }, []),
-    enabled: isAuthenticated,
+    onBidHistory: useCallback((messages: any[]) => {
+      console.log(
+        "[WS] BidHistoryTable: onBidHistory received",
+        messages.length,
+        "items"
+      );
+      // Non-owner: Directly update bid history from WebSocket (top N bids)
+      // This is sent to /topic/product/{id}/history when new bid happens
+      // Owner will ignore this and use API data from onBidUpdate instead
+      if (!isOwnerRef.current) {
+        console.log("[WS] Non-owner, updating from WebSocket data");
+        setBids(messages);
+        setTotal(messages.length);
+      }
+    }, []),
+    enabled: isAuthenticated && productId > 0,
   });
 
   const totalPages = total > 0 ? Math.ceil(total / size) : 1;
