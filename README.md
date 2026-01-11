@@ -94,7 +94,19 @@ cd Auction-Project
 - Maven >= 3.9.x
 - Docker & Docker Compose
 
-#### Khởi động Database
+#### Khởi động Database và Container
+
+> **Quan trọng (Windows):** Trước khi chạy docker compose, đảm bảo các file shell script sử dụng line ending **LF** thay vì CRLF:
+>
+> - `backend/es-init/entrypoint.sh`
+> - `backend/es-init/init-system-users.sh`
+>
+> Cách chuyển đổi:
+>
+> - **VS Code:** Mở file → Nhấn vào **CRLF** ở góc dưới bên phải → Chọn **LF** → Lưu file
+> - **IntelliJ IDEA:** Mở file → Nhấn vào **CRLF** ở góc dưới bên phải → Chọn **LF - Unix and macOS (\n)** → Lưu file
+> - **Git:** `git config core.autocrlf false` sau đó checkout lại file
+> - **Notepad++:** Edit → EOL Conversion → Unix (LF)
 
 ```bash
 cd backend
