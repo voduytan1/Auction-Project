@@ -110,6 +110,7 @@ cd Auction-Project
 
 ```bash
 cd backend
+cp .env.example .env
 docker compose up -d
 ```
 
@@ -126,11 +127,6 @@ docker compose up -d
 
 **Logstash:** Tự động authenticate với Elasticsearch bằng user `logstash_system`
 
-#### Tạo file `.env`
-
-```bash
-cp .env.example .env
-```
 
 #### Cấu hình biến môi trường Backend
 
