@@ -118,60 +118,67 @@ public class AutoBidService {
             autoBidRepository.save(autoBid);
         }
 
-        // --- BƯỚC MỚI: XÓA LỊCH SỬ ĐẤU GIÁ (BID HISTORY) ---
-        // Xóa dòng này khỏi DB để không hiện trong danh sách lịch sử nữa.
-        // LƯU Ý: Ta KHÔNG trừ field "soLuotRaGia" trong entity Product
-        // để thỏa mãn yêu cầu "vẫn giữ số lượng ra giá".
+        // --- BƯỚC MỚI: ĐẾM SỐ LƯỢT ĐẤU GIÁ VÀ TRỪ ĐI ---
+        Long blockedBidCount = bidHistoryRepository.countByProductProductidAndBidderUserid(
+                product.getProductid(), blockedBidderId);
+        
+        if (blockedBidCount > 0) {
+            int currentBidCount = product.getSoLuotRaGia();
+            int newBidCount = Math.max(0, currentBidCount - blockedBidCount.intValue());
+            product.setSoLuotRaGia(newBidCount);
+            log.info("Trừ {} lượt đấu giá của user bị chặn. Số lượt cũ: {}, mới: {}", 
+                    blockedBidCount, currentBidCount, newBidCount);
+        }
+
+        // --- XÓA LỊCH SỬ ĐẤU GIÁ (BID HISTORY) ---
         bidHistoryRepository.deleteAllByProductAndBidder(product.getProductid(), blockedBidderId);
-
         log.info("Đã xóa lịch sử đấu giá của user {} cho sản phẩm {}", blockedBidderId, product.getProductid());
-
 
         // 3. Kiểm tra xem người bị chặn có đang là Winner không?
         User currentWinner = product.getCurrentBidder();
 
-        // Nếu người bị chặn đang giữ giá cao nhất -> Cần reset và tính lại
+        // Nếu người bị chặn đang giữ giá cao nhất -> Tìm giá thứ 2
         if (currentWinner != null && currentWinner.getUserid().equals(blockedBidderId)) {
-            log.info("Người bị chặn đang là Winner -> Tiến hành tính toán lại giá");
+            log.info("Người bị chặn đang là Winner -> Tìm giá cao nhất tiếp theo");
 
-            // Reset người thắng về null
-            product.setCurrentBidder(null);
+            // Tìm bid history cao nhất còn lại (không phải của người bị chặn)
+            List<BidHistory> remainingBids = bidHistoryRepository
+                    .findByProductProductidOrderByGiaDatDescCreatedAtDesc(product.getProductid());
 
-            // Reset giá về khởi điểm tạm thời
-            // (Thuật toán runAutoBidCompetition sẽ tự nâng giá lên dựa trên các BidHistory CÒN LẠI)
-            product.setGiaHienTai(product.getGiaKhoiDiem());
-
-            // Lưu trạng thái tạm (đã xóa winner, giá về mo)
-            productRepository.save(product);
-
-            // --- CHẠY LẠI ĐẤU GIÁ ---
-            // Lúc này trong bảng BidHistory đã mất sạch dữ liệu của ông bị chặn
-            // Nên hàm này sẽ tự động tìm ra người cao nhất trong số những người còn lại.
-            Product newProductState = runAutoBidCompetition(product);
-
-            // --- GỬI THÔNG BÁO CHO WINNER MỚI (NẾU CÓ) ---
-            if (newProductState != null && newProductState.getCurrentBidder() != null) {
-                User newWinner = newProductState.getCurrentBidder();
+            if (!remainingBids.isEmpty()) {
+                // Lấy bid cao nhất còn lại làm winner mới
+                BidHistory highestRemainingBid = remainingBids.get(0);
+                
+                product.setCurrentBidder(highestRemainingBid.getBidder());
+                product.setGiaHienTai(highestRemainingBid.getGiaDat());
+                productRepository.save(product);
 
                 // Gửi mail chúc mừng Winner mới
                 emailService.sendNewWinnerNotification(
-                        newWinner.getEmail(),
-                        newProductState.getTenSanPham(),
-                        newProductState.getProductid(),
-                        newProductState.getGiaHienTai()
+                        highestRemainingBid.getBidder().getEmail(),
+                        product.getTenSanPham(),
+                        product.getProductid(),
+                        highestRemainingBid.getGiaDat()
                 );
 
                 // Báo socket UI cập nhật lại tên người thắng và giá mới
-                webSocketEventPublisher.publishBidUpdate(newProductState, "NEW_WINNER_FOUND");
+                webSocketEventPublisher.publishBidUpdate(product, "NEW_WINNER_FOUND");
+                
+                log.info("Winner mới: {} với giá {}", 
+                        highestRemainingBid.getBidder().getUsername(), 
+                        highestRemainingBid.getGiaDat());
             } else {
-                // Trường hợp không còn ai khác đấu giá
+                // Không còn ai đấu giá -> Reset về giá khởi điểm
+                product.setCurrentBidder(null);
+                product.setGiaHienTai(product.getGiaKhoiDiem());
+                productRepository.save(product);
+
                 webSocketEventPublisher.publishBidUpdate(product, "NO_BIDDER_LEFT");
+                log.info("Không còn bidder nào, reset về giá khởi điểm");
             }
         } else {
-            // Trường hợp người bị chặn KHÔNG phải là Winner (chỉ là người lót đường)
-            // Ta đã xóa BidHistory ở trên rồi, nhưng vì họ không giữ giá cao nhất
-            // nên giá hiện tại của sản phẩm KHÔNG đổi.
-            // Tuy nhiên, ta vẫn cần báo socket để UI xóa tên họ khỏi danh sách lịch sử đấu giá bên tay phải (nếu có hiện).
+            // Trường hợp người bị chặn KHÔNG phải là Winner
+            productRepository.save(product);
             webSocketEventPublisher.publishBidUpdate(product, "HISTORY_REMOVED");
         }
     }

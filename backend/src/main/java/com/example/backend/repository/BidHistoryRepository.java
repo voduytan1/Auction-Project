@@ -22,6 +22,10 @@ public interface BidHistoryRepository extends JpaRepository<@NotNull BidHistory,
 
     Long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 
+    Long countByProductProductidAndBidderUserid(Long productId, UUID bidderId);
+
+    List<BidHistory> findByProductProductidOrderByGiaDatDescCreatedAtDesc(Long productId);
+
     @Modifying
     @Transactional
     @Query("DELETE FROM BidHistory b WHERE b.product.productid = :productId AND b.bidder.userid = :userId")
