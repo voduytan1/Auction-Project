@@ -1,21 +1,25 @@
 import api from "./api";
 
 /**
- * Chat Message DTOs
+ * Chat Message DTOs - Aligned with ChatMessageResponse.java
  */
 export interface ChatMessage {
-  id: number;
-  transactionId: number;
-  senderId: string;
+  messageid: number;
+  transactionid: number;
+  senderid: string;
   senderName: string;
-  message: string;
-  timestamp: string;
+  senderAvatar?: string;
+  messageContent: string;
+  messageType?: string;
+  attachmentUrl?: string;
   isRead: boolean;
+  isSentByMe?: boolean;
+  createdAt: string;
 }
 
 export interface SendMessageRequest {
-  transactionId: number;
-  message: string;
+  transactionid: number;
+  messageContent: string;
 }
 
 export interface ChatConversationResponse {

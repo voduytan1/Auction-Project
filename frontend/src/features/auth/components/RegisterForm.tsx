@@ -140,7 +140,11 @@ export function RegisterForm() {
         <CardDescription>Đăng ký để bắt đầu tham gia đấu giá</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-4"
+          noValidate
+        >
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <div className="flex gap-2">

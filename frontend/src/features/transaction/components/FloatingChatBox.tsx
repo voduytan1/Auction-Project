@@ -40,14 +40,15 @@ export function FloatingChatBox({
   const typingTimeoutRef = useRef<number | null>(null);
 
   // WebSocket for real-time chat and typing indicator
+  // Enable chat WebSocket whenever transaction is available (not just when UI is open)
   const { isOtherUserTyping, startTyping, stopTyping } = useChatWebSocket({
     transactionId,
-    enabled: isOpen && !isMinimized,
+    enabled: true, // Always enabled to receive real-time updates
     onNewMessage: (newMsg: ChatMessage) => {
       // Add new message from WebSocket to state
       setMessages((prev) => {
         // Check if message already exists (avoid duplicates)
-        const exists = prev.some((m) => m.id === newMsg.id);
+        const exists = prev.some((m) => m.messageid === newMsg.messageid);
         if (exists) return prev;
         return [...prev, newMsg];
       });
@@ -96,14 +97,16 @@ export function FloatingChatBox({
     try {
       setSending(true);
       const response = await chatAPI.sendMessage({
-        transactionId,
-        message: tempMessage.trim(),
+        transactionid: transactionId,
+        messageContent: tempMessage.trim(),
       });
 
       // Add message to state (WebSocket will also broadcast it, but we add it immediately for better UX)
       setMessages((prev) => {
         // Check if already exists (from WebSocket)
-        const exists = prev.some((m) => m.id === response.data.id);
+        const exists = prev.some(
+          (m) => m.messageid === response.data.messageid
+        );
         if (exists) return prev;
         return [...prev, response.data];
       });
@@ -293,11 +296,11 @@ export function FloatingChatBox({
                     </div>
 
                     {messages.map((msg, index) => {
-                      const isMe = msg.senderId === user.userid;
+                      const isMe = msg.senderid === user.userid;
 
                       return (
                         <div
-                          key={msg.id || index}
+                          key={msg.messageid || index}
                           className={cn(
                             "flex w-full",
                             isMe ? "justify-end" : "justify-start"
@@ -327,7 +330,7 @@ export function FloatingChatBox({
                                     : "bg-white border border-slate-100 text-slate-800 rounded-2xl rounded-tl-sm"
                                 )}
                               >
-                                {msg.message}
+                                {msg.messageContent}
                               </div>
                               <div
                                 className={cn(
@@ -335,7 +338,9 @@ export function FloatingChatBox({
                                   isMe ? "text-right pr-1" : "text-left pl-1"
                                 )}
                               >
-                                {format(new Date(msg.timestamp), "HH:mm")}
+                                {msg.createdAt
+                                  ? format(new Date(msg.createdAt), "HH:mm")
+                                  : ""}
                               </div>
                             </div>
                           </div>

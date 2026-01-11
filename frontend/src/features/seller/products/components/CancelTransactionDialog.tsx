@@ -100,7 +100,11 @@ export function CancelTransactionDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-4"
+          noValidate
+        >
           {/* Winner Info */}
           <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4 space-y-3">
             <div className="flex items-center justify-between">

@@ -174,6 +174,7 @@ export function EditProfileForm() {
           <form
             onSubmit={handleSubmit(onSubmit)}
             className="space-y-3 sm:space-y-4"
+            noValidate
           >
             {/* Avatar Upload */}
             <div className="flex flex-col items-center gap-3 sm:gap-4 pb-3 sm:pb-4 border-b">

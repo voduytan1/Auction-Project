@@ -96,24 +96,36 @@ class BaseWebSocketService {
     }
 
     if (!this.client?.connected) {
-      console.error("[WebSocket] Not connected. Cannot subscribe.");
+      console.error(`[WebSocket] Not connected. Cannot subscribe to ${topic}.`);
       return key;
     }
 
-    const subscription = this.client.subscribe(topic, (message: IMessage) => {
-      try {
-        const data: T = JSON.parse(message.body);
-        callback(data);
-      } catch (error) {
-        console.error(
-          `[WebSocket] Error parsing message from ${topic}:`,
-          error
-        );
-      }
-    });
+    try {
+      const subscription = this.client.subscribe(topic, (message: IMessage) => {
+        try {
+          console.log(
+            `[WebSocket] Received message from ${topic}:`,
+            message.body
+          );
+          const data: T = JSON.parse(message.body);
+          callback(data);
+        } catch (error) {
+          console.error(
+            `[WebSocket] Error parsing message from ${topic}:`,
+            error
+          );
+        }
+      });
 
-    this.subscriptions.set(key, subscription);
-    return key;
+      this.subscriptions.set(key, subscription);
+      console.log(
+        `[WebSocket] Successfully subscribed to ${topic} with key ${key}`
+      );
+      return key;
+    } catch (error) {
+      console.error(`[WebSocket] Error subscribing to ${topic}:`, error);
+      return key;
+    }
   }
 
   /**
@@ -121,15 +133,19 @@ class BaseWebSocketService {
    */
   protected publish(destination: string, body: object): void {
     if (!this.client?.connected) {
-      console.error("[WebSocket] Not connected. Cannot publish.");
+      console.error(
+        `[WebSocket] Not connected. Cannot publish to ${destination}.`
+      );
       return;
     }
 
     try {
+      console.log(`[WebSocket] Publishing to ${destination}:`, body);
       this.client.publish({
         destination,
         body: JSON.stringify(body),
       });
+      console.log(`[WebSocket] Published successfully to ${destination}`);
     } catch (error) {
       console.error(`[WebSocket] Error publishing to ${destination}:`, error);
     }
@@ -144,6 +160,24 @@ class BaseWebSocketService {
       subscription.unsubscribe();
       this.subscriptions.delete(key);
     }
+  }
+
+  /**
+   * Public method to publish message (for external services)
+   */
+  sendMessage(destination: string, body: object): void {
+    this.publish(destination, body);
+  }
+
+  /**
+   * Public method to subscribe (for external services)
+   */
+  subscribeToTopic<T>(
+    topic: string,
+    key: string,
+    callback: (data: T) => void
+  ): string {
+    return this.subscribe(topic, key, callback);
   }
 }
 

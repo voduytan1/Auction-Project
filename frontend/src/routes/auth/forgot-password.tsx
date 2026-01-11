@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { toast } from "sonner";
 import { ArrowLeft, Mail, Lock, KeyRound } from "lucide-react";
@@ -16,16 +17,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { authAPI } from "@/services/auth.api";
-
-interface ForgotPasswordForm {
-  email: string;
-}
-
-interface ResetPasswordForm {
-  otp: string;
-  newPassword: string;
-  confirmPassword: string;
-}
+import {
+  forgotPasswordEmailSchema,
+  forgotPasswordResetSchema,
+  type ForgotPasswordEmailFormData,
+  type ForgotPasswordResetFormData,
+} from "@/features/profile/schemas/validation";
 
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
@@ -38,18 +35,19 @@ export default function ForgotPasswordPage() {
     register: registerEmail,
     handleSubmit: handleSubmitEmail,
     formState: { errors: errorsEmail },
-  } = useForm<ForgotPasswordForm>();
+  } = useForm<ForgotPasswordEmailFormData>({
+    resolver: zodResolver(forgotPasswordEmailSchema),
+  });
 
   const {
     register: registerReset,
     handleSubmit: handleSubmitReset,
     formState: { errors: errorsReset },
-    watch,
-  } = useForm<ResetPasswordForm>();
+  } = useForm<ForgotPasswordResetFormData>({
+    resolver: zodResolver(forgotPasswordResetSchema),
+  });
 
-  const newPassword = watch("newPassword");
-
-  const onRequestOTP = async (data: ForgotPasswordForm) => {
+  const onRequestOTP = async (data: ForgotPasswordEmailFormData) => {
     setIsLoading(true);
     try {
       await authAPI.sendOtp(data.email);
@@ -69,12 +67,7 @@ export default function ForgotPasswordPage() {
     }
   };
 
-  const onResetPassword = async (data: ResetPasswordForm) => {
-    if (data.newPassword !== data.confirmPassword) {
-      toast.error("Mật khẩu xác nhận không khớp!");
-      return;
-    }
-
+  const onResetPassword = async (data: ForgotPasswordResetFormData) => {
     if (!executeRecaptcha) {
       toast.error("reCAPTCHA chưa sẵn sàng. Vui lòng thử lại!");
       return;
@@ -130,6 +123,7 @@ export default function ForgotPasswordPage() {
           <form
             onSubmit={handleSubmitEmail(onRequestOTP)}
             className="space-y-4"
+            noValidate
           >
             <div className="space-y-2">
               <Label htmlFor="email">
@@ -140,13 +134,7 @@ export default function ForgotPasswordPage() {
                 id="email"
                 type="email"
                 placeholder="email@example.com"
-                {...registerEmail("email", {
-                  required: "Email là bắt buộc",
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: "Email không hợp lệ",
-                  },
-                })}
+                {...registerEmail("email")}
               />
               {errorsEmail.email && (
                 <p className="text-sm text-destructive">
@@ -169,6 +157,7 @@ export default function ForgotPasswordPage() {
           <form
             onSubmit={handleSubmitReset(onResetPassword)}
             className="space-y-4"
+            noValidate
           >
             <div className="space-y-2">
               <Label htmlFor="email-display">
@@ -192,9 +181,7 @@ export default function ForgotPasswordPage() {
               <Input
                 id="otp"
                 placeholder="Nhập mã OTP từ email"
-                {...registerReset("otp", {
-                  required: "Mã OTP là bắt buộc",
-                })}
+                {...registerReset("otp")}
               />
               {errorsReset.otp && (
                 <p className="text-sm text-destructive">
@@ -212,13 +199,7 @@ export default function ForgotPasswordPage() {
                 id="newPassword"
                 type="password"
                 placeholder="Nhập mật khẩu mới"
-                {...registerReset("newPassword", {
-                  required: "Mật khẩu mới là bắt buộc",
-                  minLength: {
-                    value: 6,
-                    message: "Mật khẩu phải có ít nhất 6 ký tự",
-                  },
-                })}
+                {...registerReset("newPassword")}
               />
               {errorsReset.newPassword && (
                 <p className="text-sm text-destructive">
@@ -233,11 +214,7 @@ export default function ForgotPasswordPage() {
                 id="confirmPassword"
                 type="password"
                 placeholder="Nhập lại mật khẩu mới"
-                {...registerReset("confirmPassword", {
-                  required: "Xác nhận mật khẩu là bắt buộc",
-                  validate: (value) =>
-                    value === newPassword || "Mật khẩu xác nhận không khớp",
-                })}
+                {...registerReset("confirmPassword")}
               />
               {errorsReset.confirmPassword && (
                 <p className="text-sm text-destructive">
