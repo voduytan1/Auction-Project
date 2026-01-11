@@ -91,9 +91,7 @@ public class TransactionController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        String maVanDon = request.getMaVanDon();
-
-        TransactionResponse response =transactionService.addShipmentProve(id, maVanDon, UUID.fromString(sub));
+        TransactionResponse response =transactionService.addShipmentProve(id, request, UUID.fromString(sub));
 
         return ResponseEntity.ok(ApiResponse.success(response));
     }

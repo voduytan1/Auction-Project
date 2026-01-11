@@ -4,6 +4,7 @@ import com.example.backend.dto.admin.dashboard.RevenueDataPoint;
 import com.example.backend.dto.common.PaginationRequest;
 import com.example.backend.dto.rating.CreateRatingRequest;
 import com.example.backend.dto.transaction.TransactionResponse;
+import com.example.backend.dto.transaction.TransactionShipmentProveRequest;
 import com.example.backend.entity.Transaction;
 import com.example.backend.entity.TransactionStatus;
 import com.example.backend.exception.ForbiddenException;
@@ -20,6 +21,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.ModelAttribute;
+
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -109,7 +111,7 @@ public class TransactionService {
     }
 
     @Transactional
-    public TransactionResponse addShipmentProve(Long transactionId, String maVanDon, UUID userid) {
+    public TransactionResponse addShipmentProve(Long transactionId, TransactionShipmentProveRequest request, UUID userid) {
         Transaction transaction = transactionRepository.findById(transactionId).orElseThrow(()-> new EntityNotFoundException("Không tìm thấy giao dịch với id " + transactionId));
 
         if (!userid.equals(transaction.getSeller().getUserid())){
@@ -120,7 +122,8 @@ public class TransactionService {
             throw new IllegalStateException("Giao dịch phải ở trạng thái chờ gửi hàng mới có thể nhập mã vận đơn");
         }
 
-        transaction.setMaVanDon(maVanDon);
+        transaction.setMaVanDon(request.getMaVanDon());
+        transaction.setAnhVanDon(request.getAnhVanDon());
         transaction.setThoiGianGiaoHang(LocalDateTime.now());
         transaction.setTrangThai(TransactionStatus.SHIPPED);
 
