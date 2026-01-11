@@ -49,6 +49,7 @@ export interface TransactionStatusMessage {
   trangThai: TransactionStatus;
   diaChiGiaoHang?: string;
   maVanDon?: string;
+  anhVanDon?: string;
   phuongThucThanhToan?: string;
   thoiGianThanhToan?: string;
   thoiGianGiaoHang?: string;

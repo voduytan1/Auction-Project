@@ -18,31 +18,63 @@ export interface SendMessageRequest {
   message: string;
 }
 
+export interface ChatConversationResponse {
+  transactionId: number;
+  productName: string;
+  otherUserName: string;
+  otherUserAvatar?: string;
+  lastMessage?: string;
+  lastMessageTime?: string;
+  unreadCount: number;
+}
+
 /**
  * Chat API - Real-time messaging between buyer and seller
- * Response giống như login API, không wrap trong ApiResponse
+ * Aligned with ChatController.java endpoints
  */
 export const chatAPI = {
   /**
-   * GET /chat/{transactionId} - Get all messages for a transaction
-   */
-  getMessages: (transactionId: number) =>
-    api.get<ChatMessage[]>(`/chat/${transactionId}`),
-
-  /**
-   * POST /chat - Send a new message
+   * POST /chat/send - Send a new message
    */
   sendMessage: (data: SendMessageRequest) =>
-    api.post<ChatMessage>("/chat", data),
+    api.post<ChatMessage>("/chat/send", data),
 
   /**
-   * PATCH /chat/{messageId}/read - Mark message as read
+   * GET /chat/transaction/{transactionId} - Get all messages for a transaction with pagination
+   * Query params: page, size, sort
    */
-  markAsRead: (messageId: number) => api.patch<void>(`/chat/${messageId}/read`),
+  getMessages: (
+    transactionId: number,
+    params?: { page?: number; size?: number }
+  ) => api.get<ChatMessage[]>(`/chat/transaction/${transactionId}`, { params }),
 
   /**
-   * GET /chat/unread-count/{transactionId} - Get unread message count
+   * GET /chat/conversation/{transactionId} - Get conversation info
+   */
+  getConversation: (transactionId: number) =>
+    api.get<ChatConversationResponse>(`/chat/conversation/${transactionId}`),
+
+  /**
+   * POST /chat/transaction/{transactionId}/read - Mark all messages in transaction as read
+   */
+  markAsRead: (transactionId: number) =>
+    api.post<void>(`/chat/transaction/${transactionId}/read`),
+
+  /**
+   * GET /chat/transaction/{transactionId}/unread - Get unread message count for transaction
    */
   getUnreadCount: (transactionId: number) =>
-    api.get<number>(`/chat/unread-count/${transactionId}`),
+    api.get<number>(`/chat/transaction/${transactionId}/unread`),
+
+  /**
+   * GET /chat/conversations - Get all conversations for current user
+   */
+  getMyConversations: () =>
+    api.get<ChatConversationResponse[]>("/chat/conversations"),
+
+  /**
+   * DELETE /chat/transaction/{transactionId} - Delete conversation (admin only)
+   */
+  deleteConversation: (transactionId: number) =>
+    api.delete<void>(`/chat/transaction/${transactionId}`),
 };

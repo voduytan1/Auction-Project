@@ -125,6 +125,24 @@ api.interceptors.response.use(
       // window.location.href = "/unauthorized";
     }
 
+    // Handle 429 Too Many Requests (Rate Limit)
+    if (error.response?.status === 429) {
+      // Import toast dynamically to avoid circular dependency
+      import("sonner").then(({ toast }) => {
+        toast.error("Thao tác quá nhanh!", {
+          description:
+            "Bạn đang thực hiện thao tác quá nhiều. Vui lòng chờ 1 phút và thử lại.",
+          duration: 5000,
+        });
+      });
+
+      const rateLimitError = new Error(
+        "Quá nhiều yêu cầu. Vui lòng chờ 1 phút."
+      ) as AxiosError;
+      rateLimitError.response = error.response;
+      return Promise.reject(rateLimitError);
+    }
+
     // Handle 404 Not Found
     if (error.response?.status === 404) {
       console.error("Resource not found");

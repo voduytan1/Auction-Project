@@ -23,6 +23,7 @@ export interface Transaction {
   trangThai: TransactionStatus;
   diaChiGiaoHang?: string;
   maVanDon?: string;
+  anhVanDon?: string;
   phuongThucThanhToan?: string; // paymentMethod
   thoiGianThanhToan?: string;
   thoiGianGiaoHang?: string;
@@ -52,6 +53,7 @@ export interface ShippingAddressRequest {
 export interface TrackingNumberRequest {
   transactionId: number;
   maVanDon: string;
+  anhVanDon: string;
 }
 
 export interface DeliveryConfirmRequest {
