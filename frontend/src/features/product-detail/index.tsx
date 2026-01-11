@@ -33,7 +33,6 @@ const ProductDetail = () => {
   const [error, setError] = useState<string | null>(null);
   const [showWinnerDialog, setShowWinnerDialog] = useState(false);
   const [showSellerDialog, setShowSellerDialog] = useState(false);
-  const [isProcessingPayment] = useState(false);
   const [isUserActionInProgress, setIsUserActionInProgress] = useState(false);
   const navigate = useNavigate();
 
@@ -80,15 +79,16 @@ const ProductDetail = () => {
     }
   }, [product, user, isAuthenticated, isUserActionInProgress]);
 
-  const handlePayNow = () => {
-    if (!product?.transactionId) {
-      toast.error("Không tìm thấy thông tin giao dịch");
-      return;
-    }
-
-    // Navigate to transaction detail page
-    navigate(`/transactions/${product.transactionId}/detail`);
+  const handleViewWonAuctions = () => {
+    // Navigate to won auctions page
+    navigate("/bidder/transactions");
     setShowWinnerDialog(false);
+  };
+
+  const handleViewSoldProducts = () => {
+    // Navigate to sold products page
+    navigate("/seller/transactions");
+    setShowSellerDialog(false);
   };
 
   const handleRefreshProduct = async () => {
@@ -107,7 +107,7 @@ const ProductDetail = () => {
     productId: product?.productid,
     onBidUpdate: useCallback(
       (message: BidUpdateMessage) => {
-        // Update current price from WebSocket message
+        // Update current price, bid count, and current bidder from WebSocket message
         if (product && message.giaHienTai !== undefined) {
           setProduct((prev) => {
             if (!prev) return prev;
@@ -115,6 +115,7 @@ const ProductDetail = () => {
               ...prev,
               giaHienTai: message.giaHienTai,
               soLuotRaGia: message.soLuotRaGia || prev.soLuotRaGia,
+              tenBidder: message.currentBidder || prev.tenBidder,
             };
           });
         }
@@ -122,7 +123,7 @@ const ProductDetail = () => {
       [product]
     ),
     onProductStatus: useCallback(
-      (message: ProductStatusMessage) => {
+      async (message: ProductStatusMessage) => {
         // Update product status, winner info
         if (product) {
           setProduct((prev) => {
@@ -134,9 +135,14 @@ const ProductDetail = () => {
               tenBidder: message.winnerName || prev.tenBidder,
             };
           });
+
+          // If product is completed, refetch to get transactionId
+          if (message.status === "COMPLETED") {
+            await handleRefreshProduct();
+          }
         }
       },
-      [product]
+      [product, handleRefreshProduct]
     ),
     enabled: isAuthenticated && !!product,
   });
@@ -192,22 +198,9 @@ const ProductDetail = () => {
             >
               Để sau
             </Button>
-            <Button
-              onClick={handlePayNow}
-              disabled={isProcessingPayment}
-              className="flex-1"
-            >
-              {isProcessingPayment ? (
-                <>
-                  <CreditCard className="mr-2 h-4 w-4 animate-pulse" />
-                  Đang xử lý...
-                </>
-              ) : (
-                <>
-                  <CreditCard className="mr-2 h-4 w-4" />
-                  Thanh toán ngay
-                </>
-              )}
+            <Button onClick={handleViewWonAuctions} className="flex-1">
+              <CreditCard className="mr-2 h-4 w-4" />
+              Xem giao dịch
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -248,18 +241,8 @@ const ProductDetail = () => {
             >
               Để sau
             </Button>
-            <Button
-              onClick={() => {
-                if (!product?.transactionId) {
-                  toast.error("Không tìm thấy thông tin giao dịch");
-                  return;
-                }
-                navigate(`/transactions/${product.transactionId}/detail`);
-                setShowSellerDialog(false);
-              }}
-              className="flex-1"
-            >
-              Xem chi tiết
+            <Button onClick={handleViewSoldProducts} className="flex-1">
+              Xem sản phẩm đã bán
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -283,7 +266,7 @@ const ProductDetail = () => {
             </Link>
             <span>›</span>
             <Link
-              to={`/category/${product.parentCategoryId}`}
+              to={`/parent-category/${product.parentCategoryId}`}
               className="hover:text-primary"
             >
               {product.tenDanhMucCha}

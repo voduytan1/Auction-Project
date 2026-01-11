@@ -4,6 +4,7 @@
  */
 
 import api from "./api";
+import type { ProductResponse } from "./product.api";
 import type {
   CategoryResponse,
   CategoryDisplay,
@@ -154,6 +155,22 @@ export const categoryApi = {
     api.get<CategoryWithProductResponse>(`/categories/${categoryId}/products`, {
       params,
     }),
+
+  /**
+   * GET /categories/{id}/products/parent-category - Get products by parent category (level 1)
+   * Returns all products that belong to this parent category and its subcategories
+   * Returns: ApiResponse with ProductResponse[] data
+   */
+  getProductsByParentCategory: (
+    categoryId: number,
+    params?: { page?: number; size?: number; search?: string }
+  ) =>
+    api.get<ProductResponse[]>(
+      `/categories/${categoryId}/products/parent-category`,
+      {
+        params,
+      }
+    ),
 
   /**
    * POST /categories - Create new category (admin only)

@@ -190,43 +190,41 @@ export function UpgradeRequestsTable() {
             placeholder="Tìm theo username..."
           />
 
-          {isLoading && <TableLoadingState colSpan={3} />}
-
-          {!isLoading && requests.length === 0 && (
-            <TableEmptyState
-              colSpan={3}
-              message={
-                searchTerm
-                  ? "Không tìm thấy yêu cầu nào"
-                  : "Không có yêu cầu nào đang chờ duyệt"
-              }
-            />
-          )}
-
-          {!isLoading && requests.length > 0 && (
-            <div className="border rounded-lg overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <SortableTableHead
-                      field="username"
-                      label="Người dùng"
-                      sortBy={sortBy}
-                      sortOrder={sortOrder}
-                      onSort={handleSort}
-                    />
-                    <SortableTableHead
-                      field="trangThai"
-                      label="Trạng thái"
-                      sortBy={sortBy}
-                      sortOrder={sortOrder}
-                      onSort={handleSort}
-                    />
-                    <TableHead className="text-right">Thao tác</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedRequests.map((request) => (
+          <div className="border rounded-lg overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <SortableTableHead
+                    field="username"
+                    label="Người dùng"
+                    sortBy={sortBy}
+                    sortOrder={sortOrder}
+                    onSort={handleSort}
+                  />
+                  <SortableTableHead
+                    field="trangThai"
+                    label="Trạng thái"
+                    sortBy={sortBy}
+                    sortOrder={sortOrder}
+                    onSort={handleSort}
+                  />
+                  <TableHead className="text-right">Thao tác</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableLoadingState colSpan={3} />
+                ) : requests.length === 0 ? (
+                  <TableEmptyState
+                    colSpan={3}
+                    message={
+                      searchTerm
+                        ? "Không tìm thấy yêu cầu nào"
+                        : "Không có yêu cầu nào đang chờ duyệt"
+                    }
+                  />
+                ) : (
+                  sortedRequests.map((request) => (
                     <TableRow key={request.requestid}>
                       <TableCell className="font-medium">
                         {request.username}
@@ -282,11 +280,11 @@ export function UpgradeRequestsTable() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
 
           <TablePagination
             currentPage={currentPage}

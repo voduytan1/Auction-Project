@@ -1,6 +1,13 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   CheckCircle2,
   Circle,
@@ -111,6 +118,7 @@ export function TransactionStepper({
 }: TransactionStepperProps) {
   const currentStep = getStepFromStatus(transaction.trangThai);
   const isCancelled = transaction.trangThai === "CANCELLED";
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
 
   return (
     <Card>
@@ -199,6 +207,45 @@ export function TransactionStepper({
                       <p className="mt-1 text-sm text-gray-600">
                         {step.description}
                       </p>
+
+                      {/* Show tracking image only at shipping step */}
+                      {step.id === 2 && transaction.anhVanDon && (
+                        <div className="mt-3">
+                          <img
+                            src={transaction.anhVanDon}
+                            alt="Ảnh vận đơn"
+                            className="w-full max-w-md rounded-lg border shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                            onClick={() => setImageDialogOpen(true)}
+                          />
+                          {transaction.maVanDon && (
+                            <p className="mt-2 text-sm text-gray-600">
+                              Mã vận đơn:{" "}
+                              <span className="font-mono font-semibold">
+                                {transaction.maVanDon}
+                              </span>
+                            </p>
+                          )}
+
+                          {/* Image Dialog */}
+                          <Dialog
+                            open={imageDialogOpen}
+                            onOpenChange={setImageDialogOpen}
+                          >
+                            <DialogContent className="max-w-3xl">
+                              <DialogHeader>
+                                <DialogTitle>Ảnh vận đơn</DialogTitle>
+                              </DialogHeader>
+                              <div className="flex justify-center">
+                                <img
+                                  src={transaction.anhVanDon}
+                                  alt="Ảnh vận đơn"
+                                  className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                                />
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                      )}
 
                       {isCurrent && step.id < 4 && (
                         <div className="mt-3 text-sm">

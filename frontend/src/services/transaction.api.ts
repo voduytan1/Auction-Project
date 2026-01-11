@@ -42,8 +42,11 @@ export const transactionAPI = {
    * Thêm mã vận đơn (Seller only)
    * Chuyển trạng thái từ AWAITING_SHIPMENT → SHIPPED
    */
-  addShipmentProve: (id: number, maVanDon: string) =>
-    api.post<Transaction>(`/transactions/${id}/ma-van-don`, { maVanDon }),
+  addShipmentProve: (id: number, maVanDon: string, anhVanDon: string) =>
+    api.post<Transaction>(`/transactions/${id}/ma-van-don`, {
+      maVanDon,
+      anhVanDon,
+    }),
 
   /**
    * Xác nhận hoàn thành giao dịch (Buyer only)

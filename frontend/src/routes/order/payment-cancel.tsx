@@ -17,7 +17,7 @@ export default function PaymentCancelPage() {
   };
 
   const handleViewPurchases = () => {
-    navigate("/bidder/profile?tab=won-auctions");
+    navigate("/bidder/transactions");
   };
 
   return (

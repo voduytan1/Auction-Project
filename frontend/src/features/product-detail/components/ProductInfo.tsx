@@ -61,6 +61,22 @@ const formatCurrency = (amount: number) => {
   }).format(amount);
 };
 
+// Format number with comma separator
+const formatNumber = (value: number | string | undefined): string => {
+  if (!value) return "";
+  const numValue =
+    typeof value === "string" ? parseFloat(value.replace(/,/g, "")) : value;
+  if (isNaN(numValue)) return "";
+  return numValue.toLocaleString("en-US");
+};
+
+// Parse formatted string to number
+const parseNumber = (value: string): number | undefined => {
+  if (!value) return undefined;
+  const numValue = parseFloat(value.replace(/,/g, ""));
+  return isNaN(numValue) ? undefined : numValue;
+};
+
 interface ProductInfoProps {
   product: ProductResponse;
   onRefreshProduct?: () => Promise<void>;
@@ -276,10 +292,15 @@ export function ProductInfo({
                     Mức giá tối đa (VND)
                   </label>
                   <Input
-                    type="number"
-                    value={autoValue}
-                    onChange={(e) => setAutoValue(e.target.value)}
-                    placeholder={String(product.giaHienTai + product.buocGia)}
+                    type="text"
+                    value={formatNumber(autoValue)}
+                    onChange={(e) => {
+                      const numValue = parseNumber(e.target.value);
+                      setAutoValue(numValue ? String(numValue) : "");
+                    }}
+                    placeholder={formatNumber(
+                      product.giaHienTai + product.buocGia
+                    )}
                   />
                   <div className="mt-2 text-xs text-slate-500 space-y-1">
                     <div>

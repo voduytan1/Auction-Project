@@ -12,11 +12,9 @@ export function SellerTransactionsPage() {
     <div className="container mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-12">
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl sm:text-2xl">
-            Giao dịch của tôi
-          </CardTitle>
+          <CardTitle className="text-xl sm:text-2xl">Sản phẩm đã bán</CardTitle>
           <CardDescription className="text-sm">
-            Quản lý các giao dịch bán hàng của bạn
+            Quản lý các sản phẩm đã có người thắng đấu giá
           </CardDescription>
         </CardHeader>
         <CardContent>
