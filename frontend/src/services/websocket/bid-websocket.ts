@@ -13,6 +13,9 @@ export type TransactionStatusCallback = (
   message: TransactionStatusMessage
 ) => void;
 
+// Counter to generate unique keys for multiple subscriptions
+let subscriptionCounter = 0;
+
 /**
  * Bid WebSocket Service
  * Handles all bid-related WebSocket subscriptions
@@ -22,14 +25,18 @@ class BidWebSocketService {
    * Subscribe to bid updates for a product
    * @param productId - Product ID to subscribe to
    * @param callback - Callback function when receiving bid update
+   * @param keySuffix - Optional suffix to create unique keys for multiple subscribers
    * @returns Subscription key for unsubscribing
    */
   subscribeToBidUpdates(
     productId: number,
-    callback: BidUpdateCallback
+    callback: BidUpdateCallback,
+    keySuffix?: string
   ): string {
     const topic = `/topic/product/${productId}/bids`;
-    const key = `bids-${productId}`;
+    const key = keySuffix
+      ? `bids-${productId}-${keySuffix}`
+      : `bids-${productId}-${++subscriptionCounter}`;
     return baseWebSocketService["subscribe"]<BidUpdateMessage>(
       topic,
       key,
@@ -41,14 +48,18 @@ class BidWebSocketService {
    * Subscribe to bid history updates for a product
    * @param productId - Product ID to subscribe to
    * @param callback - Callback function when receiving bid history (top 5 bids)
+   * @param keySuffix - Optional suffix to create unique keys for multiple subscribers
    * @returns Subscription key for unsubscribing
    */
   subscribeToBidHistory(
     productId: number,
-    callback: BidHistoryCallback
+    callback: BidHistoryCallback,
+    keySuffix?: string
   ): string {
     const topic = `/topic/product/${productId}/history`;
-    const key = `history-${productId}`;
+    const key = keySuffix
+      ? `history-${productId}-${keySuffix}`
+      : `history-${productId}-${++subscriptionCounter}`;
     return baseWebSocketService["subscribe"]<BidHistoryItemMessage[]>(
       topic,
       key,
@@ -60,14 +71,18 @@ class BidWebSocketService {
    * Subscribe to product status changes
    * @param productId - Product ID to subscribe to
    * @param callback - Callback function when product status changes
+   * @param keySuffix - Optional suffix to create unique keys for multiple subscribers
    * @returns Subscription key for unsubscribing
    */
   subscribeToProductStatus(
     productId: number,
-    callback: ProductStatusCallback
+    callback: ProductStatusCallback,
+    keySuffix?: string
   ): string {
     const topic = `/topic/product/${productId}/status`;
-    const key = `status-${productId}`;
+    const key = keySuffix
+      ? `status-${productId}-${keySuffix}`
+      : `status-${productId}-${++subscriptionCounter}`;
     return baseWebSocketService["subscribe"]<ProductStatusMessage>(
       topic,
       key,
@@ -79,14 +94,18 @@ class BidWebSocketService {
    * Subscribe to transaction status changes
    * @param transactionId - Transaction ID to subscribe to
    * @param callback - Callback function when transaction status changes
+   * @param keySuffix - Optional suffix to create unique keys for multiple subscribers
    * @returns Subscription key for unsubscribing
    */
   subscribeToTransactionStatus(
     transactionId: number,
-    callback: TransactionStatusCallback
+    callback: TransactionStatusCallback,
+    keySuffix?: string
   ): string {
     const topic = `/topic/transaction/${transactionId}/status`;
-    const key = `transaction-${transactionId}`;
+    const key = keySuffix
+      ? `transaction-${transactionId}-${keySuffix}`
+      : `transaction-${transactionId}-${++subscriptionCounter}`;
     return baseWebSocketService["subscribe"]<TransactionStatusMessage>(
       topic,
       key,

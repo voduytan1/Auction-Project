@@ -105,44 +105,42 @@ const ProductDetail = () => {
   // WebSocket integration - update product data directly
   useBidWebSocket({
     productId: product?.productid,
-    onBidUpdate: useCallback(
-      (message: BidUpdateMessage) => {
-        // Update current price, bid count, and current bidder from WebSocket message
-        if (product && message.giaHienTai !== undefined) {
-          setProduct((prev) => {
-            if (!prev) return prev;
-            return {
-              ...prev,
-              giaHienTai: message.giaHienTai,
-              soLuotRaGia: message.soLuotRaGia || prev.soLuotRaGia,
-              tenBidder: message.currentBidder || prev.tenBidder,
-            };
-          });
-        }
-      },
-      [product]
-    ),
+    onBidUpdate: useCallback((message: BidUpdateMessage) => {
+      // Update current price, bid count, and current bidder from WebSocket message
+      if (message.giaHienTai !== undefined) {
+        console.log("[WS] Bid update received:", message);
+        setProduct((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            giaHienTai: message.giaHienTai,
+            soLuotRaGia: message.soLuotRaGia ?? prev.soLuotRaGia,
+            // currentBidder can be null when no bidder left after block
+            tenBidder: message.currentBidder ?? null,
+          };
+        });
+      }
+    }, []),
     onProductStatus: useCallback(
       async (message: ProductStatusMessage) => {
         // Update product status, winner info
-        if (product) {
-          setProduct((prev) => {
-            if (!prev) return prev;
-            return {
-              ...prev,
-              trangThai: message.status as ProductResponse["trangThai"],
-              bidderId: message.winnerId || prev.bidderId,
-              tenBidder: message.winnerName || prev.tenBidder,
-            };
-          });
+        console.log("[WS] Product status received:", message);
+        setProduct((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            trangThai: message.status as ProductResponse["trangThai"],
+            bidderId: message.winnerId || prev.bidderId,
+            tenBidder: message.winnerName || prev.tenBidder,
+          };
+        });
 
-          // If product is completed, refetch to get transactionId
-          if (message.status === "COMPLETED") {
-            await handleRefreshProduct();
-          }
+        // If product is completed, refetch to get transactionId
+        if (message.status === "COMPLETED") {
+          await handleRefreshProduct();
         }
       },
-      [product, handleRefreshProduct]
+      [handleRefreshProduct]
     ),
     enabled: isAuthenticated && !!product,
   });

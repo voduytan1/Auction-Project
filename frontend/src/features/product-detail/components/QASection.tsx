@@ -285,7 +285,7 @@ export function QASection({ productId, sellerId }: QASectionProps) {
 
         {questions.length === 0 && (
           <div className="py-8 text-center text-slate-500">
-            Chưa có câu hỏi nào. Hãy là người đầu tiên đặt câu hỏi!
+            Chưa có câu hỏi nào.
           </div>
         )}
       </CardContent>

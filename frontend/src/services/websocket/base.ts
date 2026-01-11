@@ -6,10 +6,15 @@ import { env } from "@/config/env";
 /**
  * Base WebSocket Service
  * Provides core WebSocket connection and subscription management
+ * Supports multiple callbacks per topic (multi-subscriber pattern)
  */
 class BaseWebSocketService {
   private client: Client | null = null;
+  // Map topic -> subscription
   protected subscriptions: Map<string, StompSubscription> = new Map();
+  // Map topic -> Map<key, callback>
+  protected callbacks: Map<string, Map<string, (data: unknown) => void>> =
+    new Map();
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectDelay = 3000;
@@ -59,6 +64,7 @@ class BaseWebSocketService {
     if (this.client) {
       this.subscriptions.forEach((sub) => sub.unsubscribe());
       this.subscriptions.clear();
+      this.callbacks.clear();
       this.client.deactivate();
       this.client = null;
     }
@@ -84,14 +90,21 @@ class BaseWebSocketService {
 
   /**
    * Subscribe to a topic with callback
+   * Supports multiple callbacks per topic (multi-subscriber pattern)
    */
   protected subscribe<T>(
     topic: string,
     key: string,
     callback: (data: T) => void
   ): string {
-    if (this.subscriptions.has(key)) {
-      console.warn(`[WebSocket] Already subscribed to ${topic}`);
+    // Check if this specific key already has a callback
+    const topicCallbacks = this.callbacks.get(topic);
+    if (topicCallbacks?.has(key)) {
+      console.warn(
+        `[WebSocket] Key ${key} already subscribed to ${topic}, updating callback`
+      );
+      // Update the callback instead of ignoring
+      topicCallbacks.set(key, callback as (data: unknown) => void);
       return key;
     }
 
@@ -100,6 +113,23 @@ class BaseWebSocketService {
       return key;
     }
 
+    // Initialize callbacks map for this topic if needed
+    if (!this.callbacks.has(topic)) {
+      this.callbacks.set(topic, new Map());
+    }
+
+    // Add this callback
+    this.callbacks.get(topic)!.set(key, callback as (data: unknown) => void);
+
+    // If topic already has a subscription, just add the callback
+    if (this.subscriptions.has(topic)) {
+      console.log(
+        `[WebSocket] Added callback ${key} to existing subscription for ${topic}`
+      );
+      return key;
+    }
+
+    // Create new subscription for this topic
     try {
       const subscription = this.client.subscribe(topic, (message: IMessage) => {
         try {
@@ -108,7 +138,17 @@ class BaseWebSocketService {
             message.body
           );
           const data: T = JSON.parse(message.body);
-          callback(data);
+
+          // Invoke all callbacks for this topic
+          const callbacks = this.callbacks.get(topic);
+          if (callbacks) {
+            callbacks.forEach((cb, cbKey) => {
+              console.log(
+                `[WebSocket] Invoking callback ${cbKey} for ${topic}`
+              );
+              cb(data);
+            });
+          }
         } catch (error) {
           console.error(
             `[WebSocket] Error parsing message from ${topic}:`,
@@ -117,7 +157,7 @@ class BaseWebSocketService {
         }
       });
 
-      this.subscriptions.set(key, subscription);
+      this.subscriptions.set(topic, subscription);
       console.log(
         `[WebSocket] Successfully subscribed to ${topic} with key ${key}`
       );
@@ -152,13 +192,30 @@ class BaseWebSocketService {
   }
 
   /**
-   * Unsubscribe from a topic
+   * Unsubscribe from a topic by key
+   * Only removes the subscription when no callbacks remain
    */
   unsubscribe(key: string): void {
-    const subscription = this.subscriptions.get(key);
-    if (subscription) {
-      subscription.unsubscribe();
-      this.subscriptions.delete(key);
+    // Find which topic this key belongs to
+    for (const [topic, callbacks] of this.callbacks.entries()) {
+      if (callbacks.has(key)) {
+        callbacks.delete(key);
+        console.log(`[WebSocket] Removed callback ${key} from ${topic}`);
+
+        // If no more callbacks for this topic, unsubscribe from STOMP
+        if (callbacks.size === 0) {
+          const subscription = this.subscriptions.get(topic);
+          if (subscription) {
+            subscription.unsubscribe();
+            this.subscriptions.delete(topic);
+            console.log(
+              `[WebSocket] Unsubscribed from ${topic} (no more callbacks)`
+            );
+          }
+          this.callbacks.delete(topic);
+        }
+        return;
+      }
     }
   }
 
