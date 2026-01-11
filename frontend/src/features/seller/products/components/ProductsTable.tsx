@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import {
   Eye,
   FileText,
-  ChevronLeft,
-  ChevronRight,
   MoreVertical,
   Clock,
   Gavel,
@@ -22,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { productAPI, type ProductResponse } from "@/services/product.api";
 import { PageLoader } from "@/components/PageLoader";
+import { SimplePagination } from "@/components/SimplePagination";
 import { useAppSelector } from "@/hooks/use-redux";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
@@ -103,8 +102,7 @@ export function ProductsTable({ status }: ProductsTableProps) {
     }
   };
 
-  if (loading)
-    return <PageLoader message="Đang tải..." className="min-h-[200px]" />;
+  if (loading) return <PageLoader message="Đang tải..." className="min-h-50" />;
   if (error)
     return (
       <div className="text-center py-8 text-destructive text-sm">
@@ -114,9 +112,15 @@ export function ProductsTable({ status }: ProductsTableProps) {
 
   if (products.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 border border-dashed rounded-lg bg-slate-50">
-        <Box className="h-8 w-8 text-slate-300 mb-2" />
-        <p className="text-sm text-slate-500">Danh sách trống</p>
+      <div className="text-center py-12 text-muted-foreground">
+        <Gavel className="h-12 w-12 mx-auto mb-3 opacity-50" />
+        <p>Chưa có sản phẩm nào đang đấu giá</p>
+        <Button
+          className="mt-4"
+          onClick={() => navigate("/seller/products/create")}
+        >
+          Đăng sản phẩm mới
+        </Button>
       </div>
     );
   }
@@ -170,7 +174,7 @@ export function ProductsTable({ status }: ProductsTableProps) {
                     {/* Ẩn danh mục ở mobile để đỡ rối */}
                     <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500">
                       <Tag className="h-3 w-3" />
-                      <span className="truncate max-w-[150px]">
+                      <span className="truncate max-w-37.5">
                         {product.tenDanhMuc || "Khác"}
                       </span>
                     </div>
@@ -258,32 +262,14 @@ export function ProductsTable({ status }: ProductsTableProps) {
         ))}
       </div>
 
-      {/* Pagination - Compact */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-6">
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => setPage(page - 1)}
-            disabled={page === 1}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-xs font-medium text-slate-600">
-            {page}/{totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => setPage(page + 1)}
-            disabled={page === totalPages}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
+      {/* Pagination */}
+      <SimplePagination
+        currentPage={page}
+        totalPages={totalPages}
+        totalElements={products.length}
+        pageSize={size}
+        onPageChange={setPage}
+      />
     </>
   );
 }

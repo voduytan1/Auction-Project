@@ -27,7 +27,7 @@ export function ProductAutoRenewField({ control }: ProductAutoRenewFieldProps) {
           htmlFor="choPhepTuDongGiaHan"
           className="text-sm font-normal cursor-pointer flex-1"
         >
-          Tự động gia hạn nếu không có người đấu giá
+          Tự động gia hạn khi có người đấu giá
         </Label>
         <Controller
           name="choPhepTuDongGiaHan"

@@ -173,7 +173,7 @@ export function SellerOverview({ stats }: SellerOverviewProps) {
           <Button
             variant="outline"
             className="w-full justify-start"
-            onClick={() => navigate("/seller/profile?tab=sold-products")}
+            onClick={() => navigate("/seller/transactions")}
           >
             <DollarSign className="mr-2 h-4 w-4" />
             Xem giao dịch

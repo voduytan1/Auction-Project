@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+﻿import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { PageWrapper } from "@/components/PageWrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,39 +21,46 @@ export default function PaymentSuccessPage() {
     ? `/transactions/${transactionId}/detail`
     : null;
   const [countdown, setCountdown] = useState(5);
+  const toastShown = useRef(false);
 
+  // Toast chỉ hiện 1 lần
   useEffect(() => {
-    if (sessionId) {
+    if (sessionId && !toastShown.current) {
+      toastShown.current = true;
       toast.success("Thanh toán thành công! Đơn hàng của bạn đang được xử lý.");
-
-      // Countdown để tự động redirect
-      const timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            // Redirect đến transaction detail để nhập địa chỉ
-            if (transactionLink) {
-              navigate(transactionLink);
-            } else {
-              navigate("/bidder/purchases");
-            }
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => clearInterval(timer);
     }
+  }, [sessionId]);
+
+  // Countdown để tự động redirect (tách riêng để không bị ảnh hưởng bởi toastShown)
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          // Redirect đến transaction detail để nhập địa chỉ
+          if (transactionLink) {
+            navigate(transactionLink);
+          } else {
+            navigate("/bidder/transactions");
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
   }, [sessionId, navigate, transactionLink]);
 
   const handleContinueToAddress = () => {
     // Đến trang detail giao dịch để nhập địa chỉ giao hàng
-    if (transactionId) {
-      navigate(`/transactions/${transactionId}/detail`);
+    if (transactionLink) {
+      navigate(transactionLink);
     } else {
       toast.info("Không tìm thấy mã giao dịch, quay lại danh sách mua");
-      navigate("/bidder/profile?tab=won-auctions");
+      navigate("/bidder/transactions");
     }
   };
 
