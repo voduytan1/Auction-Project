@@ -6,10 +6,11 @@
 - [Yêu cầu hệ thống](#yêu-cầu-hệ-thống)
 - [Cấu trúc dự án](#cấu-trúc-dự-án)
 - [Hướng dẫn cài đặt](#hướng-dẫn-cài-đặt)
-  - [1. Database](#1-database)
-  - [2. Backend](#2-backend)
-  - [3. Frontend](#3-frontend)
+  - [Clone dự án](#clone-dự-án)
+  - [Database & Backend](#database--backend)
+  - [Frontend](#frontend)
 - [Chạy ứng dụng](#chạy-ứng-dụng)
+- [Tech Stack](#tech-stack)
 
 ---
 
@@ -37,8 +38,11 @@ AuctionHub là hệ thống đấu giá trực tuyến với các tính năng ch
 | Java       | 21                |
 | Maven      | >= 3.9.x          |
 | MySQL      | >= 8.0            |
+| Docker     | Latest            |
 
 ---
+
+<div style="page-break-before: always;"></div>
 
 ## Cấu trúc dự án
 
@@ -69,11 +73,28 @@ Auction-Project/
 
 ---
 
+<div style="page-break-before: always;"></div>
+
 ## Hướng dẫn cài đặt
 
-### 1. Database
+### Clone dự án
 
-Sử dụng Docker Compose để khởi động các dịch vụ:
+```bash
+git clone https://github.com/voduytan1/Auction-Project.git
+cd Auction-Project
+```
+
+---
+
+### Database & Backend
+
+#### Yêu cầu
+
+- Java 21
+- Maven >= 3.9.x
+- Docker & Docker Compose
+
+#### Khởi động Database
 
 ```bash
 cd backend
@@ -88,43 +109,18 @@ docker compose up -d
 
 **Kibana:** http://localhost:5601
 
-- Username: `kibana_system`
+- Username: `elastic`
 - Password: (giá trị trong file `.env`)
 
 **Logstash:** Tự động authenticate với Elasticsearch bằng user `logstash_system`
 
----
-
-### 2. Backend
-
-#### Yêu cầu
-
-- Java 21
-- Maven >= 3.9.x
-- Docker & Docker Compose
-
-#### Cài đặt
-
-1. **Clone dự án và di chuyển vào thư mục backend:**
-
-```bash
-git clone https://github.com/voduytan1/Auction-Project.git
-cd backend
-```
-
-2. **Tạo file `.env`:**
+#### Tạo file `.env`
 
 ```bash
 cp .env.example .env
 ```
 
-3. **Build các container:**
-
-```bash
-docker compose up -d
-```
-
-#### Cấu hình biến môi trường
+#### Cấu hình biến môi trường Backend
 
 ##### Cloudinary (Upload ảnh)
 
@@ -232,7 +228,7 @@ Backend sẽ chạy tại: `http://localhost:8080`
 
 ---
 
-### 3. Frontend
+### Frontend
 
 #### Yêu cầu
 
@@ -252,10 +248,10 @@ Tạo file `.env` trong thư mục `frontend/`:
 
 ```env
 # API Backend URL
-VITE_API_URL=
+VITE_API_URL=http://localhost:8080
 
 # WebSocket URL
-VITE_WS_URL=
+VITE_WS_URL=http://localhost:8080/ws
 
 # Google reCAPTCHA v3 Site Key
 VITE_RECAPTCHA_SITE_KEY=
@@ -271,24 +267,10 @@ VITE_OAUTH_GOOGLE_CLIENT_ID=
 | `VITE_RECAPTCHA_SITE_KEY`     | Google reCAPTCHA v3 Site Key |
 | `VITE_OAUTH_GOOGLE_CLIENT_ID` | Google OAuth Client ID       |
 
-#### Lấy reCAPTCHA Site Key
+**Lưu ý:**
 
-1. Truy cập [Google reCAPTCHA Admin Console](https://www.google.com/recaptcha/admin)
-2. Tạo site mới với loại **reCAPTCHA v3**
-3. Thêm domain: `localhost` (development) và domain production
-4. Copy **Site Key** vào `VITE_RECAPTCHA_SITE_KEY`
-
-#### Lấy Google OAuth Client ID
-
-1. Truy cập [Google Cloud Console](https://console.cloud.google.com/)
-2. Tạo project mới hoặc chọn project có sẵn
-3. Vào **APIs & Services** > **Credentials**
-4. Click **Create Credentials** > **OAuth client ID**
-5. Chọn **Web application**
-6. Thêm **Authorized JavaScript origins**:
-   - `http://localhost:5173` (development)
-   - URL production (nếu có)
-7. Copy **Client ID** vào `VITE_OAUTH_GOOGLE_CLIENT_ID`
+- `VITE_RECAPTCHA_SITE_KEY`: Lấy từ Backend config (đã cấu hình ở phần reCAPTCHA)
+- `VITE_OAUTH_GOOGLE_CLIENT_ID`: Lấy từ Backend config (đã cấu hình ở phần Google OAuth)
 
 #### Chạy Frontend
 
@@ -305,14 +287,14 @@ Frontend sẽ chạy tại: `http://localhost:5173`
 
 ### Development
 
-1. **Khởi động Database:**
+**1. Khởi động Database:**
 
 ```bash
 cd backend
 docker compose up -d
 ```
 
-2. **Khởi động Backend:**
+**2. Khởi động Backend:**
 
 ```bash
 cd backend
@@ -321,14 +303,14 @@ mvn spring-boot:run
 
 > **Stripe Webhook:** Nhớ chạy `stripe listen --forward-to localhost:8080/payment/webhook` trong terminal riêng
 
-3. **Khởi động Frontend:**
+**3. Khởi động Frontend:**
 
 ```bash
 cd frontend
 npm run dev
 ```
 
-4. **Truy cập ứng dụng:** http://localhost:5173
+**4. Truy cập ứng dụng:** http://localhost:5173
 
 ---
 
