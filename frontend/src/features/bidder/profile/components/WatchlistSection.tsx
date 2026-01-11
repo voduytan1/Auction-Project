@@ -17,34 +17,35 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { watchlistAPI } from "@/services/watchlist.api";
-import { productAPI, type ProductResponse } from "@/services/product.api";
+import type { ProductResponse } from "@/services/product.api";
 
 export function WatchlistSection() {
   const navigate = useNavigate();
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<ProductResponse[]>([]);
+  const [totalPages, setTotalPages] = useState(0);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const size = 10;
 
   useEffect(() => {
     const fetchWatchlist = async () => {
       try {
         setLoading(true);
-        // Get watchlist product IDs
-        const watchlistResponse = await watchlistAPI.getWatchlist();
-        const productIds = watchlistResponse.data?.data || [];
+        // Get watchlist with full product details
+        const response = await watchlistAPI.getWatchlistWithProducts({
+          page,
+          size,
+        });
+        const watchlistItems = response.data || [];
 
-        if (productIds.length === 0) {
-          setProducts([]);
-          return;
-        }
+        // Extract products from watchlist items
+        const productsData = watchlistItems.map((item) => item.product);
+        setProducts(productsData);
 
-        // Fetch full product details
-        const productPromises = productIds.map((id: number) =>
-          productAPI.getById(id).then((res) => res.data)
-        );
-
-        const productsData = await Promise.all(productPromises);
-        setProducts(productsData.filter(Boolean));
+        // Get metadata from __raw__
+        const metadata = (response as any).__raw__?.metadata;
+        setTotalPages(metadata?.totalPages || 0);
       } catch (error) {
         console.error("Error fetching watchlist:", error);
         toast.error("Không thể tải danh sách yêu thích");
@@ -54,7 +55,7 @@ export function WatchlistSection() {
     };
 
     fetchWatchlist();
-  }, []);
+  }, [page, size]);
 
   const handleRemoveFromWatchlist = async (productId: number) => {
     try {
@@ -108,20 +109,19 @@ export function WatchlistSection() {
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 gap-4 -mx-6 px-6">
         {products.map((product) => (
           <Card
             key={product.productid}
-            className="group overflow-hidden hover:shadow-md transition-all duration-200 border-border/60"
+            className="group hover:shadow-md transition-all duration-200 border-border/60"
           >
-            {/* Layout Logic:
-               - Mobile: Flex Col (Ảnh trên, Text dưới)
-               - Tablet+: Flex Row (Ảnh trái, Text phải)
-            */}
-            <div className="flex flex-col sm:flex-row h-full">
+            {/* SỬA 1: Thêm p-3 hoặc p-4 vào đây để tạo khoảng hở với viền Card */}
+            <div className="flex flex-col sm:flex-row h-full p-3 sm:p-4 gap-3 sm:gap-4">
               {/* === PRODUCT IMAGE === */}
               <div
-                className="relative w-full sm:w-40 md:w-48 lg:w-56 xl:w-64 h-48 sm:h-40 md:h-48 lg:h-52 xl:h-56 shrink-0 bg-muted cursor-pointer group-hover:opacity-90 transition-opacity"
+                // SỬA 2: Thêm rounded-md và overflow-hidden để bo góc ảnh
+                // Xóa bg-muted nếu muốn (hoặc giữ để load placeholder)
+                className="relative w-full sm:w-32 md:w-36 lg:w-40 h-40 sm:h-32 md:h-36 lg:h-40 shrink-0 bg-muted rounded-md overflow-hidden cursor-pointer group-hover:opacity-90 transition-opacity"
                 onClick={() => navigate(`/products/${product.productid}`)}
               >
                 {product.images && product.images.length > 0 ? (
@@ -136,7 +136,7 @@ export function WatchlistSection() {
                   </div>
                 )}
 
-                {/* Status Badge (Overlay on Image) */}
+                {/* Status Badge */}
                 <div className="absolute top-2 left-2">
                   <Badge
                     variant={
@@ -154,7 +154,8 @@ export function WatchlistSection() {
               </div>
 
               {/* === PRODUCT DETAILS === */}
-              <div className="flex flex-1 flex-col p-3 sm:p-4 md:p-5 lg:p-6 gap-2 sm:gap-3">
+              {/* SỬA 3: Xóa padding ở đây đi (vì cha đã có p-4 rồi), chỉ giữ lại flex-col và gap */}
+              <div className="flex flex-1 flex-col gap-2">
                 {/* Header: Title & Delete Button */}
                 <div className="flex justify-between items-start gap-2 sm:gap-3">
                   <div className="space-y-1 flex-1 min-w-0">
@@ -171,11 +172,11 @@ export function WatchlistSection() {
                     </div>
                   </div>
 
-                  {/* Delete Button (Top Right) */}
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0 -mt-1 -mr-1"
+                    // Chỉnh lại margin nút xóa xíu cho đẹp
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0 -mr-2 -mt-2"
                     onClick={() => setDeleteConfirmId(product.productid)}
                     title="Xóa khỏi danh sách"
                   >
@@ -183,13 +184,11 @@ export function WatchlistSection() {
                   </Button>
                 </div>
 
-                {/* Mobile Divider */}
-                <div className="h-px bg-border sm:hidden" />
+                {/* Mobile Divider (Giữ nguyên hoặc xóa tùy thích) */}
+                <div className="h-px bg-border sm:hidden my-1" />
 
                 {/* Footer: Stats & Action Button */}
-                {/* Use mt-auto to push this section to bottom on desktop */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 items-end mt-auto pt-2">
-                  {/* Column 1: Price */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 items-end mt-auto">
                   <div className="col-span-2 sm:col-span-1">
                     <p className="text-xs text-muted-foreground mb-0.5">
                       Giá hiện tại
@@ -199,7 +198,6 @@ export function WatchlistSection() {
                     </p>
                   </div>
 
-                  {/* Column 2: Time & Bids */}
                   <div className="col-span-2 sm:col-span-1 lg:col-span-1 space-y-1 sm:space-y-1.5">
                     <div
                       className={`flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium ${
@@ -224,12 +222,10 @@ export function WatchlistSection() {
                     )}
                   </div>
 
-                  {/* Column 3: Action Button */}
                   <div className="col-span-2 sm:col-span-1 lg:col-span-2 flex justify-end">
                     <Button
-                      className="w-full sm:w-auto md:min-w-[140px] lg:min-w-[160px] font-semibold text-sm md:text-base"
+                      className="w-full sm:w-auto md:min-w-35 lg:min-w-40 font-semibold text-sm md:text-base"
                       onClick={() => navigate(`/products/${product.productid}`)}
-                      disabled={product.trangThai !== "ACTIVE"}
                     >
                       {product.trangThai === "ACTIVE"
                         ? "Đấu giá ngay"
@@ -242,6 +238,33 @@ export function WatchlistSection() {
           </Card>
         ))}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-3 mt-4 sm:mt-6">
+          <Button
+            variant="outline"
+            onClick={() => setPage(page - 1)}
+            disabled={page <= 1}
+            size="sm"
+            className="w-full sm:w-auto text-sm"
+          >
+            Trang trước
+          </Button>
+          <div className="flex items-center px-3 sm:px-4 text-xs sm:text-sm">
+            Trang {page} / {totalPages}
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => setPage(page + 1)}
+            disabled={page >= totalPages}
+            size="sm"
+            className="w-full sm:w-auto text-sm"
+          >
+            Trang sau
+          </Button>
+        </div>
+      )}
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog

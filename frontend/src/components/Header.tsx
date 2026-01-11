@@ -6,16 +6,7 @@ import {
   useSearchParams,
   useLocation,
 } from "react-router-dom";
-import {
-  Search,
-  ChevronRight,
-  Grid,
-  Smartphone,
-  Laptop,
-  Headphones,
-  Menu,
-  Package,
-} from "lucide-react";
+import { Search, ChevronRight, Grid, Menu, Package } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,11 +20,8 @@ import {
 import { cn } from "@/lib/utils";
 import UserDropdown from "@/components/UserDropdown";
 
-// Helper function to select icon based on category slug
-const getCategoryIcon = (slug: string) => {
-  if (slug?.includes("dien-thoai")) return <Smartphone className="w-5 h-5" />;
-  if (slug?.includes("laptop")) return <Laptop className="w-5 h-5" />;
-  if (slug?.includes("am-thanh")) return <Headphones className="w-5 h-5" />;
+// Helper function to select icon - Using same icon for all categories
+const getCategoryIcon = () => {
   return <Grid className="w-5 h-5" />;
 };
 
@@ -165,7 +153,7 @@ export default function Header() {
                     >
                       <div className="flex items-center gap-2 sm:gap-3">
                         <div className="hidden sm:block">
-                          {getCategoryIcon(category.slug)}
+                          {getCategoryIcon()}
                         </div>
                         <span className="line-clamp-1 text-xs sm:text-sm">
                           {category.name}
@@ -188,7 +176,7 @@ export default function Header() {
                           {activeCategory.name}
                         </h3>
                         <Link
-                          to={`/category/${activeCategory.id}`}
+                          to={`/parent-category/${activeCategory.id}`}
                           onClick={() => setShowMegaMenu(false)}
                           className="text-xs sm:text-sm font-medium text-primary hover:underline flex items-center group whitespace-nowrap"
                         >

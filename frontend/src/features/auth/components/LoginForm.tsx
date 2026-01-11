@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { toast } from "sonner";
+import { Eye, EyeOff } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -29,6 +30,7 @@ export function LoginForm() {
     (state) => state.auth
   );
   const [isLoginAttempted, setIsLoginAttempted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Lấy trang trước đó từ location.state (ProtectedRoute truyền vào)
   const from =
@@ -128,15 +130,29 @@ export function LoginForm() {
             )}
           </div>
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Mật khẩu</Label>
+            <Label htmlFor="password">Mật khẩu</Label>
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                {...register("password")}
+                className="pr-10"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <Eye className="h-4 w-4 text-muted-foreground" />
+                )}
+              </Button>
             </div>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              {...register("password")}
-            />
 
             {errors.password && (
               <p className="text-sm text-destructive">

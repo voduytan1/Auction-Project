@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import { TrendingUp, Upload, FileText, Send } from "lucide-react";
+import { TrendingUp, FileText, Send } from "lucide-react";
 import {
   Card,
   CardContent,
