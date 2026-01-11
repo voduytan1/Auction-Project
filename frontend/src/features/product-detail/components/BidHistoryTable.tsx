@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageLoader } from "@/components/PageLoader";
 import { Button } from "@/components/ui/button";
-import { History, Lock, ChevronLeft, ChevronRight, Ban } from "lucide-react";
+import { History, Lock, Ban } from "lucide-react";
+import { SimplePagination } from "@/components/SimplePagination";
 import { useBidWebSocket } from "@/hooks/use-bid-websocket";
 import {
   Dialog,
@@ -70,49 +71,6 @@ const LoginOverlay = ({ onLogin }: { onLogin: () => void }) => (
   </div>
 );
 
-// Component: Pagination controls
-const PaginationControls = ({
-  page,
-  totalPages,
-  size,
-  total,
-  onPageChange,
-}: {
-  page: number;
-  totalPages: number;
-  size: number;
-  total: number;
-  onPageChange: (newPage: number) => void;
-}) => (
-  <div className="mt-4 flex items-center justify-between">
-    <div className="text-sm text-slate-600">
-      Hiển thị {Math.min(page * size + 1, total)} -{" "}
-      {Math.min((page + 1) * size, total)} của {total}
-    </div>
-    <div className="flex items-center gap-2">
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={() => onPageChange(Math.max(0, page - 1))}
-        disabled={page === 0}
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </Button>
-      <div className="text-sm text-slate-600">
-        {page + 1}/{totalPages}
-      </div>
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={() => onPageChange(Math.min(totalPages - 1, page + 1))}
-        disabled={page >= totalPages - 1}
-      >
-        <ChevronRight className="h-4 w-4" />
-      </Button>
-    </div>
-  </div>
-);
-
 export function BidHistoryTable({
   productId,
   initialSize = 5,
@@ -122,7 +80,7 @@ export function BidHistoryTable({
   const navigate = useNavigate();
 
   const [bids, setBids] = useState<BidHistory[]>([]);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
   const size = initialSize;
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -149,41 +107,28 @@ export function BidHistoryTable({
       setLoading(true);
       setError(null);
 
-      const role = user?.vaitro;
+      // Fetch paginated history for all users
+      // API expects 0-based page, but we use 1-based internally
+      const response = await bidAPI.getBidHistory(productId, {
+        page,
+        size,
+      });
 
-      // BIDDER or non-owner SELLER: fetch top N only
-      if (role === "BIDDER" || (role === "SELLER" && !isOwner)) {
-        const resp = await bidAPI.getBidHistoryTop(productId, size);
-        const bidsData = Array.isArray(resp.data) ? resp.data : [];
-        setBids(bidsData);
-        setTotal(bidsData.length);
-        return;
-      }
-
-      // SELLER who owns this product: fetch full paged history
-      if (role === "SELLER" && isOwner) {
-        const resp = await bidAPI.getBidHistory(productId, {
-          page,
-          size,
-        });
-        const bidsData = Array.isArray(resp.data) ? resp.data : [];
-        setBids(bidsData);
-        setTotal(bidsData.length);
-        return;
-      }
-
-      // ADMIN or other roles: fetch top
-      const resp = await bidAPI.getBidHistoryTop(productId, size);
-      const bidsData = Array.isArray(resp.data) ? resp.data : [];
+      const bidsData = Array.isArray(response.data) ? response.data : [];
       setBids(bidsData);
-      setTotal(bidsData.length);
+
+      // Extract total from metadata (__raw__?.metadata or __metadata__)
+      const metadata =
+        (response as any).__raw__?.metadata || (response as any).__metadata__;
+      const totalCount = metadata?.totalElements || bidsData.length;
+      setTotal(totalCount);
     } catch (error) {
-      console.error("❌ Fetch bid history failed", error);
+      console.error("Fetch bid history failed", error);
       setError(extractErrorMessage(error));
     } finally {
       setLoading(false);
     }
-  }, [productId, page, size, user?.vaitro, isOwner]);
+  }, [productId, page, size]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -313,16 +258,18 @@ export function BidHistoryTable({
                             {bid.tenBidder || bid.bidderName}
                           </span>
                         )}
-                        {index === 0 && (
-                          <span className="hidden sm:inline-block ml-2 rounded-full bg-accent px-2 py-0.5 text-xs text-white">
-                            Cao nhất
-                          </span>
-                        )}
+                        {index === 0 &&
+                          page === 1 && ( // <--- Thêm điều kiện page === 1
+                            <span className="hidden sm:inline-block ml-2 rounded-full bg-accent px-2 py-0.5 text-xs text-white">
+                              Cao nhất
+                            </span>
+                          )}
                       </td>
                       <td className="pr-4 sm:pr-0 py-3 text-right">
                         <span
                           className={`font-semibold text-xs sm:text-sm ${
-                            index === 0 ? "text-accent" : ""
+                            // Cũng sửa luôn màu chữ cho đồng bộ
+                            index === 0 && page === 1 ? "text-accent" : ""
                           }`}
                         >
                           {formatCurrency(bid.giaDat)}
@@ -360,11 +307,11 @@ export function BidHistoryTable({
             )}
 
             {shouldShowPagination && (
-              <PaginationControls
-                page={page}
+              <SimplePagination
+                currentPage={page}
                 totalPages={totalPages}
-                size={size}
-                total={total}
+                totalElements={total}
+                pageSize={size}
                 onPageChange={setPage}
               />
             )}
