@@ -8,6 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { AlertTriangle } from "lucide-react";
 import type { User } from "@/features/auth/types";
 
 interface ResetPasswordDialogProps {
@@ -38,10 +39,13 @@ export function ResetPasswordDialog({
               </span>
               ?
             </p>
-            <p className="text-sm">
-              ⚠️ Hệ thống sẽ tự động tạo mật khẩu mới và gửi email thông báo đến{" "}
-              <span className="font-semibold text-foreground">
-                {user.email}
+            <p className="flex items-start gap-2 text-sm">
+              <AlertTriangle className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
+              <span>
+                Hệ thống sẽ tự động tạo mật khẩu mới và gửi email thông báo đến{" "}
+                <span className="font-semibold text-foreground">
+                  {user.email}
+                </span>
               </span>
             </p>
           </AlertDialogDescription>

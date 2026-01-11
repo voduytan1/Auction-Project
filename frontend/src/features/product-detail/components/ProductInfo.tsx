@@ -98,6 +98,7 @@ export function ProductInfo({
   const [buyDialogOpen, setBuyDialogOpen] = useState(false);
   const [buyLoading, setBuyLoading] = useState(false);
   const [autoDialogOpen, setAutoDialogOpen] = useState(false);
+  const [autoConfirmDialogOpen, setAutoConfirmDialogOpen] = useState(false);
   const [autoLoading, setAutoLoading] = useState(false);
   const [autoValue, setAutoValue] = useState<string>("");
   const [, setAutoBidResponse] = useState<unknown>(null);
@@ -327,7 +328,7 @@ export function ProductInfo({
                   </DialogClose>
                   <Button
                     className="ml-2"
-                    onClick={async () => {
+                    onClick={() => {
                       const parsed = Number(autoValue);
                       if (!parsed || parsed <= 0) {
                         toast.error("Vui lòng nhập mức giá hợp lệ");
@@ -348,17 +349,62 @@ export function ProductInfo({
                       // Validate giá phải là bội số của bước giá
                       const difference = parsed - product.giaHienTai;
                       if (difference % product.buocGia !== 0) {
-                        const suggested =
-                          product.giaHienTai +
-                          Math.ceil(difference / product.buocGia) *
-                            product.buocGia;
+                        const minValidPrice = product.giaHienTai + product.buocGia;
                         toast.error(
-                          `Giá phải có dạng: giá hiện tại + n × bước giá.\nGợi ý: ${formatCurrency(
-                            suggested
+                          `Giá phải có dạng: giá hiện tại + n × bước giá.\nĐề nghị giá hợp lệ nhỏ nhất: ${formatCurrency(
+                            minValidPrice
                           )}`
                         );
                         return;
                       }
+
+                      // Validation passed, show confirmation dialog
+                      setAutoDialogOpen(false);
+                      setAutoConfirmDialogOpen(true);
+                    }}
+                    disabled={autoLoading}
+                  >
+                    Tiếp tục
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Auto Bid Confirmation Dialog */}
+            <AlertDialog open={autoConfirmDialogOpen} onOpenChange={setAutoConfirmDialogOpen}>
+              <AlertDialogContent className="w-[95vw] max-w-lg rounded-lg">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Xác nhận đặt giá tự động</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Bạn sẽ đặt giá tự động với mức giá tối đa là{" "}
+                    <span className="font-semibold text-foreground">
+                      {formatCurrency(Number(autoValue))}
+                    </span>
+                    .
+                    <br />
+                    <br />
+                    Hệ thống sẽ tự động đặt giá thay bạn khi có người đấu giá cao hơn, cho đến khi đạt mức giá tối đa này.
+                    {product.giaMuaNgay && Number(autoValue) >= product.giaMuaNgay && (
+                      <span className="flex items-center gap-1.5 mt-2 text-orange-600 font-medium">
+                        <AlertTriangle className="h-4 w-4" />
+                        Giá của bạn sẽ kích hoạt mua ngay!
+                      </span>
+                    )}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel 
+                    disabled={autoLoading}
+                    onClick={() => {
+                      setAutoConfirmDialogOpen(false);
+                      setAutoDialogOpen(true); // Quay lại dialog nhập giá
+                    }}
+                  >
+                    Quay lại
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={async () => {
+                      const parsed = Number(autoValue);
 
                       try {
                         setAutoLoading(true);
@@ -368,7 +414,8 @@ export function ProductInfo({
                         });
 
                         setAutoBidResponse(resp.data);
-                        setAutoDialogOpen(false);
+                        setAutoConfirmDialogOpen(false);
+                        setAutoValue(""); // Reset value
 
                         // Kiểm tra có transactionId không (mua ngay)
                         const responseData = resp.data as {
@@ -393,7 +440,6 @@ export function ProductInfo({
                         } else {
                           // Trường hợp đặt giá tự động bình thường
                           toast.success("Đặt giá tự động thành công!");
-                          setAutoDialogOpen(false);
                           // Refetch product để cập nhật giá hiện tại thay vì reload
                           if (onRefreshProduct) {
                             await onRefreshProduct();
@@ -413,11 +459,11 @@ export function ProductInfo({
                     }}
                     disabled={autoLoading}
                   >
-                    {autoLoading ? "Đang xử lý..." : "Đặt giá tự động"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                    {autoLoading ? "Đang xử lý..." : "Xác nhận đặt giá"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </>
 
           {/* Nút Mua ngay - Nếu có thì giãn rộng cùng nút Đặt giá */}
