@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router";
+import { useForm } from "react-hook-form";
 import { PageLoader } from "@/components/PageLoader";
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -30,6 +31,8 @@ import { RatingDialog } from "./RatingDialog";
 import { transactionAPI } from "@/services/transaction.api";
 import { ratingAPI } from "@/services/rating.api";
 import { paymentAPI } from "@/services/payment.api";
+import { imageAPI } from "@/services/image.api";
+import { ImageUploader } from "@/components/ImageUploader";
 import { webSocketService } from "@/services/websocket";
 import type { Transaction } from "@/types/transaction";
 import type { ApiResponse } from "@/types/types";
@@ -62,8 +65,20 @@ export function TransactionListPage({ role }: TransactionListPageProps) {
   const [trackingDialog, setTrackingDialog] = useState<{
     open: boolean;
     transactionId: number | null;
-    tracking: string;
-  }>({ open: false, transactionId: null, tracking: "" });
+    trackingImageFile: File | null;
+  }>({
+    open: false,
+    transactionId: null,
+    trackingImageFile: null,
+  });
+
+  // React Hook Form for tracking
+  const {
+    register: registerTracking,
+    handleSubmit: handleSubmitTracking,
+    formState: { errors: trackingErrors },
+    reset: resetTracking,
+  } = useForm<{ trackingNumber: string }>();
 
   // Confirm delivery dialog (buyer only)
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -182,20 +197,35 @@ export function TransactionListPage({ role }: TransactionListPageProps) {
     }
   };
 
-  const handleAddTracking = async () => {
-    if (!trackingDialog.transactionId || !trackingDialog.tracking.trim()) {
-      toast.error("Vui lòng nhập mã vận đơn");
+  const handleAddTracking = async (data: { trackingNumber: string }) => {
+    if (!trackingDialog.transactionId) return;
+
+    if (!trackingDialog.trackingImageFile) {
+      toast.error("Vui lòng upload ảnh vận đơn");
       return;
     }
 
     try {
       setProcessingId(trackingDialog.transactionId);
+
+      // Upload ảnh trước
+      const uploadResult = await imageAPI.uploadSingle(
+        trackingDialog.trackingImageFile
+      );
+
+      // Sau đó gọi API cập nhật trạng thái
       await transactionAPI.addShipmentProve(
         trackingDialog.transactionId,
-        trackingDialog.tracking
+        data.trackingNumber,
+        uploadResult.url
       );
       toast.success("Đã cập nhật mã vận đơn");
-      setTrackingDialog({ open: false, transactionId: null, tracking: "" });
+      setTrackingDialog({
+        open: false,
+        transactionId: null,
+        trackingImageFile: null,
+      });
+      resetTracking();
       fetchTransactions();
     } catch (error) {
       toast.error("Lỗi: " + (error as Error).message);
@@ -280,12 +310,14 @@ export function TransactionListPage({ role }: TransactionListPageProps) {
                   }
                   onAddTracking={
                     role === "seller"
-                      ? (id) =>
+                      ? (id) => {
+                          resetTracking();
                           setTrackingDialog({
                             open: true,
                             transactionId: id,
-                            tracking: "",
-                          })
+                            trackingImageFile: null,
+                          });
+                        }
                       : undefined
                   }
                   onConfirmDelivery={
@@ -403,9 +435,14 @@ export function TransactionListPage({ role }: TransactionListPageProps) {
           {role === "seller" && (
             <Dialog
               open={trackingDialog.open}
-              onOpenChange={(open) =>
-                setTrackingDialog({ open, transactionId: null, tracking: "" })
-              }
+              onOpenChange={(open) => {
+                if (!open) resetTracking();
+                setTrackingDialog({
+                  open,
+                  transactionId: null,
+                  trackingImageFile: null,
+                });
+              }}
             >
               <DialogContent className="max-w-[90vw] sm:max-w-lg">
                 <DialogHeader>
@@ -413,44 +450,72 @@ export function TransactionListPage({ role }: TransactionListPageProps) {
                     Cập nhật mã vận đơn
                   </DialogTitle>
                   <DialogDescription className="text-xs sm:text-sm">
-                    Vui lòng nhập mã vận đơn để cập nhật trạng thái giao hàng
+                    Vui lòng nhập mã vận đơn và upload ảnh để cập nhật trạng
+                    thái giao hàng
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
                     <Label htmlFor="tracking" className="text-sm">
-                      Mã vận đơn
+                      Mã vận đơn <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="tracking"
                       placeholder="Nhập mã vận đơn..."
-                      value={trackingDialog.tracking}
-                      onChange={(e) =>
+                      {...registerTracking("trackingNumber", {
+                        required: "Vui lòng nhập mã vận đơn",
+                      })}
+                      className="text-sm"
+                    />
+                    {trackingErrors.trackingNumber && (
+                      <p className="text-sm text-destructive">
+                        {trackingErrors.trackingNumber.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm">
+                      Ảnh vận đơn <span className="text-destructive">*</span>
+                    </Label>
+                    <ImageUploader
+                      mode="single"
+                      showConfirmButton={false}
+                      currentImage={
+                        trackingDialog.trackingImageFile
+                          ? URL.createObjectURL(
+                              trackingDialog.trackingImageFile
+                            )
+                          : undefined
+                      }
+                      onUploadComplete={(file) => {
+                        const uploadedFile = Array.isArray(file)
+                          ? file[0]
+                          : file;
                         setTrackingDialog((prev) => ({
                           ...prev,
-                          tracking: e.target.value,
-                        }))
-                      }
-                      className="text-sm"
+                          trackingImageFile: uploadedFile,
+                        }));
+                      }}
                     />
                   </div>
                 </div>
                 <DialogFooter className="gap-2 flex-col sm:flex-row">
                   <Button
                     variant="outline"
-                    onClick={() =>
+                    onClick={() => {
+                      resetTracking();
                       setTrackingDialog({
                         open: false,
                         transactionId: null,
-                        tracking: "",
-                      })
-                    }
+                        trackingImageFile: null,
+                      });
+                    }}
                     className="w-full sm:w-auto text-sm"
                   >
                     Hủy
                   </Button>
                   <Button
-                    onClick={handleAddTracking}
+                    onClick={handleSubmitTracking(handleAddTracking)}
                     disabled={processingId === trackingDialog.transactionId}
                     className="w-full sm:w-auto text-sm"
                   >

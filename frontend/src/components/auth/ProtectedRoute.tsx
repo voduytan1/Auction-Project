@@ -5,7 +5,11 @@ import { useEffect } from "react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: "BIDDER" | "SELLER" | "ADMIN";
+  requiredRole?:
+    | "BIDDER"
+    | "SELLER"
+    | "ADMIN"
+    | ("BIDDER" | "SELLER" | "ADMIN")[];
 }
 
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
@@ -42,9 +46,15 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     );
   }
 
-  if (requiredRole && user?.vaitro !== requiredRole) {
-    // Không đủ quyền -> Redirect về home
-    return <Navigate to="/" replace />;
+  // Check role - support both single role and array of roles
+  if (requiredRole && user) {
+    const allowedRoles = Array.isArray(requiredRole)
+      ? requiredRole
+      : [requiredRole];
+    if (!allowedRoles.includes(user.vaitro)) {
+      // Không đủ quyền -> Redirect về home
+      return <Navigate to="/" replace />;
+    }
   }
 
   return <>{children}</>;

@@ -79,6 +79,7 @@ export default function TransactionDetailPage() {
         trangThai: message.trangThai as Transaction["trangThai"],
         diaChiGiaoHang: message.diaChiGiaoHang,
         maVanDon: message.maVanDon,
+        anhVanDon: message.anhVanDon,
         phuongThucThanhToan: message.phuongThucThanhToan,
         thoiGianThanhToan: message.thoiGianThanhToan,
         thoiGianGiaoHang: message.thoiGianGiaoHang,
@@ -116,8 +117,8 @@ export default function TransactionDetailPage() {
   if (error || !currentTransaction) {
     const backRoute =
       user?.vaitro === "SELLER"
-        ? "/seller/profile?tab=sold-products"
-        : "/bidder/profile?tab=won-auctions";
+        ? "/seller/transactions"
+        : "/bidder/transactions";
     return (
       <PageWrapper title="Lỗi">
         <div className="container mx-auto px-4 py-4 sm:py-8">
@@ -172,11 +173,15 @@ export default function TransactionDetailPage() {
     }
   };
 
-  const handleSubmitTracking = async (trackingNumber: string) => {
+  const handleSubmitTracking = async (
+    trackingNumber: string,
+    trackingImage: string
+  ) => {
     try {
       const updated = await transactionAPI.addShipmentProve(
         Number(transactionId),
-        trackingNumber
+        trackingNumber,
+        trackingImage
       );
       setLocalTransaction(updated.data);
       toast.success("Đã cập nhật mã vận đơn");
@@ -246,8 +251,8 @@ export default function TransactionDetailPage() {
             onClick={() =>
               navigate(
                 currentUserRole === "seller"
-                  ? "/seller/profile?tab=sold-products"
-                  : "/bidder/profile?tab=won-auctions"
+                  ? "/seller/transactions"
+                  : "/bidder/transactions"
               )
             }
             size="sm"

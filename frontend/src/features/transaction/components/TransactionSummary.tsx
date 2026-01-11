@@ -1,8 +1,16 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import type { Transaction } from "@/types/transaction";
-import { Package, User, MapPin } from "lucide-react";
+import { Package, User, MapPin, Image } from "lucide-react";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 
@@ -22,6 +30,7 @@ export function TransactionSummary({
   transaction,
   currentUserRole,
 }: TransactionSummaryProps) {
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const otherParty =
     currentUserRole === "buyer"
       ? { name: transaction.tenNguoiBan, label: "Người bán" }
@@ -83,13 +92,42 @@ export function TransactionSummary({
 
           {/* Tracking Number */}
           {transaction.maVanDon && (
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 text-sm flex-wrap">
               <Package className="h-4 w-4 text-gray-400" />
               <span className="text-gray-600">Mã vận đơn:</span>
               <Badge variant="outline" className="font-mono">
                 {transaction.maVanDon}
               </Badge>
+              {transaction.anhVanDon && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-6 px-2 text-xs gap-1 md:hidden"
+                  onClick={() => setImageDialogOpen(true)}
+                >
+                  <Image className="h-3 w-3" />
+                  Xem ảnh
+                </Button>
+              )}
             </div>
+          )}
+
+          {/* Image Dialog */}
+          {transaction.anhVanDon && (
+            <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
+              <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle>Ảnh vận đơn</DialogTitle>
+                </DialogHeader>
+                <div className="flex justify-center">
+                  <img
+                    src={transaction.anhVanDon}
+                    alt="Ảnh vận đơn"
+                    className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
           )}
         </div>
 

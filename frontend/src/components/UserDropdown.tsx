@@ -128,35 +128,10 @@ export default function UserDropdown({ user }: UserDropdownProps) {
           </>
         )}
 
-        {user.vaitro === "SELLER" && (
+        {/* User features - available for both BIDDER and SELLER */}
+        {(user.vaitro === "BIDDER" || user.vaitro === "SELLER") && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuLabel className="text-xs text-muted-foreground">
-              Người bán
-            </DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigate("/seller/products")}>
-              <Package className="mr-2 h-4 w-4" />
-              Sản phẩm đang bán
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => navigate("/seller/products/create")}
-            >
-              <TrendingUp className="mr-2 h-4 w-4" />
-              Đăng sản phẩm
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate("/seller/transactions")}>
-              <DollarSign className="mr-2 h-4 w-4" />
-              Giao dịch bán hàng
-            </DropdownMenuItem>
-          </>
-        )}
-
-        {user.vaitro === "BIDDER" && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel className="text-xs text-muted-foreground">
-              Người mua
-            </DropdownMenuLabel>
             <DropdownMenuItem onClick={() => navigate("/bidder/watchlist")}>
               <Heart className="mr-2 h-4 w-4" />
               Danh sách yêu thích
@@ -169,12 +144,30 @@ export default function UserDropdown({ user }: UserDropdownProps) {
               <Trophy className="mr-2 h-4 w-4" />
               Đấu giá thắng
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => navigate("/bidder/upgrade-request")}
-            >
-              <TrendingUp className="mr-2 h-4 w-4" />
-              Nâng cấp Seller
+            <DropdownMenuItem onClick={() => navigate("/seller/products")}>
+              <Package className="mr-2 h-4 w-4" />
+              Sản phẩm đang bán
             </DropdownMenuItem>
+            {user.vaitro === "SELLER" && (
+              <DropdownMenuItem
+                onClick={() => navigate("/seller/products/create")}
+              >
+                <TrendingUp className="mr-2 h-4 w-4" />
+                Đăng sản phẩm
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onClick={() => navigate("/seller/transactions")}>
+              <DollarSign className="mr-2 h-4 w-4" />
+              Sản phẩm đã bán
+            </DropdownMenuItem>
+            {user.vaitro === "BIDDER" && (
+              <DropdownMenuItem
+                onClick={() => navigate("/bidder/upgrade-request")}
+              >
+                <TrendingUp className="mr-2 h-4 w-4" />
+                Nâng cấp Seller
+              </DropdownMenuItem>
+            )}
           </>
         )}
 

@@ -11,20 +11,20 @@ import {
 import { Link } from "react-router-dom";
 import { categoryApi } from "@/services/category.api";
 import { SimplePagination } from "@/components/SimplePagination";
-import type {
-  CategoryWithProductResponse,
-  PaginationMetadata,
-} from "@/types/types";
+import type { PaginationMetadata } from "@/types/types";
+import type { ProductResponse } from "@/services/product.api";
 import { PageLoader } from "@/components/PageLoader";
 import { ProductCard } from "@/components/ProductCard";
+import { useAppSelector } from "@/store/hooks";
+import { selectCategories } from "@/store/slices/categorySlice";
 
 /**
- * Child Category Products Page (Level 2)
- * Shows products from a specific child category
- * Route: /category/:category
- * API: GET /categories/{id}/products
+ * Parent Category Products Page (Level 1)
+ * Shows all products from a parent category and its subcategories
+ * Route: /parent-category/:category
+ * API: GET /categories/{id}/products/parent-category
  */
-const CategoryProductsPage = () => {
+const ParentCategoryProductsPage = () => {
   const { category } = useParams<{ category: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -34,15 +34,16 @@ const CategoryProductsPage = () => {
   const searchQuery = searchParams.get("search") || "";
   const sortBy = searchParams.get("sort") || "ending-soon";
 
-  const [categoryData, setCategoryData] =
-    useState<CategoryWithProductResponse | null>(null);
+  const [products, setProducts] = useState<ProductResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<PaginationMetadata | null>(null);
 
-  // Fetch category with products from API
+  const categories = useAppSelector(selectCategories);
+
+  // Fetch parent category products from API
   useEffect(() => {
-    const fetchCategoryProducts = async () => {
+    const fetchParentCategoryProducts = async () => {
       if (!category) return;
 
       try {
@@ -51,38 +52,38 @@ const CategoryProductsPage = () => {
 
         const categoryId = Number(category);
 
-        // Level 2 (child category) - use regular endpoint
-        const response = await categoryApi.getCategoryWithProducts(categoryId, {
-          page: currentPage,
-          size: currentSize,
-          search: searchQuery || undefined,
-        });
+        // Get products from parent category endpoint
+        const response = await categoryApi.getProductsByParentCategory(
+          categoryId,
+          {
+            page: currentPage,
+            size: currentSize,
+            search: searchQuery || undefined,
+          }
+        );
 
-        // Interceptor extracts data from ApiResponse
-        // response.data = CategoryWithProductResponse
-        // metadata preserved in __raw__
-        if (response.data) {
-          setCategoryData(response.data);
-        }
-
+        const productsData = Array.isArray(response.data) ? response.data : [];
         const metadata = (response as any).__raw__?.metadata;
+
+        setProducts(productsData);
+
         if (metadata) {
           setPagination(metadata);
         }
       } catch (err) {
-        console.error("[CategoryProducts] Error:", err);
+        console.error("[ParentCategoryProducts] Error:", err);
         setError("Không thể tải danh sách sản phẩm");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCategoryProducts();
+    fetchParentCategoryProducts();
   }, [category, currentPage, currentSize, searchQuery]);
 
   // Sort products on frontend
-  const sortedProducts = categoryData?.products
-    ? [...categoryData.products].sort((a, b) => {
+  const sortedProducts = products
+    ? [...products].sort((a, b) => {
         switch (sortBy) {
           case "ending-soon":
             return (
@@ -117,18 +118,20 @@ const CategoryProductsPage = () => {
     setSearchParams(newParams);
   };
 
+  // Find category name from Redux store
+  const categoryInfo = categories.find((cat) => cat.id === Number(category));
+  const categoryName = categoryInfo?.name || "Danh mục";
+
   // Show loading state only for initial load (no data yet)
-  if (loading && !categoryData) {
+  if (loading && products.length === 0) {
     return <PageLoader message="Đang tải danh mục..." />;
   }
 
-  // Show error state or "not found" message
-  if (error || !categoryData) {
+  // Show error state
+  if (error) {
     return (
       <div className="container mx-auto py-16 text-center">
-        <h1 className="text-2xl font-bold text-destructive mb-4">
-          {error || "Danh mục không tồn tại"}
-        </h1>
+        <h1 className="text-2xl font-bold text-destructive mb-4">{error}</h1>
         <Button asChild>
           <Link to="/">Quay lại trang chủ</Link>
         </Button>
@@ -146,23 +149,8 @@ const CategoryProductsPage = () => {
               Trang chủ
             </Link>
           </li>
-          {categoryData.parentCategoryId && (
-            <>
-              <li>/</li>
-              <li>
-                <Link
-                  to={`/parent-category/${categoryData.parentCategoryId}`}
-                  className="hover:text-foreground transition-colors"
-                >
-                  {categoryData.parentCategoryName}
-                </Link>
-              </li>
-            </>
-          )}
           <li>/</li>
-          <li className="font-medium text-foreground">
-            {categoryData?.tenDanhMuc}
-          </li>
+          <li className="font-medium text-foreground">{categoryName}</li>
         </ol>
       </nav>
 
@@ -170,7 +158,7 @@ const CategoryProductsPage = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 md:mb-8">
         <div>
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2">
-            {categoryData?.tenDanhMuc}
+            {categoryName}
           </h1>
           <p className="text-sm text-muted-foreground">
             Tìm thấy {pagination?.totalElements || 0} sản phẩm
@@ -192,7 +180,7 @@ const CategoryProductsPage = () => {
       </div>
 
       {/* Empty State */}
-      {categoryData && categoryData.products.length === 0 ? (
+      {products.length === 0 ? (
         <div className="text-center py-8 sm:py-12">
           <p className="text-sm sm:text-base text-muted-foreground mb-4">
             Không có sản phẩm nào trong danh mục này.
@@ -224,4 +212,4 @@ const CategoryProductsPage = () => {
   );
 };
 
-export default CategoryProductsPage;
+export default ParentCategoryProductsPage;

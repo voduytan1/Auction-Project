@@ -17,10 +17,10 @@ const HomePage = lazy(() => import("./homepage"));
 const UnauthorizedPage = lazy(() => import("./unauthorized"));
 const ProductDetailPage = lazy(() => import("./product-detail"));
 const CompleteOrderPage = lazy(() => import("./bidder/complete-order"));
-// const CreateOrderPage = lazy(
-//   () => import("@/features/bidder/order/components/CreateOrder")
-// );
 const CategoryProductsPage = lazy(() => import("./category-products"));
+const ParentCategoryProductsPage = lazy(
+  () => import("../features/parent-category-products")
+);
 const SearchPage = lazy(() => import("./search"));
 const ProfilePage = lazy(() => import("./profile"));
 const UserRatingsPage = lazy(() => import("./users/ratings"));
@@ -102,6 +102,14 @@ export const router = createBrowserRouter([
         element: (
           <PageWrapper title="Danh sách sản phẩm">
             <CategoryProductsPage />
+          </PageWrapper>
+        ),
+      },
+      {
+        path: "parent-category/:category",
+        element: (
+          <PageWrapper title="Danh mục sản phẩm">
+            <ParentCategoryProductsPage />
           </PageWrapper>
         ),
       },
@@ -305,11 +313,11 @@ export const router = createBrowserRouter([
     ],
   },
 
-  // Seller routes
+  // Seller routes - Allow both SELLER and BIDDER (bidder can view old products when upgraded)
   {
     path: "/seller",
     element: (
-      <ProtectedRoute requiredRole="SELLER">
+      <ProtectedRoute requiredRole={["SELLER", "BIDDER"]}>
         <MainLayout />
       </ProtectedRoute>
     ),
@@ -333,7 +341,7 @@ export const router = createBrowserRouter([
       {
         path: "transactions",
         element: (
-          <PageWrapper title="Giao dịch của tôi">
+          <PageWrapper title="Sản phẩm đã bán">
             <SellerTransactionsPage />
           </PageWrapper>
         ),
@@ -353,11 +361,11 @@ export const router = createBrowserRouter([
     ],
   },
 
-  // Bidder routes
+  // Bidder routes - Allow both BIDDER and SELLER (seller can also buy items)
   {
     path: "/bidder",
     element: (
-      <ProtectedRoute requiredRole="BIDDER">
+      <ProtectedRoute requiredRole={["BIDDER", "SELLER"]}>
         <MainLayout />
       </ProtectedRoute>
     ),
