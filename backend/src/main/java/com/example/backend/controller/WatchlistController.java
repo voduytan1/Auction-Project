@@ -1,13 +1,20 @@
 package com.example.backend.controller;
 
 import com.example.backend.dto.common.ApiResponse;
+import com.example.backend.dto.common.PaginationInfo;
+import com.example.backend.dto.common.PaginationRequest;
 import com.example.backend.dto.watchlist.CreateWatchlistRequest;
 import com.example.backend.dto.watchlist.WatchlistResponse;
 import com.example.backend.entity.WatchList;
+import com.example.backend.mapper.WatchlistMapper;
 import com.example.backend.repository.WatchlistRepository;
 import com.example.backend.service.WatchlistService;
+import com.example.backend.utils.PageUtils;
 import jakarta.validation.Valid;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,9 +28,11 @@ import java.util.UUID;
 @RequestMapping("/theo-doi")
 public class WatchlistController {
     private final WatchlistService watchlistService;
+    private final WatchlistMapper watchlistMapper;
 
-    public WatchlistController(WatchlistService watchlistService) {
+    public WatchlistController(WatchlistService watchlistService, WatchlistMapper watchlistMapper) {
         this.watchlistService = watchlistService;
+        this.watchlistMapper = watchlistMapper;
     }
 
     @GetMapping
@@ -40,18 +49,18 @@ public class WatchlistController {
     }
 
     @GetMapping("/list")
-    public ResponseEntity<@NotNull ApiResponse<List<WatchlistResponse>>> findOwn(@AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<@NotNull ApiResponse<List<WatchlistResponse>>> getOwnList(@Valid @ModelAttribute PaginationRequest request, @AuthenticationPrincipal Jwt jwt) {
         String sub = jwt != null ? jwt.getSubject() : null;
         if (sub == null) {
-            throw new BadCredentialsException("Lỗi access token không hợp lệ");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        List<WatchList> watchLists = watchlistService.getOwn(UUID.fromString(sub));
-        List<WatchlistResponse> result = watchLists.stream()
-                .map(watchlistMapper::toResponse)
-                .collect(Collectors.toList());
+        Pageable pageable = request.getPageable();
+        Page<@NotNull WatchList> page = watchlistService.getOwnWithPagination(UUID.fromString(sub), pageable);
+        Page<@NotNull WatchlistResponse> responsePage = page.map(watchlistMapper::toResponse);
+        PaginationInfo paginationInfo = PageUtils.fromPage(responsePage, request.getTrimmedSearch());
 
-        return ResponseEntity.ok(ApiResponse.success(result));
+        return ResponseEntity.ok(ApiResponse.successWithPagination("Lấy danh sách theo dõi thành công", responsePage.getContent(), paginationInfo));
     }
 
 
@@ -63,13 +72,9 @@ public class WatchlistController {
         }
 
         WatchList watchList = watchlistService.createOne(createWatchlistRequest.getProductId(), UUID.fromString(sub));
+        WatchlistResponse response = watchlistMapper.toResponse(watchList);
 
-        return ResponseEntity.ok(ApiResponse.success(WatchlistResponse.builder()
-                .watchlistId(watchList.getWatchlistid())
-                .productId(watchList.getProduct().getProductid())
-                .tenSanPham(watchList.getProduct().getTenSanPham())
-                .userId(UUID.fromString(sub))
-                .build()));
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @DeleteMapping
