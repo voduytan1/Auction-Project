@@ -124,7 +124,7 @@ public class ProductService {
 //            throw new ForbiddenException("Bạn không có quyền gỡ bỏ sản phẩm này");
 //        }
 
-        if(product.getTrangThai()!=ProductStatus.COMPLETED){
+        if(product.getTrangThai()==ProductStatus.COMPLETED){
             throw new ForbiddenException("Sản phẩm đã đấu giá thành công, không thể thu hồi");
         }
 
