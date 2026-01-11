@@ -187,25 +187,29 @@ public class ProductService {
     @Transactional
     public void processExpiredProduct(Product product) {
         try {
+            // Reload product với seller và currentBidder để tránh LazyInitializationException
+            Product managedProduct = productRepository.findByIdWithSellerAndBidder(product.getProductid())
+                    .orElseThrow(() -> new EntityNotFoundException("Product not found: " + product.getProductid()));
+
             log.info("Processing expired product: {} (ID: {})",
-                    product.getTenSanPham(), product.getProductid());
+                    managedProduct.getTenSanPham(), managedProduct.getProductid());
 
             // Chuyển trạng thái sang COMPLETED
-            product.setTrangThai(ProductStatus.COMPLETED);
-            productRepository.save(product);
+            managedProduct.setTrangThai(ProductStatus.COMPLETED);
+            productRepository.save(managedProduct);
 
             List<AutoBid> activeAutoBids = autoBidRepository
                     .findActiveAutoBidsByProductOrderByGiaToiDaDesc(product.getProductid());
             activeAutoBids.forEach(ab -> ab.setIsActive(false));
             autoBidRepository.saveAll(activeAutoBids);
 
-            if (product.getCurrentBidder() != null) {
+            if (managedProduct.getCurrentBidder() != null) {
                 // CÓ NGƯỜI THẮNG - Tạo transaction
                 Transaction transaction = Transaction.builder()
-                        .product(product)
-                        .buyer(product.getCurrentBidder())
-                        .seller(product.getSeller())
-                        .giaCuoiCung(product.getGiaHienTai())
+                        .product(managedProduct)
+                        .buyer(managedProduct.getCurrentBidder())
+                        .seller(managedProduct.getSeller())
+                        .giaCuoiCung(managedProduct.getGiaHienTai())
                         .trangThai(TransactionStatus.PENDING_PAYMENT)
                         .paymentMethod("Stripe")
                         .build();
@@ -214,37 +218,35 @@ public class ProductService {
 
                 // Gửi email cho seller
                 emailService.sendAuctionSuccessToSeller(
-                        product.getSeller().getEmail(),
-                        product.getSeller().getHoVaTen(), // Hoặc getUsername()
-                        product.getTenSanPham(),
-                        product.getGiaHienTai(),
-                        product.getCurrentBidder().getHoVaTen(),
-                        product.getProductid()
+                        managedProduct.getSeller().getEmail(),
+                        managedProduct.getSeller().getHoVaTen(),
+                        managedProduct.getTenSanPham(),
+                        managedProduct.getGiaHienTai(),
+                        managedProduct.getCurrentBidder().getHoVaTen()
                 );
 
                 // Gửi email cho winner
                 emailService.sendAuctionSuccessToWinner(
-                        product.getCurrentBidder().getEmail(),
-                        product.getCurrentBidder().getHoVaTen(),
-                        product.getTenSanPham(),
-                        product.getGiaHienTai(),
-                        product.getProductid()
+                        managedProduct.getCurrentBidder().getEmail(),
+                        managedProduct.getCurrentBidder().getHoVaTen(),
+                        managedProduct.getTenSanPham(),
+                        managedProduct.getGiaHienTai()
                 );
 
                 log.info("Product {} completed with winner: {}",
-                        product.getProductid(),
-                        product.getCurrentBidder().getUsername());
+                        managedProduct.getProductid(),
+                        managedProduct.getCurrentBidder().getUsername());
             } else {
                 // KHÔNG CÓ NGƯỜI THẮNG, gửi mail cho người bán
                 emailService.sendAuctionFailToSeller(
-                        product.getSeller().getEmail(),
-                        product.getSeller().getHoVaTen(),
-                        product.getTenSanPham(),
-                        product.getProductid()
+                        managedProduct.getSeller().getEmail(),
+                        managedProduct.getSeller().getHoVaTen(),
+                        managedProduct.getTenSanPham(),
+                        managedProduct.getProductid()
                 );
 
                 log.info("Product {} completed with no winner",
-                        product.getProductid());
+                        managedProduct.getProductid());
             }
         } catch (Exception e) {
             log.error("Error processing expired product {}: {}",

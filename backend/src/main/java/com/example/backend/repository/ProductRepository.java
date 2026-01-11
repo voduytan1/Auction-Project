@@ -24,6 +24,12 @@ public interface ProductRepository extends JpaRepository<@NotNull Product, @NotN
     @Query("SELECT p FROM Product p WHERE p.productid = :id")
     Optional<Product> findByIdForUpdate(Long id);
 
+    @Query("SELECT p FROM Product p " +
+           "LEFT JOIN FETCH p.seller " +
+           "LEFT JOIN FETCH p.currentBidder " +
+           "WHERE p.productid = :id")
+    Optional<Product> findByIdWithSellerAndBidder(@Param("id") Long id);
+
     Long countByTrangThai(ProductStatus status);
 
     // Đếm theo thời gian tạo

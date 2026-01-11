@@ -248,8 +248,8 @@ public class EmailService {
     }
 
     @Async
-    public void sendAuctionSuccessToWinner(String winnerEmail, String winnerName, String productName, BigDecimal finalPrice, Long productId) {
-        String productUrl = DOMAIN + "/payment/checkout/" + productId; // Hoặc dẫn đến trang Lịch sử giao dịch
+    public void sendAuctionSuccessToWinner(String winnerEmail, String winnerName, String productName, BigDecimal finalPrice) {
+        String productUrl = DOMAIN + "/bidder/transactions" ; // Hoặc dẫn đến trang Lịch sử giao dịch
         NumberFormat currencyFormatter = NumberFormat.getInstance(new Locale("vi", "VN"));
         String formattedPrice = currencyFormatter.format(finalPrice) + " đ";
 
@@ -286,8 +286,8 @@ public class EmailService {
      * 2. Gửi cho SELLER: Bán thành công (Có người thắng)
      */
     @Async
-    public void sendAuctionSuccessToSeller(String sellerEmail, String sellerName, String productName, BigDecimal finalPrice, String winnerName, Long productId) {
-        String productUrl = DOMAIN + "/products/" + productId;
+    public void sendAuctionSuccessToSeller(String sellerEmail, String sellerName, String productName, BigDecimal finalPrice, String winnerName) {
+        String productUrl = DOMAIN + "/seller/transactions";
         NumberFormat currencyFormatter = NumberFormat.getInstance(new Locale("vi", "VN"));
         String formattedPrice = currencyFormatter.format(finalPrice) + " đ";
 
