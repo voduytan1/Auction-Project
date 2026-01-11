@@ -55,7 +55,11 @@ export function ChangePasswordForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <form
+        onSubmit={form.handleSubmit(handleSubmit)}
+        className="space-y-6"
+        noValidate
+      >
         <FormField
           control={form.control}
           name="oldPassword"
