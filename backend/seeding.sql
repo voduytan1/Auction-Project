@@ -296,48 +296,52 @@ INSERT INTO configurations (variable, value) VALUES
 (2, 10);   -- EXTENSION_MINUTES = 10 phút
 
 -- ======================================================================================
--- 6. SEED DATA BID HISTORY (Lịch sử đấu giá - ít nhất 5 lượt mỗi sản phẩm)
+-- 6. SEED DATA BID HISTORY (Lịch sử đấu giá theo thuật toán Proxy Bidding)
+-- ======================================================================================
+-- Thuật toán AutoBid: newPrice = min(giá_max_người_thắng, giá_max_người_nhì + bước_giá)
+-- Mỗi sản phẩm ít nhất 5 lượt đấu giá
 -- ======================================================================================
 
--- Product 1: iPhone 15 Plus (6 lượt) - current_bidderid: c0eebc99
+-- Product 1: iPhone 15 Plus (6 lượt, Giá: 28M→31M, Bước: 500K)
+-- Timeline: nguoimua2→nguoimua1 (cạnh tranh, autobid tự động tăng giá)
 INSERT INTO bid_history (productid, bidderid, gia_dat, thoi_gian_dat) VALUES
-(1, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 28000000, DATE_SUB(NOW(), INTERVAL 50 HOUR)),
-(1, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 28500000, DATE_SUB(NOW(), INTERVAL 45 HOUR)),
-(1, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 29500000, DATE_SUB(NOW(), INTERVAL 30 HOUR)),
-(1, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 30000000, DATE_SUB(NOW(), INTERVAL 20 HOUR)),
-(1, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 30500000, DATE_SUB(NOW(), INTERVAL 10 HOUR)),
-(1, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 31000000, DATE_SUB(NOW(), INTERVAL 5 HOUR));
+(1, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 28000000, DATE_SUB(NOW(), INTERVAL 50 HOUR)), -- nguoimua2 đặt autobid 30.5M → giá = 28M (khởi điểm)
+(1, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 28500000, DATE_SUB(NOW(), INTERVAL 45 HOUR)), -- nguoimua1 đặt autobid 29M → giá = 28.5M
+(1, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 29000000, DATE_SUB(NOW(), INTERVAL 40 HOUR)), -- nguoimua2 tăng autobid 29.5M → giá = 29M
+(1, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 29500000, DATE_SUB(NOW(), INTERVAL 30 HOUR)), -- nguoimua1 tăng autobid 30M → giá = 29.5M
+(1, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 30000000, DATE_SUB(NOW(), INTERVAL 20 HOUR)), -- nguoimua2 tăng autobid 30.5M → giá = 30M
+(1, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 31000000, DATE_SUB(NOW(), INTERVAL 10 HOUR)); -- nguoimua1 tăng autobid 35M → giá = 31M (30.5M + 500K)
 
--- Product 2: iPhone 13 (8 lượt)
+-- Product 2: iPhone 13 (8 lượt, Giá: 11M→12.6M, Bước: 200K)
 INSERT INTO bid_history (productid, bidderid, gia_dat, thoi_gian_dat) VALUES
-(2, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 11000000, DATE_SUB(NOW(), INTERVAL 40 HOUR)),
-(2, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 11200000, DATE_SUB(NOW(), INTERVAL 35 HOUR)),
+(2, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 11000000, DATE_SUB(NOW(), INTERVAL 48 HOUR)),
+(2, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 11200000, DATE_SUB(NOW(), INTERVAL 42 HOUR)),
+(2, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 11400000, DATE_SUB(NOW(), INTERVAL 36 HOUR)),
 (2, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 11600000, DATE_SUB(NOW(), INTERVAL 28 HOUR)),
 (2, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 11800000, DATE_SUB(NOW(), INTERVAL 22 HOUR)),
-(2, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 12000000, DATE_SUB(NOW(), INTERVAL 18 HOUR)),
-(2, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 12200000, DATE_SUB(NOW(), INTERVAL 12 HOUR)),
-(2, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 12400000, DATE_SUB(NOW(), INTERVAL 8 HOUR)),
-(2, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 12600000, DATE_SUB(NOW(), INTERVAL 4 HOUR));
+(2, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 12000000, DATE_SUB(NOW(), INTERVAL 16 HOUR)),
+(2, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 12200000, DATE_SUB(NOW(), INTERVAL 10 HOUR)),
+(2, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 12600000, DATE_SUB(NOW(), INTERVAL 5 HOUR)); -- Winner cuối
 
--- Product 3: OPPO A6 Pro (6 lượt)
+-- Product 3: OPPO A6 Pro (6 lượt, Giá: 7.2M→7.8M, Bước: 100K)
 INSERT INTO bid_history (productid, bidderid, gia_dat, thoi_gian_dat) VALUES
-(3, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 7200000, DATE_SUB(NOW(), INTERVAL 48 HOUR)),
-(3, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 7300000, DATE_SUB(NOW(), INTERVAL 42 HOUR)),
-(3, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 7500000, DATE_SUB(NOW(), INTERVAL 32 HOUR)),
-(3, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 7600000, DATE_SUB(NOW(), INTERVAL 24 HOUR)),
-(3, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 7700000, DATE_SUB(NOW(), INTERVAL 15 HOUR)),
-(3, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 7800000, DATE_SUB(NOW(), INTERVAL 8 HOUR));
+(3, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 7200000, DATE_SUB(NOW(), INTERVAL 48 HOUR)),
+(3, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 7300000, DATE_SUB(NOW(), INTERVAL 40 HOUR)),
+(3, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 7400000, DATE_SUB(NOW(), INTERVAL 32 HOUR)),
+(3, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 7500000, DATE_SUB(NOW(), INTERVAL 24 HOUR)),
+(3, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 7600000, DATE_SUB(NOW(), INTERVAL 16 HOUR)),
+(3, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 7800000, DATE_SUB(NOW(), INTERVAL 8 HOUR)); -- Winner
 
--- Product 4: OPPO Reno14 (6 lượt)
+-- Product 4: OPPO Reno14 (6 lượt, Giá: 15M→17.4M, Bước: 400K)
 INSERT INTO bid_history (productid, bidderid, gia_dat, thoi_gian_dat) VALUES
-(4, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 15000000, DATE_SUB(NOW(), INTERVAL 52 HOUR)),
-(4, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 15400000, DATE_SUB(NOW(), INTERVAL 46 HOUR)),
-(4, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 16200000, DATE_SUB(NOW(), INTERVAL 36 HOUR)),
-(4, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 16600000, DATE_SUB(NOW(), INTERVAL 26 HOUR)),
-(4, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 17000000, DATE_SUB(NOW(), INTERVAL 16 HOUR)),
-(4, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 17400000, DATE_SUB(NOW(), INTERVAL 6 HOUR));
+(4, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 15000000, DATE_SUB(NOW(), INTERVAL 52 HOUR)),
+(4, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 15400000, DATE_SUB(NOW(), INTERVAL 44 HOUR)),
+(4, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 15800000, DATE_SUB(NOW(), INTERVAL 36 HOUR)),
+(4, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 16200000, DATE_SUB(NOW(), INTERVAL 26 HOUR)),
+(4, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 16600000, DATE_SUB(NOW(), INTERVAL 18 HOUR)),
+(4, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 17400000, DATE_SUB(NOW(), INTERVAL 8 HOUR)); -- Winner
 
--- Product 5: MacBook Air M4 (8 lượt)
+-- Product 5: MacBook Air M4 (8 lượt, Giá: 26.5M→30.5M, Bước: 500K)
 INSERT INTO bid_history (productid, bidderid, gia_dat, thoi_gian_dat) VALUES
 (5, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 26500000, DATE_SUB(NOW(), INTERVAL 55 HOUR)),
 (5, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 27000000, DATE_SUB(NOW(), INTERVAL 50 HOUR)),
@@ -499,6 +503,69 @@ INSERT INTO bid_history (productid, bidderid, gia_dat, thoi_gian_dat) VALUES
 (20, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 7900000, DATE_SUB(NOW(), INTERVAL 16 HOUR)),
 (20, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 8050000, DATE_SUB(NOW(), INTERVAL 10 HOUR)),
 (20, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 8200000, DATE_SUB(NOW(), INTERVAL 4 HOUR));
+
+-- ======================================================================================
+-- 7. SEED DATA AUTO BIDS (Đấu giá tự động - Đồng bộ với Bid History)
+-- ======================================================================================
+
+INSERT INTO auto_bids (productid, bidderid, gia_toi_da, is_active, created_at) VALUES
+(1, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 30500000, true, DATE_SUB(NOW(), INTERVAL 50 HOUR)),
+(1, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 35000000, true, DATE_SUB(NOW(), INTERVAL 10 HOUR)),
+
+(2, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 12400000, true, DATE_SUB(NOW(), INTERVAL 48 HOUR)),
+(2, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 13140000, true, DATE_SUB(NOW(), INTERVAL 5 HOUR)),
+
+(3, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 7700000, true, DATE_SUB(NOW(), INTERVAL 48 HOUR)),
+(3, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 8290000, true, DATE_SUB(NOW(), INTERVAL 8 HOUR)),
+
+(4, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 17000000, true, DATE_SUB(NOW(), INTERVAL 52 HOUR)),
+(4, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 17740000, true, DATE_SUB(NOW(), INTERVAL 8 HOUR)),
+
+(5, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 30000000, true, DATE_SUB(NOW(), INTERVAL 55 HOUR)),
+(5, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 30848000, true, DATE_SUB(NOW(), INTERVAL 5 HOUR)),
+
+(6, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 20300000, true, DATE_SUB(NOW(), INTERVAL 58 HOUR)),
+(6, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 21140000, true, DATE_SUB(NOW(), INTERVAL 9 HOUR)),
+
+(7, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 46500000, true, DATE_SUB(NOW(), INTERVAL 60 HOUR)),
+(7, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 47924000, true, DATE_SUB(NOW(), INTERVAL 4 HOUR)),
+
+(8, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 22400000, true, DATE_SUB(NOW(), INTERVAL 48 HOUR)),
+(8, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 23210000, true, DATE_SUB(NOW(), INTERVAL 3 HOUR)),
+
+(9, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 990000, true, DATE_SUB(NOW(), INTERVAL 7 HOUR)),
+
+(10, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 1750000, true, DATE_SUB(NOW(), INTERVAL 54 HOUR)),
+(10, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 1990000, true, DATE_SUB(NOW(), INTERVAL 9 HOUR)),
+
+(11, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 390000, true, DATE_SUB(NOW(), INTERVAL 40 HOUR)),
+(11, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 470000, true, DATE_SUB(NOW(), INTERVAL 3 HOUR)),
+
+(12, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 550000, true, DATE_SUB(NOW(), INTERVAL 42 HOUR)),
+(12, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 590000, true, DATE_SUB(NOW(), INTERVAL 5 HOUR)),
+
+(13, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 1075000, true, DATE_SUB(NOW(), INTERVAL 6 HOUR)),
+
+(14, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 3000000, true, DATE_SUB(NOW(), INTERVAL 56 HOUR)),
+(14, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 3234000, true, DATE_SUB(NOW(), INTERVAL 8 HOUR)),
+
+(15, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 9500000, true, DATE_SUB(NOW(), INTERVAL 52 HOUR)),
+(15, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 10059000, true, DATE_SUB(NOW(), INTERVAL 7 HOUR)),
+
+(16, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 6200000, true, DATE_SUB(NOW(), INTERVAL 44 HOUR)),
+(16, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 6942000, true, DATE_SUB(NOW(), INTERVAL 4 HOUR)),
+
+(17, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 11900000, true, DATE_SUB(NOW(), INTERVAL 50 HOUR)),
+(17, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 12540000, true, DATE_SUB(NOW(), INTERVAL 3 HOUR)),
+
+(18, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 12500000, true, DATE_SUB(NOW(), INTERVAL 42 HOUR)),
+(18, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 13740000, true, DATE_SUB(NOW(), INTERVAL 5 HOUR)),
+
+(19, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 5200000, true, DATE_SUB(NOW(), INTERVAL 48 HOUR)),
+(19, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 6040000, true, DATE_SUB(NOW(), INTERVAL 3 HOUR)),
+
+(20, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 8050000, true, DATE_SUB(NOW(), INTERVAL 54 HOUR)),
+(20, 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 8590000, true, DATE_SUB(NOW(), INTERVAL 4 HOUR));
 
 -- Bật lại kiểm tra khóa ngoại
 SET FOREIGN_KEY_CHECKS = 1;
