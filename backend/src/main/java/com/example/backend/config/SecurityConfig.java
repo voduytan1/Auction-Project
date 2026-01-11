@@ -72,7 +72,7 @@ public class SecurityConfig {
                     HttpMethod.DELETE, new String[]{}
             ),
             "AUTHENTICATED",Map.of(
-                    HttpMethod.GET, new String[]{"/users/me", "/bids/**", "/bids/history/{productId}", "/transactions/buyer", "/transactions/seller","/transactions/{id}", "/theo-doi", "/rating/mine", "/chat/**"},
+                    HttpMethod.GET, new String[]{"/users/me", "/bids/**", "/bids/history/{productId}", "/transactions/buyer", "/transactions/seller","/transactions/{id}", "/theo-doi", "/rating/mine", "/chat/**", "/theo-doi/list"},
                     HttpMethod.POST, new String[]{"/users/request-seller", "/images/**","/image/**", "/bids/**", "/payment/create-checkout-session", "/transactions/{id}/dia-chi", "/transactions/{id}/hoan-thanh", "/theo-doi", "/questions", "/transactions/{id}/ma-van-don", "/transactions/{id}/huy", "/products/block", "/chat/**"},
                     HttpMethod.PUT, new String[]{"/users/{id}"},
                     HttpMethod.PATCH, new String[]{"/products", "/questions/{id}"},

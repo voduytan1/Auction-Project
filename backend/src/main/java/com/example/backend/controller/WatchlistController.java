@@ -39,6 +39,22 @@ public class WatchlistController {
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
+    @GetMapping("/list")
+    public ResponseEntity<@NotNull ApiResponse<List<WatchlistResponse>>> findOwn(@AuthenticationPrincipal Jwt jwt) {
+        String sub = jwt != null ? jwt.getSubject() : null;
+        if (sub == null) {
+            throw new BadCredentialsException("Lỗi access token không hợp lệ");
+        }
+
+        List<WatchList> watchLists = watchlistService.getOwn(UUID.fromString(sub));
+        List<WatchlistResponse> result = watchLists.stream()
+                .map(watchlistMapper::toResponse)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+
     @PostMapping
     public ResponseEntity<@NotNull ApiResponse<WatchlistResponse>> create(@AuthenticationPrincipal Jwt jwt, @RequestBody @Valid CreateWatchlistRequest createWatchlistRequest) {
         String sub = jwt != null ? jwt.getSubject() : null;
