@@ -13,12 +13,12 @@ USE auction_db;
 -- Password mặc định là "auction" (BCrypt hash)
 -- ======================================================================================
 
-INSERT INTO users (userid, username, password, email, vai_tro, ho_va_ten, dia_chi, so_dien_thoai, created_at, provider) 
+INSERT INTO users (userid, username, password, email, vai_tro, thoi_han_ban_hang, ho_va_ten, dia_chi, so_dien_thoai, created_at, provider) 
 VALUES 
-('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'admin', '$2a$10$WVc5WFoZua4dxGh3lZaQfOvAiT91LbiqIL96RXCnslqV2y769WVuK', 'admin@gmail.com', 'ADMIN', 'Quản Trị Viên', 'Hồ Chí Minh', '0912345678', NOW(), 'LOCAL'),
-('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b22', 'shopdunk', '$2a$10$WVc5WFoZua4dxGh3lZaQfOvAiT91LbiqIL96RXCnslqV2y769WVuK', 'shopdunk@gmail.com', 'SELLER', 'Cửa hàng ShopDunk', 'TP.HCM', '0923456781', NOW(), 'LOCAL'),
-('c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 'nguoimua1', '$2a$10$WVc5WFoZua4dxGh3lZaQfOvAiT91LbiqIL96RXCnslqV2y769WVuK', 'bidder1@gmail.com', 'BIDDER', 'Nguyễn Văn A', 'Đà Nẵng', '0934567812', NOW(), 'LOCAL'),
-('d0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 'nguoimua2', '$2a$10$WVc5WFoZua4dxGh3lZaQfOvAiT91LbiqIL96RXCnslqV2y769WVuK', 'bidder2@gmail.com', 'BIDDER', 'Trần Thị B', 'Cần Thơ', '0945678123', NOW(), 'LOCAL');
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'admin', '$2a$10$WVc5WFoZua4dxGh3lZaQfOvAiT91LbiqIL96RXCnslqV2y769WVuK', 'admin@gmail.com', 'ADMIN', null, 'Quản Trị Viên', 'Hồ Chí Minh', '0912345678', NOW(), 'LOCAL'),
+('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b22', 'shopdunk', '$2a$10$WVc5WFoZua4dxGh3lZaQfOvAiT91LbiqIL96RXCnslqV2y769WVuK', 'shopdunk@gmail.com', 'SELLER', DATE_ADD(NOW(), INTERVAL 7 DAY), 'Cửa hàng ShopDunk', 'TP.HCM', '0923456781', NOW(), 'LOCAL'),
+('c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33', 'nguoimua1', '$2a$10$WVc5WFoZua4dxGh3lZaQfOvAiT91LbiqIL96RXCnslqV2y769WVuK', 'bidder1@gmail.com', 'BIDDER', null, 'Nguyễn Văn A', 'Đà Nẵng', '0934567812', NOW(), 'LOCAL'),
+('d0eebc99-9c0b-4ef8-bb6d-6bb9bd380d44', 'nguoimua2', '$2a$10$WVc5WFoZua4dxGh3lZaQfOvAiT91LbiqIL96RXCnslqV2y769WVuK', 'bidder2@gmail.com', 'BIDDER', null, 'Trần Thị B', 'Cần Thơ', '0945678123', NOW(), 'LOCAL');
 
 -- ======================================================================================
 -- 2. SEED DATA CATEGORIES (Danh mục cấp 1 và cấp 2)
