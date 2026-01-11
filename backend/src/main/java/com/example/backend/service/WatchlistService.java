@@ -9,6 +9,9 @@ import com.example.backend.repository.WatchlistRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -47,6 +50,11 @@ public class WatchlistService {
     public List<WatchList> getOwn(UUID userId){
         User user = userRepository.findById(userId).orElseThrow(()->new EntityNotFoundException("Không tìm thấy user với id "+ userId));
         return watchlistRepository.findByUser_Userid(userId);
+    }
+
+    public Page<@NotNull WatchList> getOwnWithPagination(UUID userId, Pageable pageable){
+        User user = userRepository.findById(userId).orElseThrow(()->new EntityNotFoundException("Không tìm thấy user với id "+ userId));
+        return watchlistRepository.findByUser_Userid(userId, pageable);
     }
 
     @Transactional

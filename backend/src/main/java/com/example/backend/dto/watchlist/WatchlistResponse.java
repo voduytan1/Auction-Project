@@ -1,5 +1,6 @@
 package com.example.backend.dto.watchlist;
 
+import com.example.backend.dto.product.ProductResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,6 +15,5 @@ import java.util.UUID;
 public class WatchlistResponse {
     Long watchlistId;
     UUID userId;
-    Long productId;
-    String tenSanPham;
+    ProductResponse product;
 }

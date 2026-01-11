@@ -5,12 +5,11 @@ import com.example.backend.entity.WatchList;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {ProductMapper.class})
 public interface WatchlistMapper {
     
     @Mapping(source = "watchlistid", target = "watchlistId")
     @Mapping(source = "user.userid", target = "userId")
-    @Mapping(source = "product.productid", target = "productId")
-    @Mapping(source = "product.tenSanPham", target = "tenSanPham")
+    @Mapping(source = "product", target = "product")
     WatchlistResponse toResponse(WatchList watchList);
 }
