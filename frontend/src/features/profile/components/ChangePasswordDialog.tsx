@@ -48,7 +48,11 @@ export function ChangePasswordDialog({
             Nhập mật khẩu cũ và mật khẩu mới của bạn
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-4"
+          noValidate
+        >
           <div className="space-y-2">
             <Label htmlFor="oldPassword">Mật khẩu cũ</Label>
             <Input

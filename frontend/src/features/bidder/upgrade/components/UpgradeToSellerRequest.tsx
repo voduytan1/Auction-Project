@@ -70,6 +70,7 @@ export function UpgradeToSellerRequest() {
           <form
             onSubmit={handleSubmit(onSubmit)}
             className="space-y-4 sm:space-y-6"
+            noValidate
           >
             {/* Information Alert */}
             <Alert>

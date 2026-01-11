@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Lock, Eye, EyeOff, Shield } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,12 +10,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { profileAPI } from "@/services/profile.api";
 import { useAppSelector } from "@/store/hooks";
-
-interface PasswordFormData {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-}
+import {
+  changePasswordSchema,
+  type ChangePasswordFormData,
+} from "@/features/profile/schemas/validation";
 
 export function ChangePasswordForm() {
   const { user } = useAppSelector((state) => state.auth);
@@ -27,13 +26,12 @@ export function ChangePasswordForm() {
     register,
     handleSubmit,
     formState: { errors },
-    watch,
     reset,
-  } = useForm<PasswordFormData>();
+  } = useForm<ChangePasswordFormData>({
+    resolver: zodResolver(changePasswordSchema),
+  });
 
-  const newPassword = watch("newPassword");
-
-  const onSubmit = async (data: PasswordFormData) => {
+  const onSubmit = async (data: ChangePasswordFormData) => {
     if (!user?.userid) {
       toast.error("Không tìm thấy thông tin người dùng");
       return;
@@ -67,6 +65,7 @@ export function ChangePasswordForm() {
           <form
             onSubmit={handleSubmit(onSubmit)}
             className="space-y-3 sm:space-y-4"
+            noValidate
           >
             {/* Security Alert */}
             <Alert>
@@ -87,9 +86,7 @@ export function ChangePasswordForm() {
                   id="currentPassword"
                   type={showCurrentPassword ? "text" : "password"}
                   className="pl-8 sm:pl-10 pr-9 sm:pr-10 text-sm md:text-base"
-                  {...register("currentPassword", {
-                    required: "Vui lòng nhập mật khẩu hiện tại",
-                  })}
+                  {...register("currentPassword")}
                   placeholder="••••••••"
                 />
                 <button
@@ -122,13 +119,7 @@ export function ChangePasswordForm() {
                   id="newPassword"
                   type={showNewPassword ? "text" : "password"}
                   className="pl-8 sm:pl-10 pr-9 sm:pr-10 text-sm md:text-base"
-                  {...register("newPassword", {
-                    required: "Vui lòng nhập mật khẩu mới",
-                    minLength: {
-                      value: 6,
-                      message: "Mật khẩu phải có ít nhất 6 ký tự",
-                    },
-                  })}
+                  {...register("newPassword")}
                   placeholder="••••••••"
                 />
                 <button
@@ -162,11 +153,7 @@ export function ChangePasswordForm() {
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
                   className="pl-8 sm:pl-10 pr-9 sm:pr-10 text-sm md:text-base"
-                  {...register("confirmPassword", {
-                    required: "Vui lòng xác nhận mật khẩu mới",
-                    validate: (value) =>
-                      value === newPassword || "Mật khẩu xác nhận không khớp",
-                  })}
+                  {...register("confirmPassword")}
                   placeholder="••••••••"
                 />
                 <button

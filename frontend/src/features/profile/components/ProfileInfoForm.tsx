@@ -1,4 +1,5 @@
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Lock } from "lucide-react";
 import type { UserProfile, UpdateProfileData } from "../types";
+import { profileInfoSchema } from "../schemas/validation";
 
 interface ProfileInfoFormProps {
   profileData: UserProfile;
@@ -27,6 +29,7 @@ export function ProfileInfoForm({
     reset,
     formState: { errors },
   } = useForm<UpdateProfileData>({
+    resolver: zodResolver(profileInfoSchema),
     values: {
       hoVaTen: profileData?.hoVaTen || "",
       email: profileData?.email || "",
@@ -56,7 +59,11 @@ export function ProfileInfoForm({
         <CardTitle>Thông tin cá nhân</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-4"
+          noValidate
+        >
           <div className="space-y-2">
             <Label htmlFor="hoVaTen">Họ và tên</Label>
             <Input
@@ -93,13 +100,7 @@ export function ProfileInfoForm({
             <Input
               id="email"
               type="email"
-              {...register("email", {
-                required: "Email là bắt buộc",
-                pattern: {
-                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: "Email không hợp lệ",
-                },
-              })}
+              {...register("email")}
               placeholder="email@example.com"
             />
             {errors.email && (
@@ -114,6 +115,11 @@ export function ProfileInfoForm({
               {...register("diaChi")}
               placeholder="Nhập địa chỉ"
             />
+            {errors.diaChi && (
+              <p className="text-sm text-destructive">
+                {errors.diaChi.message}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -121,12 +127,7 @@ export function ProfileInfoForm({
             <Input
               id="soDienThoai"
               type="tel"
-              {...register("soDienThoai", {
-                pattern: {
-                  value: /^[0-9]{10}$/,
-                  message: "Số điện thoại phải có 10 chữ số",
-                },
-              })}
+              {...register("soDienThoai")}
               placeholder="Nhập số điện thoại (10 chữ số)"
             />
             {errors.soDienThoai && (

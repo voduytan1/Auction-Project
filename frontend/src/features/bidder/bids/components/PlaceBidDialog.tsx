@@ -135,7 +135,11 @@ export function PlaceBidDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-4"
+          noValidate
+        >
           {/* Rating Validation Warning */}
           {!canBid && (
             <Alert variant="destructive">

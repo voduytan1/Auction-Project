@@ -115,7 +115,11 @@ export default function AppendDescriptionPage() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-6"
+          noValidate
+        >
           {/* Current Description */}
           <Card>
             <CardHeader>

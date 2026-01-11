@@ -3,6 +3,28 @@ import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
 import type { AppStore } from "@/store";
 import type { RefreshTokenResponse } from "@/features/auth/types";
 import { env } from "@/config/env";
+import { rateLimitManager } from "./rate-limit";
+
+// Flag to prevent multiple rate limit triggers
+let rateLimitTriggered = false;
+
+// Refresh token state - prevent multiple refresh calls
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value: unknown) => void;
+  reject: (reason?: unknown) => void;
+}> = [];
+
+const processQueue = (error: unknown, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
 
 // Declare window.__REDUX_STORE__ type
 declare global {
@@ -71,7 +93,29 @@ api.interceptors.response.use(
 
     // Handle 401 Unauthorized - Token expired (các request khác)
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // Skip refresh for auth endpoints
+      if (originalRequest.url?.includes("/auth/refresh")) {
+        return Promise.reject(error);
+      }
+
+      if (isRefreshing) {
+        // If already refreshing, queue this request
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            if (originalRequest.headers) {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+            }
+            return api(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
       originalRequest._retry = true;
+      isRefreshing = true;
+
+      console.log("[API] Access token expired, attempting refresh...");
 
       try {
         // Refresh token - BE sẽ đọc refresh_token từ cookie
@@ -82,6 +126,8 @@ api.interceptors.response.use(
             withCredentials: true, // Gửi cookie
           }
         );
+
+        console.log("[API] Refresh successful!");
 
         const refreshData = response.data.data;
         const { accessToken, ...userData } = refreshData;
@@ -99,12 +145,22 @@ api.interceptors.response.use(
           });
         }
 
+        // Process queued requests
+        processQueue(null, accessToken);
+        isRefreshing = false;
+
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         }
 
         return api(originalRequest);
       } catch (refreshError) {
+        console.error("[API] Refresh failed:", refreshError);
+
+        // Process queued requests with error
+        processQueue(refreshError, null);
+        isRefreshing = false;
+
         // Dispatch logout action
         const store = window.__REDUX_STORE__;
         if (store) {
@@ -127,14 +183,16 @@ api.interceptors.response.use(
 
     // Handle 429 Too Many Requests (Rate Limit)
     if (error.response?.status === 429) {
-      // Import toast dynamically to avoid circular dependency
-      import("sonner").then(({ toast }) => {
-        toast.error("Thao tác quá nhanh!", {
-          description:
-            "Bạn đang thực hiện thao tác quá nhiều. Vui lòng chờ 1 phút và thử lại.",
-          duration: 5000,
-        });
-      });
+      // Only trigger once to avoid multiple modals
+      if (!rateLimitTriggered) {
+        rateLimitTriggered = true;
+        rateLimitManager.trigger();
+
+        // Reset flag after 1 minute
+        setTimeout(() => {
+          rateLimitTriggered = false;
+        }, 60000);
+      }
 
       const rateLimitError = new Error(
         "Quá nhiều yêu cầu. Vui lòng chờ 1 phút."

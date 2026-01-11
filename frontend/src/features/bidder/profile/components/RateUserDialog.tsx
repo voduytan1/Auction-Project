@@ -106,7 +106,11 @@ export function RateUserDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-6"
+          noValidate
+        >
           {/* Rating Type Selection */}
           <div className="space-y-3">
             <Label>

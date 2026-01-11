@@ -9,6 +9,7 @@ import { ThemeProvider } from "./components/ThemeProvider";
 import { PageLoader } from "./components/PageLoader";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
 import { AuthRestoreWrapper } from "./components/AuthRestoreWrapper";
+import { RateLimitProvider } from "./components/RateLimitProvider";
 import { Toaster } from "./components/ui/sonner";
 import "./index.css";
 
@@ -21,17 +22,19 @@ createRoot(document.getElementById("root")!).render(
         <AuthRestoreWrapper>
           <WebSocketProvider>
             <ThemeProvider defaultTheme="light" storageKey="auction-theme">
-              <Suspense
-                fallback={
-                  <PageLoader
-                    message="Đang tải trang..."
-                    className="min-h-screen"
-                  />
-                }
-              >
-                <RouterProvider router={router} />
-              </Suspense>
-              <Toaster />
+              <RateLimitProvider>
+                <Suspense
+                  fallback={
+                    <PageLoader
+                      message="Đang tải trang..."
+                      className="min-h-screen"
+                    />
+                  }
+                >
+                  <RouterProvider router={router} />
+                </Suspense>
+                <Toaster />
+              </RateLimitProvider>
             </ThemeProvider>
           </WebSocketProvider>
         </AuthRestoreWrapper>

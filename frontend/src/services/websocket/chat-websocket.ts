@@ -19,9 +19,9 @@ class ChatWebSocketService {
     transactionId: number,
     callback: ChatMessageCallback
   ): string {
-    const topic = `/topic/transaction/${transactionId}/messages`;
+    const topic = `/topic/transaction/${transactionId}`;
     const key = `chat-${transactionId}`;
-    return baseWebSocketService["subscribe"]<ChatMessageWS>(
+    return baseWebSocketService.subscribeToTopic<ChatMessageWS>(
       topic,
       key,
       callback
@@ -40,7 +40,7 @@ class ChatWebSocketService {
   ): string {
     const topic = `/topic/transaction/${transactionId}/typing`;
     const key = `typing-${transactionId}`;
-    return baseWebSocketService["subscribe"]<TypingIndicator>(
+    return baseWebSocketService.subscribeToTopic<TypingIndicator>(
       topic,
       key,
       callback
@@ -58,7 +58,7 @@ class ChatWebSocketService {
       transactionid: transactionId,
       isTyping,
     };
-    baseWebSocketService["publish"](destination, body);
+    baseWebSocketService.sendMessage(destination, body);
   }
 
   /**

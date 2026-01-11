@@ -160,6 +160,7 @@ export function CreateProductForm() {
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="space-y-4 sm:space-y-6"
+          noValidate
         >
           {/* Product Name */}
           <ProductBasicInfoFields register={register} errors={errors} />

@@ -102,7 +102,11 @@ export function AskSeller({ productId, sellerId }: AskSellerProps) {
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Question Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-4"
+          noValidate
+        >
           <div className="space-y-2">
             <Label htmlFor="question">
               Câu hỏi của bạn <span className="text-destructive">*</span>
