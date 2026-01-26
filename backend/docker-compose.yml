@@ -1,6 +1,30 @@
 services:
   # Dịch vụ MySQL từ tệp gốc của bạn
 
+  mysql_db:
+    image: mysql:8.0
+    container_name: my-mysql-container
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-your_root_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-auction_db}
+      MYSQL_USER: ${MYSQL_USER:-your_app_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-your_app_password}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # Mount schema và seeding files vào /docker-entrypoint-initdb.d/
+      # MySQL sẽ tự động chạy các file theo thứ tự alphabet khi khởi tạo lần đầu
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./seeding.sql:/docker-entrypoint-initdb.d/02-seeding.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+      interval: 10s
+    networks:
+      - elk
+
   redis:
     image: redis:latest
     container_name: "Cache"
@@ -20,34 +44,47 @@ services:
     networks:
       - elk
 
-  mysql_db:
-    image: mysql:8.0
-    container_name: my-mysql-container
-    environment:
-      MYSQL_ROOT_PASSWORD: your_root_password
-      MYSQL_DATABASE: auction_db
-      MYSQL_USER: your_app_user
-      MYSQL_PASSWORD: your_app_password
+  # Spring Boot Application
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: spring-boot-backend
     ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-      # Mount schema và seeding files vào /docker-entrypoint-initdb.d/
-      # MySQL sẽ tự động chạy các file theo thứ tự alphabet khi khởi tạo lần đầu
-      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
-      - ./seeding.sql:/docker-entrypoint-initdb.d/02-seeding.sql:ro
-    healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
-      interval: 10s
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql_db:3306/${MYSQL_DATABASE:-auction_db}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=${MYSQL_USER:-your_app_user}
+      - SPRING_DATASOURCE_PASSWORD=${MYSQL_PASSWORD:-your_app_password}
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-t2YO0HdF3asOEgMEy9g2YQ9N9Jtwq+op9Ir5VnIYIYs=}
+      - DEFAULT_USER_PASSWORD=${DEFAULT_USER_PASSWORD:-123456}
+      - CLOUD_NAME=${CLOUD_NAME}
+      - CLOUD_API_KEY=${CLOUD_API_KEY}
+      - CLOUD_API_SECRET=${CLOUD_API_SECRET}
+      - STRIPE_SECRET=${STRIPE_SECRET}
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_APP_PASSWORD=${MAIL_APP_PASSWORD}
+      - RECAPTCHA_SECRET=${RECAPTCHA_SECRET:-6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - RATE_LIMIT=${RATE_LIMIT:-40}
+    depends_on:
+      mysql_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - elk
+    restart: unless-stopped
 
   # Dịch vụ Elasticsearch
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.1.5
     container_name: elasticsearch
+    profiles: ["elk"]
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=true
@@ -73,6 +110,7 @@ services:
   es-init:
     image: alpine/curl:latest
     container_name: es-init
+    profiles: ["elk"]
     volumes:
       - ./es-init/init-system-users.sh:/usr/local/bin/init-system-users.sh:ro
     environment:
@@ -90,6 +128,7 @@ services:
   # Dịch vụ Logstash
   logstash:
     image: docker.elastic.co/logstash/logstash:9.1.5
+    profiles: ["elk"]
     container_name: logstash
     restart: on-failure
     environment:
@@ -110,6 +149,7 @@ services:
   # Dịch vụ Kibana
   kibana:
     image: docker.elastic.co/kibana/kibana:9.1.5
+    profiles: ["elk"]
     container_name: kibana
     restart: on-failure
     ports:
