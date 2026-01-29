@@ -5,9 +5,9 @@
 -- ============================================
 
 -- Drop existing database and create new one
-DROP DATABASE IF EXISTS auction_db;
-CREATE DATABASE auction_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE auction_db;
+DROP DATABASE IF EXISTS test;
+CREATE DATABASE test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE test;
 
 -- ============================================
 -- Table: users
